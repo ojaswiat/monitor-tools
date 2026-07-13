@@ -1,0 +1,17 @@
+{
+  "name": "monitor",
+  "version": "1.1.0",
+  "description": "Portable logging + reporting workflow. Maintains a project-local monitor/ folder (Dashboard + Reports + Logs) whose report template and log schema are project-specific and evolve additively. Commands: /monitor, /monitor:init, /monitor:update, /monitor:clean-logs, /monitor:clean-reports. Engine is stdlib-only Python 3 with graceful fallbacks for optional companion skills.",
+  "author": {
+    "name": "Ojaswi Athghara",
+    "email": "ojaswiat@gmail.com"
+  },
+  "keywords": [
+    "logging",
+    "reporting",
+    "observability",
+    "dashboard",
+    "html-reports",
+    "audit-trail"
+  ]
+}

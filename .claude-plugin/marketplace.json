@@ -1,0 +1,14 @@
+{
+  "name": "monitor-tools",
+  "owner": {
+    "name": "Ojaswi Athghara",
+    "email": "ojaswiat@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "monitor",
+      "source": "./plugins/monitor",
+      "description": "Portable logging + reporting workflow (project-local Dashboard + Reports + Logs)."
+    }
+  ]
+}
