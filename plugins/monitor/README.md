@@ -16,6 +16,9 @@ project from `monitor/profile.json` and evolve **additively** (backward compatib
 ## Design guarantees
 - **stdlib-only, zero deps, no hardcoded project paths** — each script resolves its
   own project root.
+- **Branch-aware:** every page shows the current branch (masthead chip + KPI), and
+  each log entry / report records the branch its change was made on. Detected
+  automatically; degrades to `no branch` outside a git repo.
 - **Init-gated:** every command except `/monitor:init` fails fast (exit 2) until
   `monitor/profile.json` exists.
 - **Immutable reports:** old report HTML is never rewritten on a template upgrade.

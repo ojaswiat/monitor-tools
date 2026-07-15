@@ -2,8 +2,9 @@
 """Append one validated operation entry to monitor/logs/operations.log.
 
 Validates against monitor/logs/schema.json (generated from profile.json),
-stamps the entry with the schema version, writes newest-first, then regenerates
-the Logs page. Never hand-edit the log — always go through this script.
+stamps the entry with the schema version and the current git branch, writes
+newest-first, then regenerates the Logs page. Never hand-edit the log — always
+go through this script.
 
 Extra profile-added fields are passed with repeatable --set key=value and are
 rendered as chips on the Logs page.
@@ -11,7 +12,7 @@ rendered as chips on the Logs page.
 Usage:
   python3 logger.py --project-root <repo> --operation edit-file --tool Edit \\
       --summary "..." --status success [--details "..."] [--files a b] \\
-      [--task "..."] [--level INFO] [--set tests=54/54]
+      [--task "..."] [--level INFO] [--branch feat/x] [--set tests=54/54]
 """
 
 from __future__ import annotations
@@ -51,6 +52,8 @@ def render_entry(entry: dict) -> str:
         f"{entry['timestamp']} {entry['level']} [{entry['operation']}] "
         f"({entry['tool']}) {entry['summary']} -- {entry['status']}"
     ]
+    if entry.get("branch"):
+        lines.append(f"branch:  {entry['branch']}")
     if entry.get("task"):
         lines.append(f"task:    {entry['task']}")
     if entry.get("files"):
@@ -63,13 +66,19 @@ def render_entry(entry: dict) -> str:
 
 
 def log_operation(root: Path, *, operation, tool, summary, status,
-                  level="INFO", details="", files=None, task="", extra=None) -> None:
+                  level="INFO", details="", files=None, task="", extra=None,
+                  branch=None) -> None:
     schema = load_schema(root)
+    # The branch the change was made on. Detected at log time so every entry
+    # records where it happened; --branch overrides, "" when not in a repo.
+    if branch is None:
+        branch = mlib.git_branch(root)
     entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3],
         "level": level, "operation": operation, "tool": tool,
         "summary": summary, "status": status,
         "schemaVersion": schema.get("schemaVersion", 1),
+        "branch": branch,
         "task": task, "details": details, "files": list(files or []),
         "extra": dict(extra or {}),
     }
@@ -97,6 +106,8 @@ def main() -> int:
     ap.add_argument("--details", default="")
     ap.add_argument("--files", nargs="*", default=None)
     ap.add_argument("--task", default="")
+    ap.add_argument("--branch", default=None,
+                    help="Branch the change was made on (default: detected).")
     ap.add_argument("--set", action="append", default=[], metavar="key=value",
                     help="Extra profile field, repeatable.")
     args = ap.parse_args()
@@ -110,7 +121,7 @@ def main() -> int:
         log_operation(mlib.resolve_root(args), operation=args.operation,
                       tool=args.tool, summary=args.summary, status=args.status,
                       level=args.level, details=args.details, files=args.files,
-                      task=args.task, extra=extra)
+                      task=args.task, extra=extra, branch=args.branch)
     except ValueError as err:
         print(f"log entry rejected: {err}", file=sys.stderr)
         return 1

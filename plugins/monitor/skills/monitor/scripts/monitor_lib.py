@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -80,6 +81,33 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+# ---------------------------------------------------------------- vcs
+
+def git_branch(root: Path) -> str:
+    """Current git branch name, or "" when unavailable.
+
+    Returns "" (never raises) outside a repo, without git, or on a detached
+    HEAD that has no symbolic name — callers render a neutral placeholder so a
+    non-git project still gets a working Dashboard.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True, timeout=5)
+    except Exception:  # noqa: BLE001 — git missing/unusable is not an error here
+        return ""
+    name = out.stdout.strip()
+    if out.returncode != 0 or not name:
+        return ""
+    if name == "HEAD":  # detached — report the short sha instead
+        sha = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5)
+        head = sha.stdout.strip()
+        return f"detached@{head}" if sha.returncode == 0 and head else ""
+    return name
+
+
 # The single source of truth for the report/log palette. Sharp corners, dual
 # theme (light: near-black on off-white; dark: yellow on near-black), tabular
 # numerals. Kept verbatim in generated pages so each file is self-contained.
@@ -105,15 +133,21 @@ PALETTE_CSS = """
   a { color: var(--accent); text-decoration: none; font-weight: 500; }
   a:hover { text-decoration: underline; }
   a:focus-visible, summary:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .masthead { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
   .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .branchchip.none { color: var(--muted); font-style: italic; }
   .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
   .back svg { width: 13px; height: 13px; }
   header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
   header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
   header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
-  .tabnav { display: flex; gap: 0; margin-top: 20px; }
-  .tabnav a { border: 1px solid var(--border); border-bottom: none; padding: 8px 18px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+  .tabnav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .tabnav a { border: 1px solid var(--border); padding: 8px 18px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
   .tabnav a.active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
   .tabnav a:hover { text-decoration: none; color: var(--text); }
   .tabnav a.active:hover { color: var(--accent-ink); }
@@ -151,6 +185,8 @@ PALETTE_CSS = """
   .logcard time { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .logcard .op { font-weight: 750; letter-spacing: -0.01em; }
   .logcard .toolchip, .logcard .xchip { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; color: var(--muted); border: 1px solid var(--hairline); padding: 1px 6px; }
+  .logcard .branchchip, td .branchchip { font-size: 0.7rem; padding: 1px 6px; border-color: var(--hairline); background: var(--code-bg); }
+  td .branchchip { margin-top: 6px; }
   .logcard .spacer { flex: 1 1 auto; }
   .logcard .summary { margin-top: 8px; font-size: 0.95rem; }
   .logcard .task { margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
@@ -174,6 +210,28 @@ BACK_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
             'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" '
             'aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>')
 
+# git-branch glyph. An inline SVG (never an emoji) so it inherits currentColor
+# and stays identical across platforms.
+BRANCH_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+              'aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/>'
+              '<circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>'
+              '<path d="M18 9a9 9 0 0 1-9 9"/></svg>')
+
+NO_BRANCH = "no branch"
+
+
+def branch_chip(branch: str, extra_class: str = "") -> str:
+    """Inline branch indicator: icon + name, with a visually-hidden "Branch"
+    label so the meaning never rests on the icon or colour alone."""
+    name = branch or NO_BRANCH
+    cls = "branchchip" + (" none" if not branch else "")
+    if extra_class:
+        cls += " " + extra_class
+    return (f'<span class="{cls}" title="Branch: {esc(name)}">{BRANCH_SVG}'
+            f'<span class="sr-only">Branch </span>'
+            f'<span class="bname">{esc(name)}</span></span>')
+
 
 def project_name(profile: dict, root: Path) -> str:
     return (profile.get("project", {}) or {}).get("name") or root.name
@@ -191,7 +249,12 @@ def tabnav(active: str, prefix: str) -> str:
 
 
 def page(title: str, brand: str, tag_kind: str, tag_text: str,
-         header_html: str, body_html: str, footer_html: str) -> str:
+         header_html: str, body_html: str, footer_html: str,
+         branch: str | None = None) -> str:
+    """Render a page shell. `branch` is the current branch shown in the masthead
+    of every page; pass None to omit the chip (e.g. the report template, which
+    carries a `{{ branch }}` placeholder instead)."""
+    chip = f"{branch_chip(branch)}\n      " if branch is not None else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -205,7 +268,9 @@ def page(title: str, brand: str, tag_kind: str, tag_text: str,
 
   <div class="masthead" id="top">
     <span><span class="brand">{esc(brand)}</span> · {esc(tag_text)}</span>
-    <span class="mono">{esc(now_stamp())}</span>
+    <span class="mh-right">
+      {chip}<span class="mono">{esc(now_stamp())}</span>
+    </span>
   </div>
 
 {header_html}

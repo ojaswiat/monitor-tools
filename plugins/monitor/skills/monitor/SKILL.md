@@ -62,12 +62,25 @@ new `profileVersion`; existing keys are never changed, removed, or renamed. That
 is what keeps upgrades backward compatible — the profile is always a superset of
 every prior version.
 
+## Branch tracking
+Every page shows the **current branch** in its masthead (an SVG git-branch chip,
+never an emoji) plus a *Current branch* KPI on the Dashboard, Reports, and Logs
+pages. Each **log entry** records the branch its operation was made on, and each
+**report** records the branch its work was done on — pages show *current*, entries
+show *where the change happened*, and the two legitimately differ once you switch
+branches. The engine detects the branch itself (`git rev-parse --abbrev-ref HEAD`);
+outside a repo it degrades to a neutral `no branch`, and on a detached HEAD it
+reports `detached@<short-sha>`. Entries and reports predating the field simply
+show no chip.
+
 ## Logging rules
 1. Never hand-edit `operations.log`. Always log through the engine:
-   `python3 monitor/scripts/logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details "..."] [--files a b] [--task "..."] [--level INFO] [--set key=value]`.
+   `python3 monitor/scripts/logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details "..."] [--files a b] [--task "..."] [--level INFO] [--branch <name>] [--set key=value]`.
 2. It validates against `logs/schema.json` (required fields + enums), stamps the
-   `schemaVersion`, writes newest-first with a `=`×80 separator, and regenerates
-   the Logs page. On failure, log `status=failure` with the real error.
+   `schemaVersion` **and the current branch**, writes newest-first with a `=`×80
+   separator, and regenerates the Logs page. On failure, log `status=failure`
+   with the real error. `branch` is detected automatically — pass `--branch` only
+   to override it (e.g. logging work done on another branch).
 3. Log after every operation that changes state; a tight sequence
    (edit+build+commit) may be one entry. Never log secrets/tokens/credentials.
 4. At session start / after compaction, read the top of `operations.log` (or the
@@ -77,7 +90,9 @@ every prior version.
 1. Create reports only when code changed or a report is explicitly requested —
    never for questions, discussions, or doc tweaks.
 2. Author each report from `monitor/reports/template.html` into
-   `monitor/reports/<date>-<slug>.html`; then **prepend** `{date,file,title,description}`
+   `monitor/reports/<date>-<slug>.html` — fill its `{{ branch }}` placeholders
+   (masthead chip + Branch meta chip) with the branch the work was done on; then
+   **prepend** `{date,file,title,description,branch}`
    to `reports/manifest.json` (newest-first — insert at index 0) and run
    `render_report.py` to rebuild the Reports
    index + Dashboard. Only HTML/CSS, self-contained, no external assets, no

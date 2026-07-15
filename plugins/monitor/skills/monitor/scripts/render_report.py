@@ -110,6 +110,7 @@ def render_template(profile: dict, root: Path) -> None:
     <p class="subtitle">{{{{ subtitle }}}}</p>
     <div class="meta-chips">
       <span class="chip"><b>Generated</b><span class="mono">{{{{ date }}}}</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">{{{{ branch }}}}</span></span>
       <span class="chip"><b>Commit</b><span class="mono">{{{{ commit }}}}</span></span>
       <span class="chip"><b>Status</b><span class="tag {{{{ status_class }}}}">{{{{ status }}}}</span></span>
     </div>
@@ -128,14 +129,18 @@ def render_template(profile: dict, root: Path) -> None:
     # Report pages carry a Back link to the reports index (same dir).
     masthead_extra = (f'    <a class="back" href="index.html" '
                       f'aria-label="Back to reports">{mlib.BACK_SVG}Back</a>\n')
+    # The masthead chip is a placeholder here: a report is a snapshot, so it
+    # records the branch the work was done on, not the branch you read it from.
     html = mlib.page(f"{{{{ title }}}} — {brand} Report", brand, "info",
-                     "Monitor · Report", header, body, footer)
+                     "Monitor · Report", header, body, footer,
+                     branch="{{ branch }}")
     html = html.replace('  <div class="masthead" id="top">\n',
                         '  <div class="masthead" id="top">\n' + masthead_extra)
     (mlib.monitor_dir(root) / "reports" / "template.html").write_text(html, encoding="utf-8")
 
 
-def render_reports_index(profile: dict, items: list[dict], root: Path) -> None:
+def render_reports_index(profile: dict, items: list[dict], root: Path,
+                         branch: str = "") -> None:
     brand = mlib.project_name(profile, root)
     header = f"""  <header class="report">
     <h1>Reports</h1>
@@ -144,6 +149,7 @@ def render_reports_index(profile: dict, items: list[dict], root: Path) -> None:
   </header>
 
   <div class="kpis">
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">{mlib.esc(branch or mlib.NO_BRANCH)}</div></div>
     <div class="kpi"><div class="label">Reports</div><div class="value">{len(items)}</div></div>
     <div class="kpi"><div class="label">Latest</div><div class="value small mono">{mlib.esc(items[0]["date"] if items else "—")}</div></div>
   </div>"""
@@ -152,9 +158,13 @@ def render_reports_index(profile: dict, items: list[dict], root: Path) -> None:
         if it["date"] != cur:
             cur = it["date"]
             rows.append(f'        <tr class="day-divider"><td colspan="2">{mlib.esc(cur)}</td></tr>')
+        # Per-report branch: the branch that report's work was done on. Omitted
+        # for entries that predate the field rather than shown as "no branch".
+        chip = ("<div>" + mlib.branch_chip(it["branch"]) + "</div>") \
+            if it.get("branch") else ""
         rows.append(
             f'        <tr><td><a href="{mlib.esc(it["file"])}">{mlib.esc(it["title"])}</a>'
-            f'<div class="description">{mlib.esc(it.get("description", ""))}</div></td>'
+            f'<div class="description">{mlib.esc(it.get("description", ""))}</div>{chip}</td>'
             f'<td class="timestamp">{mlib.esc(it["date"])}</td></tr>')
     table = ('  <div class="table-scroll"><table><thead><tr><th>Report</th>'
              '<th>Date</th></tr></thead><tbody>\n' + "\n".join(rows) +
@@ -164,11 +174,12 @@ def render_reports_index(profile: dict, items: list[dict], root: Path) -> None:
               '<span><a href="../index.html">← Dashboard</a> · '
               '<a href="#top">↑ Back to Top</a></span></footer>')
     out = mlib.page(f"Reports — {brand} Monitor", brand, "info",
-                    "Monitor · Reports", header, table, footer)
+                    "Monitor · Reports", header, table, footer, branch=branch)
     (mlib.monitor_dir(root) / "reports" / "index.html").write_text(out, encoding="utf-8")
 
 
-def render_dashboard(profile: dict, n_reports: int, root: Path) -> None:
+def render_dashboard(profile: dict, n_reports: int, root: Path,
+                     branch: str = "") -> None:
     brand = mlib.project_name(profile, root)
     mdir = mlib.monitor_dir(root)
     log_text = (mdir / "logs" / "operations.log")
@@ -181,6 +192,7 @@ def render_dashboard(profile: dict, n_reports: int, root: Path) -> None:
   </header>
 
   <div class="kpis">
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">{mlib.esc(branch or mlib.NO_BRANCH)}</div></div>
     <div class="kpi"><div class="label">Reports</div><div class="value">{n_reports}</div></div>
     <div class="kpi"><div class="label">Log entries</div><div class="value">{n_logs}</div></div>
     <div class="kpi"><div class="label">Profile</div><div class="value small mono">v{profile.get("profileVersion", 1)}</div></div>
@@ -191,7 +203,8 @@ def render_dashboard(profile: dict, n_reports: int, root: Path) -> None:
   </div>"""
     footer = ('  <footer><span>monitor · project dashboard</span>'
               '<span><a href="#top">↑ Back to Top</a></span></footer>')
-    out = mlib.page(f"{brand} · Monitor", brand, "info", "Monitor", header, body, footer)
+    out = mlib.page(f"{brand} · Monitor", brand, "info", "Monitor", header, body,
+                    footer, branch=branch)
     (mdir / "index.html").write_text(out, encoding="utf-8")
 
 
@@ -200,11 +213,12 @@ def render_all(root: Path) -> None:
     mdir = mlib.monitor_dir(root)
     (mdir / "reports").mkdir(parents=True, exist_ok=True)
     (mdir / "logs").mkdir(parents=True, exist_ok=True)
+    branch = mlib.git_branch(root)
     mlib.save_json(mdir / "logs" / "schema.json", build_schema(profile))
     render_template(profile, root)
     items = seed_manifest(root)
-    render_reports_index(profile, items, root)
-    render_dashboard(profile, len(items), root)
+    render_reports_index(profile, items, root, branch)
+    render_dashboard(profile, len(items), root, branch)
 
 
 def main() -> int:

@@ -29,6 +29,9 @@ DEFAULT_LOG_FIELDS = [
     {"key": "details",   "required": False, "since": 1},
     {"key": "files",     "required": False, "since": 1, "type": "array"},
     {"key": "task",      "required": False, "since": 1},
+    # Optional, not required: logging must keep working outside a git repo and
+    # on older entries that predate this field.
+    {"key": "branch",    "required": False, "since": 2},
 ]
 
 DEFAULT_KPIS = [

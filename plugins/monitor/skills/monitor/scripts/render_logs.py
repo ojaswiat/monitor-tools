@@ -22,7 +22,7 @@ STATUSES = {"success", "failure", "partial"}
 STATUS_TAG = {"success": "pass", "partial": "warn", "failure": "fail"}
 STATUS_CARD = {"success": "success", "partial": "partial", "failure": "fail"}
 _HEADER = re.compile(r"^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d+) (\w+) \[([^\]]*)\] (.*)$")
-KNOWN_EXTRA = {"task", "files", "details"}
+KNOWN_EXTRA = {"task", "files", "details", "branch"}
 
 
 def _extract_tool(rest: str) -> tuple[str, str]:
@@ -79,13 +79,15 @@ def parse_log(text: str) -> list[dict]:
         tool, summary = _extract_tool(rest)
         e = {"timestamp": timestamp, "level": level, "operation": operation,
              "tool": tool, "summary": summary, "status": status,
-             "task": "", "files": [], "details": "", "extra": {}}
+             "task": "", "files": [], "details": "", "branch": "", "extra": {}}
         for line in lines[1:]:
             if ":" not in line:
                 continue
             key, val = line.split(":", 1)
             key, val = key.strip(), val.strip()
-            if key == "task":
+            if key == "branch":
+                e["branch"] = val
+            elif key == "task":
                 e["task"] = val
             elif key == "files":
                 e["files"] = [f.strip() for f in val.split(",") if f.strip()]
@@ -122,6 +124,10 @@ def _card(e: dict) -> str:
          f'      <span class="op">{mlib.esc(e["operation"])}</span>']
     if e["tool"]:
         p.append(f'      <span class="toolchip">{mlib.esc(e["tool"])}</span>')
+    # The branch this operation was made on. Omitted (not "no branch") when the
+    # entry predates the field, so old entries stay clean rather than look wrong.
+    if e.get("branch"):
+        p.append("      " + mlib.branch_chip(e["branch"]))
     for k, v in e["extra"].items():
         p.append(f'      <span class="xchip">{mlib.esc(k)}: {mlib.esc(v)}</span>')
     p.append('      <span class="spacer"></span>')
@@ -141,7 +147,7 @@ def _card(e: dict) -> str:
     return "\n".join(p)
 
 
-def build_html(entries: list[dict], brand: str) -> str:
+def build_html(entries: list[dict], brand: str, branch: str = "") -> str:
     real = [e for e in entries if e.get("fragment") is None]
     frags = [e for e in entries if e.get("fragment") is not None]
     total = len(real)
@@ -159,6 +165,7 @@ def build_html(entries: list[dict], brand: str) -> str:
   </header>
 
   <div class="kpis">
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">{mlib.esc(branch or mlib.NO_BRANCH)}</div></div>
     <div class="kpi"><div class="label">Total ops</div><div class="value">{total}</div></div>
     <div class="kpi pass"><div class="label">Success</div><div class="value">{counts['success']}</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">{counts['partial']}</div></div>
@@ -182,7 +189,7 @@ def build_html(entries: list[dict], brand: str) -> str:
     footer = (f'  <footer><span>Rendered from monitor/logs/operations.log · {total} entries.</span>'
               f'<span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>')
     return mlib.page(f"Logs — {brand} Monitor", brand, "info", "Monitor · Logs",
-                     header, body, footer)
+                     header, body, footer, branch=branch)
 
 
 def render(root: Path) -> Path:
@@ -193,7 +200,8 @@ def render(root: Path) -> Path:
     profile = mlib.load_profile(root)
     brand = mlib.project_name(profile, root)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(build_html(parse_log(text), brand), encoding="utf-8")
+    out.write_text(build_html(parse_log(text), brand, mlib.git_branch(root)),
+                   encoding="utf-8")
     return out
 
 
