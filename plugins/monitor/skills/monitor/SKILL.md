@@ -1,129 +1,111 @@
 ---
 name: monitor
 description: >
-  Use when logging agent operations or writing HTML reports for a project.
-  Maintains a project-local monitor/ folder (Dashboard + Reports + Logs) whose
-  report template and log schema are project-specific and evolve additively.
-  Commands: /monitor (log + report), /monitor:init, /monitor:update,
-  /monitor:clean-logs <N>, /monitor:clean-reports <N>.
+  Use when logging an agent operation, writing or updating a project report or
+  dashboard, setting up per-project observability, or recovering at session
+  start what was already done. Keywords: logging, audit trail, operations log,
+  HTML report, dashboard, branch tracking.
 ---
 
 # monitor
 
-A portable logging + reporting workflow. The **plugin** (this folder,
-`.claude/skills/monitor/`) ships the generic engine; each project keeps only its
-own data + generated assets in a top-level **`monitor/`** folder — exactly like
-`openwiki/` or `graphify-out/`.
+A portable logging + reporting workflow. The plugin ships a generic, stdlib-only
+Python 3 engine; each project keeps only its own data + generated assets in a
+top-level `monitor/` folder — like `openwiki/` or `graphify-out/`.
 
 ## Where things live
 ```
-.claude/skills/monitor/   (portable engine — copy this to port monitor)
-  SKILL.md                 these rules
-  scripts/                 monitor_lib, profile, logger, render_logs,
-                           render_report, clean   (Python 3, stdlib only)
-  assets/base_template.html  fallback report template
-.claude/commands/monitor*  the slash commands (copy alongside the skill)
+monitor engine (portable — copy this to port monitor)
+  SKILL.md   scripts/   assets/base_template.html
+commands/monitor*        the slash commands (copy alongside the skill)
 
-<repo>/monitor/            (per-project data — created by /monitor:init)
-  profile.json             SOURCE OF TRUTH (auto-detected, hand-refinable)
-  usage.md                 which companion skills are present + how monitor uses them
-  index.html               Dashboard (links Reports + Logs)
-  scripts/                 project copy of the engine (run these)
+<repo>/monitor/          per-project data — created by /monitor:init
+  profile.json           SOURCE OF TRUTH (auto-detected, hand-refinable)
+  usage.md               companion skills present + how monitor uses each
+  index.html             Dashboard (links Reports + Logs)
+  scripts/               project copy of the engine (run these)
   reports/  template.html  manifest.json  index.html  <date>-<slug>.html
   logs/     schema.json  operations.log  index.html
 ```
 
-## Precondition — init before anything else
-Every command except `/monitor:init` requires the project to be initialised,
-marked by the presence of **`monitor/profile.json`**. If it is missing, the
-command must **not** run any engine script or take any action — it prompts the
-user to run `/monitor:init` and stops. As defense-in-depth, the engine scripts
-(logger, clean, render_logs, render_report) also fail fast (exit 2) when
-`monitor/profile.json` is absent; only `profile.py` (which creates it) is exempt.
-
 ## Commands
 | Command | Does |
 |---|---|
-| `/monitor:init` | First-time setup: detect project, seed `profile.json`, copy engine into `monitor/scripts/`, generate `schema.json` + `template.html` + indexes, write `usage.md`. Idempotent. |
-| `/monitor:update` | Re-detect + **reconcile** `profile.json` additively (new fields, bump `profileVersion`), re-copy the engine, regenerate `schema.json`/`template.html`/indexes, refresh `usage.md`. Backward compatible. |
-| `/monitor` | Log **and** report in one step, from the user's prompt: append a log entry AND (when code changed) write a report. |
-| `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render the Logs page. |
-| `/monitor:clean-reports <N>` | Delete the newest N reports (files + manifest); re-render the Reports page + Dashboard. |
+| `/monitor:init` | First-time setup: detect project, seed `profile.json`, copy engine into `monitor/scripts/`, generate schema + template + indexes, write `usage.md`. Idempotent. |
+| `/monitor:update` | Re-detect + reconcile `profile.json` additively, re-copy engine, regenerate assets, refresh `usage.md`. Backward compatible. |
+| `/monitor` | Log **and** (when code changed) report, in one step. |
+| `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
+| `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |
 
-Commands are agent-only (invoked in the assistant interface, never from a shell).
-Internally the agent runs the Python engine via Bash:
-`python3 monitor/scripts/<script>.py [args]` (each resolves its own project root).
+Commands are agent-only. Internally the agent runs the engine via
+`python3 monitor/scripts/<script>.py [args]` (each resolves its own project
+root). Run any script with `--help` for its flags.
 
-## profile.json — project-specific, evolves additively
-`profile.json` drives the log `schema.json` and report `template.html`. It is
-auto-seeded on init and refinable by hand. Reconcile (`/monitor:update`) is
-**strictly additive**: new detected keys/fields are added and stamped with the
-new `profileVersion`; existing keys are never changed, removed, or renamed. That
-is what keeps upgrades backward compatible — the profile is always a superset of
-every prior version.
+## Precondition — init first
+Every command except `/monitor:init` requires `monitor/profile.json`. If it is
+missing, do not run any engine script — prompt for `/monitor:init` and stop. The
+engine scripts also fail fast (exit 2) when it is absent; only `profile.py`
+(which creates it) is exempt.
+
+## profile.json evolves additively
+`profile.json` drives the log `schema.json` and report `template.html`.
+Reconcile (`/monitor:update`) only ADDS detected keys/fields and bumps
+`profileVersion`; it never changes, removes, or renames existing keys. The
+profile is always a superset of every prior version — that is what keeps upgrades
+backward compatible.
 
 ## Branch tracking
-Every page shows the **current branch** in its masthead (an SVG git-branch chip,
-never an emoji) plus a *Current branch* KPI on the Dashboard, Reports, and Logs
-pages. Each **log entry** records the branch its operation was made on, and each
-**report** records the branch its work was done on — pages show *current*, entries
-show *where the change happened*, and the two legitimately differ once you switch
-branches. The engine detects the branch itself (`git rev-parse --abbrev-ref HEAD`);
-outside a repo it degrades to a neutral `no branch`, and on a detached HEAD it
-reports `detached@<short-sha>`. Entries and reports predating the field simply
-show no chip.
+Pages (Dashboard/Reports/Logs) show the **current** branch (SVG git-branch chip +
+a KPI). Each log entry and report records the branch its **change was made on** —
+so pages and entries legitimately differ once you switch branches. The engine
+detects the branch (`git rev-parse --abbrev-ref HEAD`); outside a repo it shows
+`no branch`, on a detached HEAD `detached@<sha>`. Entries/reports predating the
+field show no chip.
 
-## Logging rules
-1. Never hand-edit `operations.log`. Always log through the engine:
-   `python3 monitor/scripts/logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details "..."] [--files a b] [--task "..."] [--level INFO] [--branch <name>] [--set key=value]`.
-2. It validates against `logs/schema.json` (required fields + enums), stamps the
-   `schemaVersion` **and the current branch**, writes newest-first with a `=`×80
-   separator, and regenerates the Logs page. On failure, log `status=failure`
-   with the real error. `branch` is detected automatically — pass `--branch` only
-   to override it (e.g. logging work done on another branch).
-3. Log after every operation that changes state; a tight sequence
-   (edit+build+commit) may be one entry. Never log secrets/tokens/credentials.
-4. At session start / after compaction, read the top of `operations.log` (or the
-   Logs page) to recover what was already done.
+## Logging
+- Log through the engine only — never hand-edit `operations.log`:
+  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--set k=v]`.
+- It validates against `schema.json`, stamps `schemaVersion` + the current branch,
+  writes newest-first with a `=`×80 separator, and regenerates the Logs page.
+  `branch` is auto-detected; pass `--branch` only to override.
+- Log after every state-changing operation (a tight edit+build+commit may be one
+  entry). On failure log `status=failure` with the real error. Never log secrets.
 
-## Reporting rules
-1. Create reports only when code changed or a report is explicitly requested —
-   never for questions, discussions, or doc tweaks.
-2. Author each report from `monitor/reports/template.html` into
-   `monitor/reports/<date>-<slug>.html` — fill its `{{ branch }}` placeholders
-   (masthead chip + Branch meta chip) with the branch the work was done on; then
-   **prepend** `{date,file,title,description,branch}`
-   to `reports/manifest.json` (newest-first — insert at index 0) and run
-   `render_report.py` to rebuild the Reports
-   index + Dashboard. Only HTML/CSS, self-contained, no external assets, no
-   `<script>`; **sharp corners** (`border-radius:0`), dual theme via
-   `prefers-color-scheme`, tabular numerals, status via `.tag` classes
-   (`pass`/`warn`/`fail`/`info`) with the label text carrying meaning.
-3. Sections: Summary · What Was Asked · What Was Done · Evidence (`<pre>`) ·
-   Files Touched (table) · Risks · Follow-ups · Actionable Next Steps.
-4. Reports are immutable snapshots — never rewrite an old report on a template
-   upgrade; only new reports use new sections/KPIs.
+## Reporting
+- Report only when code changed or a report is explicitly requested — never for
+  questions, discussions, or doc tweaks.
+- Author from `reports/template.html` into `reports/<date>-<slug>.html`: fill the
+  `{{ branch }}` placeholders with the branch the work was done on, **prepend**
+  `{date,file,title,description,branch}` to `reports/manifest.json` (index 0), and
+  run `render_report.py` to rebuild the Reports index + Dashboard.
+- HTML/CSS only, self-contained, no `<script>`; sharp corners
+  (`border-radius:0`), dual theme via `prefers-color-scheme`, status via `.tag`
+  (`pass`/`warn`/`fail`/`info`) with the label text carrying meaning.
+- Sections: Summary · What Was Asked · What Was Done · Evidence (`<pre>`) · Files
+  Touched (table) · Risks · Follow-ups · Next Steps.
+- Reports are immutable snapshots — never rewrite an old report on a template
+  upgrade; only new reports use new sections/KPIs.
 
-## Companion skills (recommended — all optional, with fallbacks)
-`usage.md` records which of these are present in the project and how monitor uses
-each. Use them if available; degrade gracefully if not.
+## Common mistakes
+| Mistake | Reality |
+|---|---|
+| Reporting a discussion or doc tweak "to be safe" | Reports are for code changes only. A rules/doc edit is not a code change — log it, don't report it. |
+| Hand-editing `operations.log` to fix a typo | Always go through `logger.py`. The Logs page is regenerated from the log; hand-edits desync the two and can corrupt parsing. |
+| Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
+| Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
+| Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
 
-| Skill | Role in monitor | Fallback if absent |
+## Companion skills (all optional, with fallbacks)
+`usage.md` records which are present and how monitor uses each.
+
+| Skill | Role | Fallback if absent |
 |---|---|---|
-| **ui-ux-pro-max** | design the report/Logs template + palette | use `assets/base_template.html` |
-| **superpowers** | `verification-before-completion` gates reports on real build/test output; plans/reviews feed report content | render but mark **unverified** |
-| **graphify** | orientation only — find relevant/related code (query/path/explain) | raw file reads / grep |
+| **ui-ux-pro-max** | design the report/Logs template + palette | `assets/base_template.html` |
+| **superpowers** | `verification-before-completion` gates reports on real build/test output | render but mark **unverified** |
+| **graphify** | orientation only — find related code (query/path/explain) | grep / raw reads |
 | **openwiki** | doc sync after commits | skip; note in follow-ups |
-| **find-skills** | improve skill *discovery* at init (surface installable skills) | recommend from this table |
+| **find-skills** | improve skill discovery at init | recommend from this table |
 | **copywriting** | polish report prose | write plainly |
 
-**Files-touched is never sourced from graphify.** graphify is a static AST
-knowledge graph (query/path/explain/diagnose) with no diff or files-changed
-capability, so a report's / log entry's Files-Touched list always comes from
-`git diff --name-only` (or the operation's explicit `--files`), whether or not
-graphify is present. **find-skills** only affects *discovery quality* at init —
-whether extra installable skills get surfaced; monitor recommends the companion
-skills from the table above either way, so its absence is a near-no-op.
-
-Language servers and other project-specific plugins are intentionally not part of
-monitor. The engine itself never requires any companion — it is stdlib Python.
+The engine never requires any companion — it is stdlib Python. Language servers
+and other project-specific plugins are intentionally out of scope.
