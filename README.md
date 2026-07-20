@@ -13,7 +13,7 @@ monitor-marketplace/
   plugins/monitor/                    the plugin
     .claude-plugin/plugin.json        manifest (name, version, author)
     skills/monitor/                   SKILL.md + engine scripts + base template
-    commands/                         /monitor + /monitor:init|update|clean-* 
+    commands/                         flat *.md → /monitor:init|log|report|record|update|clean-* 
     README.md
   install-monitor.sh                  no-marketplace fallback installer
   README.md                           (this file)
@@ -37,8 +37,9 @@ Run the fallback installer against any project directory:
 ```
 ./install-monitor.sh /path/to/your/other-project
 ```
-It copies `skills/monitor/` and the `commands/monitor*` into that project's
-`.claude/`. Re-run with `--force` to overwrite the engine + commands.
+It copies `skills/monitor/` and nests the commands under `.claude/commands/monitor/`
+(so they invoke as `/monitor:*` without a plugin prefix). Re-run with `--force` to
+overwrite the engine + commands.
 
 ## After installing — REQUIRED first step
 In the target project, run:
@@ -47,8 +48,7 @@ In the target project, run:
 ```
 This detects the project, seeds `monitor/profile.json`, copies the engine into
 `monitor/scripts/`, and generates the Dashboard, Reports, and Logs pages. **Every
-other command (`/monitor`, `/monitor:update`, `/monitor:clean-*`) refuses to run
-until `monitor/profile.json` exists.**
+other command refuses to run until `monitor/profile.json` exists.**
 
 ## Important notes
 - **Don't copy another project's top-level `monitor/` data folder.** That folder is
@@ -67,7 +67,9 @@ until `monitor/profile.json` exists.**
 | Command | Does |
 |---|---|
 | `/monitor:init` | First-time setup (idempotent). |
-| `/monitor` | Log an operation and, if code changed, write a report. |
+| `/monitor:log` | Append one operation entry to the log. |
+| `/monitor:report` | Author one HTML report and rebuild the Reports index. |
+| `/monitor:record` | Log an operation and, if code changed, write a report — in one step. |
 | `/monitor:update` | Additively reconcile profile + regenerate schema/template/indexes. |
 | `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
 | `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |

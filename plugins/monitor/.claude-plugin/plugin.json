@@ -1,7 +1,7 @@
 {
   "name": "monitor",
-  "version": "1.2.0",
-  "description": "Portable logging + reporting workflow. Maintains a project-local monitor/ folder (Dashboard + Reports + Logs) whose report template and log schema are project-specific and evolve additively. Every page shows the current git branch, and each log entry and report records the branch its change was made on. Commands: /monitor, /monitor:init, /monitor:update, /monitor:clean-logs, /monitor:clean-reports. Engine is stdlib-only Python 3 with graceful fallbacks for optional companion skills.",
+  "version": "1.3.0",
+  "description": "Portable logging + reporting workflow. Maintains a project-local monitor/ folder (Dashboard + Reports + Logs) whose report template and log schema are project-specific and evolve additively. Every page shows the current git branch, and each log entry and report records the branch its change was made on. Commands: /monitor:init, /monitor:log, /monitor:report, /monitor:record, /monitor:update, /monitor:clean-logs, /monitor:clean-reports. Engine is stdlib-only Python 3 with graceful fallbacks for optional companion skills.",
   "author": {
     "name": "Ojaswi Athghara",
     "email": "ojaswiat@gmail.com"

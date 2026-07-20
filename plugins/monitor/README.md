@@ -10,8 +10,9 @@ project from `monitor/profile.json` and evolve **additively** (backward compatib
 - **Skill:** `skills/monitor/SKILL.md` + `skills/monitor/scripts/` (engine:
   `monitor_lib`, `profile`, `logger`, `render_logs`, `render_report`, `clean` — all
   Python 3 stdlib) + `skills/monitor/assets/base_template.html` (fallback template).
-- **Commands:** `/monitor`, `/monitor:init`, `/monitor:update`,
-  `/monitor:clean-logs <N>`, `/monitor:clean-reports <N>`.
+- **Commands:** `/monitor:init`, `/monitor:log`, `/monitor:report`,
+  `/monitor:record`, `/monitor:update`, `/monitor:clean-logs <N>`,
+  `/monitor:clean-reports <N>`.
 
 ## Design guarantees
 - **stdlib-only, zero deps, no hardcoded project paths** — each script resolves its
@@ -26,5 +27,6 @@ project from `monitor/profile.json` and evolve **additively** (backward compatib
   `superpowers`, `graphify`, `openwiki`, `find-skills`, `copywriting`).
 
 ## Usage
-Run `/monitor:init` once per project, then `/monitor` after operations. See the
+Run `/monitor:init` once per project, then `/monitor:record` after operations
+(or `/monitor:log` and `/monitor:report` on their own). See the
 marketplace `README.md` for install instructions.

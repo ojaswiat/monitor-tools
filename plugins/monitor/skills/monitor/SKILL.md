@@ -17,7 +17,7 @@ top-level `monitor/` folder — like `openwiki/` or `graphify-out/`.
 ```
 monitor engine (portable — copy this to port monitor)
   SKILL.md   scripts/   assets/base_template.html
-commands/monitor*        the slash commands (copy alongside the skill)
+commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 
 <repo>/monitor/          per-project data — created by /monitor:init
   profile.json           SOURCE OF TRUTH (auto-detected, hand-refinable)
@@ -33,7 +33,9 @@ commands/monitor*        the slash commands (copy alongside the skill)
 |---|---|
 | `/monitor:init` | First-time setup: detect project, seed `profile.json`, copy engine into `monitor/scripts/`, generate schema + template + indexes, write `usage.md`. Idempotent. |
 | `/monitor:update` | Re-detect + reconcile `profile.json` additively, re-copy engine, regenerate assets, refresh `usage.md`. Backward compatible. |
-| `/monitor` | Log **and** (when code changed) report, in one step. |
+| `/monitor:log` | Append one operation entry to the log. |
+| `/monitor:report` | Author one HTML report + rebuild the Reports index. |
+| `/monitor:record` | Log **and** (when code changed) report, in one step. |
 | `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
 | `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |
 
