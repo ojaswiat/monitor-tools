@@ -103,7 +103,10 @@ def main() -> int:
     ap.add_argument("--summary", required=True)
     ap.add_argument("--status", required=True, choices=STATUSES)
     ap.add_argument("--level", default="INFO", choices=LEVELS)
-    ap.add_argument("--details", default="")
+    ap.add_argument("--details", default="",
+                    help="One labeled point per line (join lines with literal "
+                         "\\n, e.g. 'DECISION: ...\\nWHY: ...'); rendered as a "
+                         "real list on the Logs page, not a run-on sentence.")
     ap.add_argument("--files", nargs="*", default=None)
     ap.add_argument("--task", default="")
     ap.add_argument("--branch", default=None,

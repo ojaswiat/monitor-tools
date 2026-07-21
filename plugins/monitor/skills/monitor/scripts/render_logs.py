@@ -142,7 +142,7 @@ def _card(e: dict) -> str:
         p.append(f'    <div class="files">{chips}</div>')
     if e["details"]:
         p += ['    <details>', '      <summary>Details</summary>',
-              f'      <p>{mlib.esc(e["details"])}</p>', '    </details>']
+              f'      {mlib.format_list_block(e["details"])}', '    </details>']
     p.append('  </article>')
     return "\n".join(p)
 

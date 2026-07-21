@@ -76,6 +76,43 @@ field show no chip.
   just because the change was small. On failure log `status=failure` with the
   real error. Never log secrets.
 
+### Context capture — write `--details` so a new agent can pick up cold
+The log is the recovery path when a different agent (or a future you) opens this
+project with zero memory of the session. For any operation that involved a
+decision — not a pure mechanical edit — fill `--details` with a labeled,
+single-line-per-field answer to whichever of these apply. Skip fields with
+nothing to say; don't pad:
+- `DECISION:` the concrete choice made (what, not just "fixed it").
+- `WHY:` the reasoning — constraints, tradeoffs, alternatives considered and
+  why they were rejected. This is the field that saves the most re-derivation
+  time; never leave a real decision without it.
+- `ARCHITECTURE:` what changed structurally — components, data flow,
+  contracts, schemas, file responsibilities — if anything did.
+- `NEXT:` the immediate next step, stated as an action, not a vague intent.
+- `GAPS:` known issues, TODOs, deferred work, open questions, anything
+  incomplete or unverified.
+- `ASSUMPTIONS:` anything taken on faith that the next agent should verify
+  before building further on it.
+For a trivial mechanical change (typo, formatting, rename with no behavior
+change), a plain `--summary` with no `--details` is correct — verbose entries
+for non-decisions waste tokens on every future read of the log. Match verbosity
+to how much a cold-start agent would actually need.
+
+**Formatting — never write a run-on list.** Join fields with a literal `\n`
+inside the `--details` string, **one field per line** — do **not** write
+`DECISION: x. WHY: 1. reason one. 2. reason two.` as one sentence; that is
+exactly the "1. some fix. 2. next fix." run-on this convention exists to
+prevent. The Logs page splits on those `\n`s and renders one `<li>` per line
+as a real `<ul>` automatically — so each line must already be one complete,
+self-contained point. If a field has multiple genuinely separate points (e.g.
+two distinct gaps), give it multiple lines with the same label repeated
+rather than numbering inside one line:
+```
+--details "DECISION: Cache reads through Redis instead of an in-process LRU.\nWHY: Redis was already a dependency, so this avoids adding one.\nWHY: TTL-based eviction matches the cache's existing semantics.\nGAPS: No metrics on hit rate yet.\nGAPS: Backfill script for old cache keys not written."
+```
+Never number or bullet *within* a single line — one point, one line, one
+label.
+
 ## Reporting
 - Report only when code changed or a report is explicitly requested — never for
   questions, discussions, or doc tweaks.
@@ -89,13 +126,57 @@ field show no chip.
   `{{ branch }}` placeholders with the branch the work was done on, **prepend**
   `{date,file,title,description,branch}` to `reports/manifest.json` (index 0), and
   run `render_report.py` to rebuild the Reports index + Dashboard.
+- **Design is locked, independent of content requests.** A request about the
+  *content* — audience, reading level, tone, language, "explain it like I'm
+  11", humor, formality — changes only the prose written into each section.
+  It never touches the `<style>` block, palette, layout, class names, or
+  structure; those come from `mlib.PALETTE_CSS` and are identical across
+  every report regardless of who it's written for. Right after authoring a
+  report (and before indexing it), run `render_report.py --lock-report
+  reports/<file>.html` — it force-overwrites the file's `<style>` block back
+  to the canonical palette and strips any stray `<script>` tag, so even if a
+  content-tone instruction bled into the design during authoring, the
+  published file can't ship off-theme. This is a one-time correction on the
+  new file only — never run it against old reports, that would violate the
+  immutable-snapshot rule below.
 - HTML/CSS only, self-contained, no `<script>`; sharp corners
   (`border-radius:0`), dual theme via `prefers-color-scheme`, status via `.tag`
   (`pass`/`warn`/`fail`/`info`) with the label text carrying meaning.
-- Sections: Summary · What Was Asked · What Was Done · Evidence (`<pre>`) · Files
-  Touched (table) · Risks · Follow-ups · Next Steps.
+- Sections: Summary · What Was Asked · What Was Done · **Decisions & Rationale**
+  · Evidence (`<pre>`) · Files Touched (table) · Risks · Gaps & Assumptions ·
+  Follow-ups · Next Steps.
+- **Decisions & Rationale** is the recovery section — one entry per real
+  decision made on the branch: what was decided, why (alternatives considered
+  and rejected), and what it touched architecturally. Pull this straight from
+  the `DECISION:`/`WHY:`/`ARCHITECTURE:` fields already captured in the
+  branch's log entries — don't re-derive them from scratch, that's the whole
+  point of logging them as you go.
+- **Gaps & Assumptions** carries forward each entry's `GAPS:`/`ASSUMPTIONS:`
+  fields plus anything still open. A new agent reading only the report (not
+  the raw log) should be able to resume work without asking what's unfinished.
+- **Formatting — one point per `<li>`, never a numbered sentence inside a
+  `<p>`.** `template.html` already gives What Was Done, Decisions & Rationale,
+  Risks & Regressions, Gaps & Assumptions, Follow-ups, and Actionable Next
+  Steps as `<ul>`/`<ol class="steps">` — use them: one `<li>` per decision,
+  gap, risk, or step. Writing `<p>1. did x. 2. did y.</p>` defeats the
+  template's list markup and produces exactly the wall-of-text this workflow
+  exists to avoid. Only Summary and What Was Asked stay prose `<p>` — they're
+  one coherent statement, not a list of points.
 - Reports are immutable snapshots — never rewrite an old report on a template
   upgrade; only new reports use new sections/KPIs.
+
+## Memory — apply this policy without re-reading SKILL.md every session
+`/monitor:init` (and `/monitor:update`) save a compressed version of the
+Logging and Reporting defaults above to the agent's persistent memory, as
+`feedback`-type entries (see the memory system's own conventions for format).
+Once that memory exists, treat it as authoritative for *when* to log/report;
+consult it instead of re-reading this file in full — that's the token saving.
+Still open this file when a command's exact flags/behavior are needed, or when
+memory is missing/stale (e.g. after installing monitor into a new project that
+has no memory yet — run `/monitor:init` there to seed it). The memory entries
+themselves stay short (rule + why + how-to-apply, caveman-compressed); the
+*log and report content itself* stays verbose per "Context capture" above —
+compress the reminder, not the record.
 
 ## Common mistakes
 | Mistake | Reality |

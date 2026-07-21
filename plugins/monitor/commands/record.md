@@ -30,7 +30,12 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    status **unverified**). Author it from `monitor/reports/template.html` into
    `monitor/reports/<YYYY-MM-DD>-<slug>.html` (use `ui-ux-pro-max` to (re)design
    the template if available), filling every `{{ branch }}` placeholder with the
-   branch the work was done on. **Prepend** `{date,file,title,description,branch}`
+   branch the work was done on. **Only the text content changes** — a request
+   about tone, audience, reading level, or language changes the words in each
+   section, never the `<style>` block, palette, layout, or class names. Then
+   lock the design: `python3 monitor/scripts/render_report.py --lock-report
+   reports/<file>.html` (force-corrects the file back onto the canonical
+   palette before it's indexed). **Prepend** `{date,file,title,description,branch}`
    to `monitor/reports/manifest.json` (index 0), then run
    `python3 monitor/scripts/render_report.py` to rebuild the Reports index +
    Dashboard.

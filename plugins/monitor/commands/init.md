@@ -59,6 +59,14 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      via `/monitor:record`). Never report a discussion or doc-only tweak.
    - On failure, log it anyway with `status=failure` and the real error —
      don't skip logging just because the operation didn't succeed.
+   - **For real decisions, log the reasoning, not just the outcome.** In
+     `--details`, capture (whichever apply) `DECISION:` what was chosen,
+     `WHY:` alternatives considered and rejected, `ARCHITECTURE:` what
+     structurally changed, `NEXT:` the immediate next step, `GAPS:` known
+     issues/TODOs, `ASSUMPTIONS:` anything unverified. A trivial mechanical
+     edit just needs `--summary`, no `--details`. Reports pull their
+     **Decisions & Rationale** and **Gaps & Assumptions** sections straight
+     from these fields — see `SKILL.md` for the full convention.
 
    **Commands:**
    | Command | Does |
@@ -83,5 +91,27 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      detected fields, never removes or renames existing ones.
    <!-- monitor:end -->
    ```
+8. **If a persistent memory system is available to you** (a memory directory
+   you write files to and that is loaded back into future sessions — check
+   for one before assuming it's absent), save the logging/reporting policy
+   there now as `feedback`-type memory so future sessions apply it without
+   re-reading `SKILL.md` in full. Keep the memory content itself compressed
+   (rule + why + how-to-apply, one entry per policy, no restatement of the
+   full `SKILL.md` prose) — the verbosity belongs in the logs/reports
+   themselves, not in the reminder to write them. Save at minimum:
+   - **When to log**: after every state-changing operation including small
+     ones; never skip because a change was small; log failures too with the
+     real error. Why: this project uses monitor for session-to-session
+     context recovery — a gap in the log is a gap a future agent can't fill.
+   - **What to put in `--details`**: `DECISION:`/`WHY:`/`ARCHITECTURE:`/
+     `NEXT:`/`GAPS:`/`ASSUMPTIONS:` for any entry involving a real decision;
+     summary-only for mechanical edits. Why: this is what lets a cold-start
+     agent resume the work from the log alone.
+   - **When to report**: after code changes, and by default before merging
+     the current branch into its base if the branch has unreported changes —
+     don't wait to be asked. Why: reports are the per-branch decision record;
+     merging without one loses the branch's rationale once it's squashed.
+   If no memory system is available, skip this step silently — the `CLAUDE.md`
+   block from step 7 is the fallback that keeps the policy discoverable.
 
 Report the created tree and the detected profile summary.

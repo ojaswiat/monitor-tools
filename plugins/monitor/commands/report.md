@@ -20,9 +20,16 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
 2. Author the report from `monitor/reports/template.html` into
    `monitor/reports/<YYYY-MM-DD>-<slug>.html` (use `ui-ux-pro-max` to (re)design
    the template if available). Fill every `{{ branch }}` placeholder with the
-   branch the work was done on (`git rev-parse --abbrev-ref HEAD`).
-3. **Prepend** `{date,file,title,description,branch}` to
+   branch the work was done on (`git rev-parse --abbrev-ref HEAD`). **Only the
+   text content changes** — a request about tone, audience, reading level, or
+   language (e.g. "explain it like I'm 11") changes the words in each section,
+   never the `<style>` block, palette, layout, or class names. The design is
+   locked regardless of what the content-side request asks for.
+3. **Lock the design** — force-correct the file back onto the canonical
+   palette in case authoring drifted, before it's indexed:
+   `python3 monitor/scripts/render_report.py --lock-report reports/<file>.html`.
+4. **Prepend** `{date,file,title,description,branch}` to
    `monitor/reports/manifest.json` (newest-first — insert at index 0), then run
    `python3 monitor/scripts/render_report.py` to rebuild the Reports index +
    Dashboard.
-4. Relay the report path to the user.
+5. Relay the report path to the user.

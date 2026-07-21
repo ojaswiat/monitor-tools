@@ -12,6 +12,10 @@ only (re)builds the generated indexes/schema. A manifest is seeded from any
 existing index the first time so historical reports are preserved.
 
 Usage:  python3 render_report.py --project-root <repo>
+        python3 render_report.py --project-root <repo> --lock-report reports/<file>.html
+        (the second form force-corrects one freshly authored report's <style>
+        block back to the canonical palette and strips any <script> tag — run
+        it once, right after authoring, before rebuilding the indexes below)
 """
 
 from __future__ import annotations
@@ -29,6 +33,33 @@ ROW_RE = re.compile(
     r'<td class="timestamp">([^<]*)</td>\s*'
     r'<td><a href="([^"]+)">(.*?)</a></td>\s*'
     r'<td class="description">(.*?)</td>', re.S)
+
+STYLE_RE = re.compile(r"<style>.*?</style>", re.S)
+SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S | re.I)
+
+
+def lock_report_style(root: Path, report_rel_path: str) -> bool:
+    """Force a freshly authored report back onto the canonical palette/theme.
+
+    Content-tone requests (audience, reading level, language, humor) must only
+    ever change the prose inside a report's sections — never its `<style>`
+    block, since that block IS the design/theme lock (`mlib.PALETTE_CSS` is
+    the single source of truth, shared by every generated page). This is a
+    one-time correction run right after a report is authored, not a general
+    "resync all reports" — running it on old reports would violate the
+    immutable-snapshot rule if the canonical palette changes later.
+    Also strips any `<script>` tag an authoring pass may have added (reports
+    are self-contained HTML/CSS only, no `<script>`, per SKILL.md).
+    Returns True if the file needed correcting.
+    """
+    path = mlib.monitor_dir(root) / "reports" / report_rel_path
+    text = path.read_text(encoding="utf-8")
+    fixed = STYLE_RE.sub(lambda _m: f"<style>{mlib.PALETTE_CSS}</style>", text, count=1)
+    fixed = SCRIPT_RE.sub("", fixed)
+    if fixed != text:
+        path.write_text(fixed, encoding="utf-8")
+        return True
+    return False
 
 
 def build_schema(profile: dict) -> dict:
@@ -224,9 +255,18 @@ def render_all(root: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     mlib.add_root_arg(ap)
+    ap.add_argument("--lock-report", default=None, metavar="reports/<file>.html",
+                    help="Force-correct one freshly authored report's <style> "
+                         "block to the canonical palette; strip any <script>. "
+                         "Run once per new report, before the normal rebuild.")
     args = ap.parse_args()
     root = mlib.resolve_root(args)
     mlib.require_init(root)
+    if args.lock_report:
+        rel = args.lock_report.split("reports/", 1)[-1]
+        changed = lock_report_style(root, rel)
+        print(f"{'corrected' if changed else 'already canonical'}: {args.lock_report}")
+        return 0
     render_all(root)
     print("regenerated schema.json, template.html, reports/index.html, index.html")
     return 0

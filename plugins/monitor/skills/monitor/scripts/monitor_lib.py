@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -75,6 +76,35 @@ def require_init(root: Path) -> None:
 
 def esc(s) -> str:
     return html.escape(str(s), quote=True)
+
+
+_NUM_ITEM = re.compile(r"^\s*\d+[.)]\s+(.*)$")
+_BULLET_ITEM = re.compile(r"^\s*[-*•]\s+(.*)$")
+
+
+def format_list_block(text: str) -> str:
+    """Render a free-text field (log `details`, `--set` values) as real HTML.
+
+    Storage stays single-line (the log is line-based), so multi-point details
+    are written with literal ``\\n`` between points — this decodes that into
+    actual lines, then renders as a real ``<ol>``/``<ul>`` when the lines look
+    like a numbered or bulleted list, so "1. x. 2. y." never lands as one
+    run-on sentence. A single line (or no list markers) stays a plain ``<p>``.
+    """
+    if not text:
+        return ""
+    lines = [ln.strip() for ln in str(text).replace("\\n", "\n").split("\n")]
+    lines = [ln for ln in lines if ln]
+    if len(lines) <= 1:
+        return f"<p>{esc(text)}</p>"
+    num_items = [m.group(1) for m in (_NUM_ITEM.match(ln) for ln in lines) if m]
+    if len(num_items) == len(lines):
+        return "<ol>" + "".join(f"<li>{esc(i)}</li>" for i in num_items) + "</ol>"
+    bullet_items = [m.group(1) for m in (_BULLET_ITEM.match(ln) for ln in lines) if m]
+    if len(bullet_items) == len(lines):
+        return "<ul>" + "".join(f"<li>{esc(i)}</li>" for i in bullet_items) + "</ul>"
+    # Multiple lines with no consistent markers: still one point per line.
+    return "<ul>" + "".join(f"<li>{esc(ln)}</li>" for ln in lines) + "</ul>"
 
 
 def now_stamp() -> str:
@@ -196,6 +226,8 @@ PALETTE_CSS = """
   .logcard details { margin-top: 10px; }
   .logcard summary { cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
   .logcard details p { margin-top: 8px; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details ol, .logcard details ul { margin-top: 8px; padding-left: 1.4em; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details li { margin-top: 2px; }
   .empty { border: 1px solid var(--border); background: var(--surface); padding: 28px; text-align: center; color: var(--muted); margin-top: 16px; }
   .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
   .navcard { display: block; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface); padding: 20px 22px; }
