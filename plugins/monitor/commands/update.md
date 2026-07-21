@@ -31,4 +31,8 @@ exactly —
 4. Refresh `monitor/usage.md` from the current companion-skill availability. If
    `ui-ux-pro-max` is available, offer to re-design `reports/template.html`;
    apply only additively (new KPIs/sections), preserving existing structure.
-5. Report the profile diff and which assets were regenerated.
+5. Refresh the `<!-- monitor:start -->` / `<!-- monitor:end -->` block in the
+   project's `CLAUDE.md` (same content as `/monitor:init` step 7) — replace the
+   block in place if present, append it if the file exists without one, or
+   skip silently if `CLAUDE.md` was deleted (don't recreate it here).
+6. Report the profile diff and which assets were regenerated.
