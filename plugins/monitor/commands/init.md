@@ -45,11 +45,18 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    the skill at `SKILL.md` (or `$CLAUDE_PLUGIN_ROOT/skills/monitor/SKILL.md`
    when installed as a plugin) — read it before running any command below.
 
-   **When to use it:**
-   - After a state-changing operation (edit+build+commit can be one entry) —
-     run `/monitor:log` or `/monitor:record` (log **and** report in one step).
-   - After code changes specifically — write a report with `/monitor:report`
-     (or via `/monitor:record`). Never report a discussion or doc-only tweak.
+   **When to use it (defaults — no need to ask first):**
+   - **Log after every state-changing operation, including small ones** (one
+     file edit, one command run, one config tweak) — run `/monitor:log` or
+     `/monitor:record`. A tight edit+build+commit can be one entry, but don't
+     skip logging just because the change was small.
+   - **Generate a report before every merge.** Before merging the current
+     branch into its base branch, run `/monitor:report` (or `/monitor:record`)
+     if the branch has code changes not yet covered by a report. Do this by
+     default when asked to merge — don't wait to be asked for a report
+     separately.
+   - After code changes generally — write a report with `/monitor:report` (or
+     via `/monitor:record`). Never report a discussion or doc-only tweak.
    - On failure, log it anyway with `status=failure` and the real error —
      don't skip logging just because the operation didn't succeed.
 

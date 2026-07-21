@@ -70,12 +70,21 @@ field show no chip.
 - It validates against `schema.json`, stamps `schemaVersion` + the current branch,
   writes newest-first with a `=`×80 separator, and regenerates the Logs page.
   `branch` is auto-detected; pass `--branch` only to override.
-- Log after every state-changing operation (a tight edit+build+commit may be one
-  entry). On failure log `status=failure` with the real error. Never log secrets.
+- **Default behavior, no prompting needed:** log after every state-changing
+  operation, including small ones (one file edit, one command run, one config
+  tweak) — a tight edit+build+commit may be one entry, but don't skip logging
+  just because the change was small. On failure log `status=failure` with the
+  real error. Never log secrets.
 
 ## Reporting
 - Report only when code changed or a report is explicitly requested — never for
   questions, discussions, or doc tweaks.
+- **Default behavior, before every merge:** if the current branch is about to
+  be merged into its base branch (user says "merge", "ready to merge", opens a
+  PR for merge, or runs a merge command), generate a report first if the branch
+  has code changes not yet covered by one — summarizing the branch's work as a
+  single pre-merge report. Don't ask whether to report; do it, then proceed
+  with the merge.
 - Author from `reports/template.html` into `reports/<date>-<slug>.html`: fill the
   `{{ branch }}` placeholders with the branch the work was done on, **prepend**
   `{date,file,title,description,branch}` to `reports/manifest.json` (index 0), and
