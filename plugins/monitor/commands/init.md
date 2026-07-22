@@ -19,9 +19,8 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
 4. Generate project-specific assets from the profile:
    `python3 monitor/scripts/render_report.py` (writes `reports/template.html`,
    `reports/index.html`, `index.html`, seeds `reports/manifest.json`) and
-   `python3 monitor/scripts/render_logs.py` (creates `monitor/logs/log.db`
-   with the locked schema if it doesn't exist yet, and an empty-state Logs
-   page).
+   `python3 monitor/scripts/render_logs.py` (creates an empty-state Logs
+   page if there is no log yet).
 5. Probe companion skills (graphify, superpowers, openwiki, ui-ux-pro-max,
    find-skills, copywriting) via `.claude/settings.json` enabledPlugins and the
    skills folder. Write `monitor/usage.md`: for each, PRESENT/ABSENT and how
@@ -42,7 +41,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    This project has **monitor** installed: a local logging/reporting workflow.
    It keeps a project-local `monitor/` folder — a Dashboard linking a **Reports**
    page (one self-contained HTML report per task/change) and a **Logs** page
-   (rendered from `monitor/logs/log.db`, a locked-schema SQLite store). Rules for using it live in
+   (rendered from `monitor/logs/operations.log`, a locked-schema text log). Rules for using it live in
    the skill at `SKILL.md` (or `$CLAUDE_PLUGIN_ROOT/skills/monitor/SKILL.md`
    when installed as a plugin) — read it before running any command below.
 
@@ -83,10 +82,9 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    **Rules:**
    - Every command except `/monitor:init` requires `monitor/profile.json` to
      exist — it fails fast otherwise. Run init first if it's missing.
-   - Never hand-edit `monitor/logs/log.db` — always go through
-     `logger.py` (via `/monitor:log` or `/monitor:record`); the schema is
-     locked (fixed columns, CHECK constraints on `level`/`status`) and never
-     migrated — a bad manual write can violate it outright.
+   - Never hand-edit `monitor/logs/operations.log` — always go through
+     `logger.py` (via `/monitor:log` or `/monitor:record`); hand-edits desync
+     the log from the rendered Logs page.
    - Reports are immutable snapshots — never rewrite an old report when the
      template changes; only new reports pick up new sections.
    - `monitor/profile.json` evolves additively only — `/monitor:update` adds

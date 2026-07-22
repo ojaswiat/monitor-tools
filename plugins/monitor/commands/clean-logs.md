@@ -19,5 +19,5 @@ exactly —
    and show the user how many of how many entries will be removed.
 3. On confirmation, run without `--dry-run`:
    `python3 monitor/scripts/clean.py --project-root . --logs <N>`
-   (deletes the newest N rows from `log.db` and re-renders the Logs page).
+   (removes the newest N entries from `operations.log` and re-renders the Logs page).
 4. Report the new entry count.

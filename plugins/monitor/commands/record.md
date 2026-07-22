@@ -22,7 +22,7 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
      --summary "<one line>" --status success|partial|failure --details "<verbose>" \
      [--files <paths>] [--task "<task>"] [--set <key=value> …]
    ```
-   The schema is locked (fixed columns in `log.db`) — extra fields go in via
+   The schema is locked in code, not profile-driven — extra fields go in via
    `--set`. Structure `--details` yourself (labeled lines / numbered /
    bulleted, joined by literal `\n`) — it's stored and rendered as given. The
    **branch** is recorded automatically — pass `--branch <name>` only to

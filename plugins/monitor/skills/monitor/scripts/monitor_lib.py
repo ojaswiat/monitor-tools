@@ -236,7 +236,11 @@ PALETTE_CSS = """
   .navcard h3 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
   .navcard p { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
-  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer, .filter { border-color: #999; } .logcard { break-inside: avoid; } }
+  .pagenav { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 28px 0 4px; padding-top: 18px; border-top: 1px solid var(--hairline); }
+  .pagenav a { border: 1px solid var(--border); padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .pagenav a:hover { background: var(--code-bg); text-decoration: none; }
+  .pagenav .pageinfo { font-size: 0.76rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer, .filter, .pagenav { border-color: #999; } .logcard { break-inside: avoid; } }
 """
 
 BACK_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -279,6 +283,31 @@ def tabnav(active: str, prefix: str) -> str:
     return (f'<nav class="tabnav" aria-label="Dashboard pages">'
             f'{a("Reports", prefix + "reports/index.html", "reports")}'
             f'{a("Logs", prefix + "logs/index.html", "logs")}</nav>')
+
+
+PAGE_SIZE = 10
+
+
+def page_filename(n: int) -> str:
+    """Static pagination file naming: page 1 is index.html, page N>1 is page-N.html."""
+    return "index.html" if n == 1 else f"page-{n}.html"
+
+
+def pagination_nav(page_num: int, total_pages: int, total_items: int) -> str:
+    """Prev/Next static-page nav — plain <a> links, no JS. Omits Prev on page 1
+    and Next on the last page rather than disabling them, so there's nothing
+    non-functional to click."""
+    if total_pages <= 1:
+        return ""
+    parts = ['  <nav class="pagenav" aria-label="Pagination">']
+    if page_num > 1:
+        parts.append(f'    <a href="{page_filename(page_num - 1)}">← Prev</a>')
+    parts.append(f'    <span class="pageinfo">Page {page_num} of {total_pages} '
+                 f'· {total_items} total</span>')
+    if page_num < total_pages:
+        parts.append(f'    <a href="{page_filename(page_num + 1)}">Next →</a>')
+    parts.append('  </nav>')
+    return "\n".join(parts)
 
 
 def page(title: str, brand: str, tag_kind: str, tag_text: str,

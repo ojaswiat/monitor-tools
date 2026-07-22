@@ -13,19 +13,27 @@ import argparse
 import sys
 from pathlib import Path
 
-import db
 import monitor_lib as mlib
 import render_logs
 import render_report
 
+SEPARATOR = "=" * 80
+
 
 def clean_logs(root: Path, n: int, dry: bool) -> int:
-    total = db.count(root)
-    n = max(0, min(n, total))
-    print(f"removing {n} newest of {total} log entries")
+    log_path = mlib.monitor_dir(root) / "logs" / "operations.log"
+    if not log_path.exists():
+        print("no operations.log")
+        return 0
+    text = log_path.read_text(encoding="utf-8")
+    blocks = [b for b in text.split(SEPARATOR + "\n") if b.strip("\n")]
+    n = max(0, min(n, len(blocks)))
+    kept = blocks[n:]
+    print(f"removing {n} newest of {len(blocks)} log entries")
     if dry:
         return 0
-    db.delete_newest(root, n)
+    new_text = "".join(b + SEPARATOR + "\n" for b in kept)
+    log_path.write_text(new_text, encoding="utf-8")
     render_logs.render(root)
     return 0
 
