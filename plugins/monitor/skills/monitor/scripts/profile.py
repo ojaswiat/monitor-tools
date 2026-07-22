@@ -20,24 +20,6 @@ import monitor_lib as mlib
 # The "since" on each entry below is documentation only — _merge_list() always
 # stamps the actual reconcile-time version on write, so these literals never
 # reach a profile.json as-is.
-DEFAULT_LOG_FIELDS = [
-    {"key": "timestamp", "required": True,  "since": 1},
-    {"key": "level",     "required": True,  "since": 1,
-     "enum": ["DEBUG", "INFO", "WARNING", "ERROR"]},
-    {"key": "operation", "required": True,  "since": 1},
-    {"key": "tool",      "required": True,  "since": 1},
-    {"key": "summary",   "required": True,  "since": 1},
-    {"key": "status",    "required": True,  "since": 1,
-     "enum": ["success", "partial", "failure"]},
-    {"key": "details",   "required": False, "since": 1},
-    {"key": "files",     "required": False, "since": 1, "type": "array"},
-    {"key": "task",      "required": False, "since": 1},
-    # Optional, not required: logging must keep working outside a git repo and
-    # on older entries that predate this field.
-    {"key": "branch",    "required": False, "since": 2},
-]
-
-# Same "since" caveat as DEFAULT_LOG_FIELDS above.
 DEFAULT_KPIS = [
     {"key": "tests",  "label": "Tests",  "since": 1},
     {"key": "commit", "label": "Commit", "since": 1},
@@ -110,8 +92,6 @@ def reconcile(existing: dict, det: dict) -> tuple[dict, list]:
 
     prof["kpis"] = _merge_list(existing.get("kpis", []), DEFAULT_KPIS,
                                added, "kpi", version)
-    prof["logFields"] = _merge_list(existing.get("logFields", []),
-                                    DEFAULT_LOG_FIELDS, added, "logField", version)
     prof.setdefault("notes", existing.get("notes", {}))
     return prof, added
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Claude Code **plugin marketplace** (`monitor-tools`) that distributes a single plugin, `monitor`: a portable, stdlib-only-Python logging + reporting workflow. Once installed into a target project, `monitor` maintains a project-local `monitor/` folder — a Dashboard linking a Reports page (self-contained HTML report per task/change) and a Logs page (rendered from a canonical `operations.log`). No pip installs, no external assets, no hardcoded paths — Python 3 stdlib only.
+A Claude Code **plugin marketplace** (`monitor-tools`) that distributes a single plugin, `monitor`: a portable, stdlib-only-Python logging + reporting workflow. Once installed into a target project, `monitor` maintains a project-local `monitor/` folder — a Dashboard linking a Reports page (self-contained HTML report per task/change) and a Logs page (rendered from a canonical `log.db`, a locked-schema SQLite store). No pip installs, no external assets, no hardcoded paths — Python 3 stdlib only (including `sqlite3`).
 
 This repo has no build step, package manager, or test suite. There is nothing to `npm install` or `pip install`. "Development" here means editing the plugin's skill scripts, commands, and templates directly.
 
@@ -20,10 +20,11 @@ plugins/monitor/
     SKILL.md                        the skill spec agents read to operate monitor
     scripts/                        the engine (all stdlib Python 3, no deps)
       monitor_lib.py                shared lib: project-root resolution, JSON IO, palette CSS, page/masthead chrome
-      profile.py                    detects/reconciles monitor/profile.json (additive only)
-      logger.py                     appends one entry to operations.log, validates against schema.json
-      render_logs.py                renders operations.log -> logs/index.html
-      render_report.py              regenerates logs/schema.json, reports/template.html, reports/index.html, dashboard index.html
+      profile.py                    detects/reconciles monitor/profile.json (additive only; no log schema in it)
+      db.py                         locked SQLite schema + connect/insert/fetch/delete for logs/log.db
+      logger.py                     inserts one entry into logs/log.db via db.py
+      render_logs.py                renders logs/log.db -> logs/index.html
+      render_report.py              regenerates reports/template.html, reports/index.html, dashboard index.html
       clean.py                      deletes newest N logs/reports, re-renders affected pages
     assets/base_template.html       fallback report template
 ```
@@ -32,11 +33,11 @@ Commands (`plugins/monitor/commands/*.md`) are thin prompts for the agent; the a
 
 ## Architecture — how the engine works when installed in a target project
 
-- **`monitor/profile.json` is the source of truth.** Everything else (log schema, report template, dashboard) derives from it. `/monitor:init` seeds it (auto-detected project info); `/monitor:update` reconciles it.
-- **Reconciliation is strictly additive.** `profile.py` only ever adds detected keys/fields and bumps `profileVersion` — it never removes, renames, or overwrites existing keys (hand edits win). This is what keeps template/schema upgrades backward compatible: the profile is always a superset of every prior version.
+- **`monitor/profile.json` is the source of truth for project identity** (name, VCS, language, build/test commands, report KPI list) — the log schema is *not* part of it; that's locked in `db.py`, identical across every project. `/monitor:init` seeds the profile (auto-detected project info); `/monitor:update` reconciles it.
+- **Reconciliation is strictly additive.** `profile.py` only ever adds detected keys/fields and bumps `profileVersion` — it never removes, renames, or overwrites existing keys (hand edits win). This is what keeps template upgrades backward compatible: the profile is always a superset of every prior version.
 - **Init-gated.** Every script except `profile.py` calls `mlib.require_init()` and exits 2 if `monitor/profile.json` is missing. Commands must not run any other engine script before `/monitor:init`.
 - **Path model.** Each script resolves its own project root via `Path(__file__).resolve().parents[2]` when it lives at `monitor/scripts/<x>.py` inside the target project (all scripts also accept `--project-root` to override). Never hardcode a project path.
-- **Logs are append-only and canonical.** `logger.py` is the only writer of `monitor/logs/operations.log` (newest-first, `=`×80-separated blocks, validated against `logs/schema.json`). Never hand-edit the log — `render_logs.py` regenerates `logs/index.html` from it and hand-edits desync the two.
+- **Logs are a locked-schema SQLite store, canonical.** `logger.py` is the only writer of `monitor/logs/log.db` (single `log_entries` table, fixed columns, CHECK constraints on `level`/`status`, created once by `/monitor:init`'s call to `db.init_db()` and never altered — see `db.py`). Never hand-edit the DB — `render_logs.py` regenerates `logs/index.html` from it via `db.fetch_all()`. There is no migration from the old text-log engine: a project already running it keeps its `operations.log` on disk, unread, and simply gets a fresh empty `log.db` on its next init/update. `--details` formatting (numbered/bulleted/labeled lines, never a paragraph) is the logging caller's responsibility — `monitor_lib.format_list_block()` only decodes the literal `\n`-per-point convention it's given, it does not invent structure.
 - **Logs are the context-recovery mechanism, not just an audit trail.** The agent logs after every state-changing operation, small ones included, and for any real decision fills `--details` with labeled `DECISION:`/`WHY:`/`ARCHITECTURE:`/`NEXT:`/`GAPS:`/`ASSUMPTIONS:` fields (mechanical edits get a plain summary, no padding) — so a different agent with zero session context can read the log and resume work. See "Context capture" in `SKILL.md`.
 - **Reports are immutable snapshots.** Authored by the agent from `reports/template.html` into `reports/<date>-<slug>.html`, then prepended to `reports/manifest.json` (index 0). `render_report.py` rebuilds `reports/index.html` and the top-level Dashboard from that manifest. An old report is never rewritten when the template changes — only new reports pick up new sections/KPIs. Reports include a **Decisions & Rationale** and a **Gaps & Assumptions** section pulled from the branch's log entries, and are generated by default before merging a branch with unreported changes.
 - **The logging/reporting policy is mirrored into memory.** `/monitor:init` and `/monitor:update` save it as compressed `feedback`-type memory (when a persistent memory system is available to the installing agent) so later sessions apply it without re-reading `SKILL.md` in full; the target project's `CLAUDE.md` gets the same policy as a durable fallback.
@@ -46,7 +47,7 @@ Commands (`plugins/monitor/commands/*.md`) are thin prompts for the agent; the a
 
 ## Editing the engine
 
-- Any change to `logFields` handling, schema versioning, or the additive-reconcile guarantee in `profile.py` must preserve backward compatibility — never repurpose or remove a `since`-versioned field.
+- Any change to the additive-reconcile guarantee in `profile.py` must preserve backward compatibility — never repurpose or remove a `since`-versioned field. The `log_entries` schema in `db.py` is locked by design — a breaking change there is a new engine version, not a migration.
 - Changes to `PALETTE_CSS` / `page()` in `monitor_lib.py` affect every generated page (Dashboard, Reports, Logs, and the report template) — check all three render scripts after editing shared chrome.
 - After changing `plugins/monitor/skills/monitor/`, bump `version` in `plugins/monitor/.claude-plugin/plugin.json` so installed marketplaces pick up the update via `/plugin marketplace update monitor-tools`.
 - `install-monitor.sh` and the plugin path must stay in sync: both ultimately expose `/monitor:init|log|report|record|update|clean-logs|clean-reports` — the plugin path via `$CLAUDE_PLUGIN_ROOT` + plugin namespace, the manual-copy path via commands nested under `.claude/commands/monitor/`.

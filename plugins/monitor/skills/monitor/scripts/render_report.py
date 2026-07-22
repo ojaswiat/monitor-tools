@@ -2,7 +2,6 @@
 """Generate project-specific report assets from monitor/profile.json.
 
 Writes (all under monitor/):
-  logs/schema.json         from profile.logFields (versioned, additive)
   reports/template.html    the canonical report template (brand + KPIs)
   reports/index.html       the Reports listing (from reports/manifest.json)
   index.html               the top Dashboard (links Reports + Logs)
@@ -26,8 +25,8 @@ import re
 import sys
 from pathlib import Path
 
+import db
 import monitor_lib as mlib
-import render_logs
 
 ROW_RE = re.compile(
     r'<td class="timestamp">([^<]*)</td>\s*'
@@ -60,21 +59,6 @@ def lock_report_style(root: Path, report_rel_path: str) -> bool:
         path.write_text(fixed, encoding="utf-8")
         return True
     return False
-
-
-def build_schema(profile: dict) -> dict:
-    fields = profile.get("logFields", [])
-    schema = {"schemaVersion": int(profile.get("profileVersion", 1)),
-              "required": [f["key"] for f in fields if f.get("required")],
-              "fields": {}}
-    for f in fields:
-        spec = {"required": bool(f.get("required"))}
-        if "enum" in f:
-            spec["enum"] = f["enum"]
-        if "type" in f:
-            spec["type"] = f["type"]
-        schema["fields"][f["key"]] = spec
-    return schema
 
 
 def seed_manifest(root: Path) -> list[dict]:
@@ -213,9 +197,7 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
                      branch: str = "") -> None:
     brand = mlib.project_name(profile, root)
     mdir = mlib.monitor_dir(root)
-    log_text = (mdir / "logs" / "operations.log")
-    n_logs = len(render_logs.parse_log(log_text.read_text(encoding="utf-8"))) \
-        if log_text.exists() else 0
+    n_logs = db.count(root)
     header = f"""  <header class="report">
     <h1>{mlib.esc(brand)} · Monitor</h1>
     <p class="subtitle">Reports and logs for this project's agent workflow.</p>
@@ -245,7 +227,6 @@ def render_all(root: Path) -> None:
     (mdir / "reports").mkdir(parents=True, exist_ok=True)
     (mdir / "logs").mkdir(parents=True, exist_ok=True)
     branch = mlib.git_branch(root)
-    mlib.save_json(mdir / "logs" / "schema.json", build_schema(profile))
     render_template(profile, root)
     items = seed_manifest(root)
     render_reports_index(profile, items, root, branch)
@@ -268,7 +249,7 @@ def main() -> int:
         print(f"{'corrected' if changed else 'already canonical'}: {args.lock_report}")
         return 0
     render_all(root)
-    print("regenerated schema.json, template.html, reports/index.html, index.html")
+    print("regenerated template.html, reports/index.html, index.html")
     return 0
 
 

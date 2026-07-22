@@ -27,7 +27,10 @@ exactly —
    `python3 monitor/scripts/render_report.py` and
    `python3 monitor/scripts/render_logs.py`.
    Existing report HTML files are immutable snapshots — they are not touched;
-   `operations.log` is preserved and re-rendered tolerant of older entries.
+   `log.db` is untouched and just re-rendered. A project still running the old
+   text-log engine is not migrated — it keeps its `operations.log` on disk,
+   unread, and gets a fresh empty `log.db` going forward (no migration path,
+   by design — see `SKILL.md`).
 4. Refresh `monitor/usage.md` from the current companion-skill availability.
    The template's design is fixed (`mlib.PALETTE_CSS`, identical across every
    project) — regeneration only adds new KPIs/sections from the profile, never

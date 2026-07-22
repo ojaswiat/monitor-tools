@@ -3,7 +3,7 @@ name: monitor
 description: >
   Use when logging an agent operation, writing or updating a project report or
   dashboard, setting up per-project observability, or recovering at session
-  start what was already done. Keywords: logging, audit trail, operations log,
+  start what was already done. Keywords: logging, audit trail, log store,
   HTML report, dashboard, branch tracking.
 ---
 
@@ -25,13 +25,13 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
   index.html             Dashboard (links Reports + Logs)
   scripts/               project copy of the engine (run these)
   reports/  template.html  manifest.json  index.html  <date>-<slug>.html
-  logs/     schema.json  operations.log  index.html
+  logs/     log.db  index.html
 ```
 
 ## Commands
 | Command | Does |
 |---|---|
-| `/monitor:init` | First-time setup: detect project, seed `profile.json`, copy engine into `monitor/scripts/`, generate schema + template + indexes, write `usage.md`. Idempotent. |
+| `/monitor:init` | First-time setup: detect project, seed `profile.json`, copy engine into `monitor/scripts/`, create `log.db` (locked schema) + template + indexes, write `usage.md`. Idempotent. |
 | `/monitor:update` | Re-detect + reconcile `profile.json` additively, re-copy engine, regenerate assets, refresh `usage.md`. Backward compatible. |
 | `/monitor:log` | Append one operation entry to the log. |
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
@@ -50,7 +50,9 @@ engine scripts also fail fast (exit 2) when it is absent; only `profile.py`
 (which creates it) is exempt.
 
 ## profile.json evolves additively
-`profile.json` drives the log `schema.json` and report `template.html`.
+`profile.json` carries project identity (name, VCS, language, build/test
+commands) and the report KPI list. The log schema is **not** profile-driven —
+it's locked in `db.py` (see Logging below), identical across every project.
 Reconcile (`/monitor:update`) only ADDS detected keys/fields and bumps
 `profileVersion`; it never changes, removes, or renames existing keys. The
 profile is always a superset of every prior version — that is what keeps upgrades
@@ -65,11 +67,26 @@ detects the branch (`git rev-parse --abbrev-ref HEAD`); outside a repo it shows
 field show no chip.
 
 ## Logging
-- Log through the engine only — never hand-edit `operations.log`:
+- Log through the engine only — never hand-edit `monitor/logs/log.db`:
   `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--set k=v]`.
-- It validates against `schema.json`, stamps `schemaVersion` + the current branch,
-  writes newest-first with a `=`×80 separator, and regenerates the Logs page.
-  `branch` is auto-detected; pass `--branch` only to override.
+- The store is a single-table SQLite DB (`log.db`) with a **locked schema**
+  (fixed columns; `level`/`status` are CHECK-constrained enums) — see `db.py`.
+  It is created once by `/monitor:init` and never altered afterward; a future
+  breaking schema change is a new engine version, not a runtime migration.
+  There is no migration from the old text-log engine — a project already
+  running it keeps its `operations.log` on disk, unread, and gets a fresh
+  empty `log.db` on its next `/monitor:init`/`/monitor:update`. This is
+  intentional, not an oversight.
+- Each insert stamps `schemaVersion` + the current branch and refreshes the
+  Logs page. `branch` is auto-detected; pass `--branch` only to override.
+- **`--details` formatting is the caller's job, not the renderer's.** Storage
+  and rendering are dumb by design: `format_list_block` decodes a literal
+  `\n`-per-point convention into a real `<ol>`/`<ul>` (numbered markers →
+  `<ol>`, bullet markers or plain labeled lines → `<ul>`), but it only
+  reformats what it's given — a freehand paragraph renders as a paragraph.
+  Always write `--details` as one point per line (`DECISION: ...\nWHY: ...`
+  or `1. ...\n2. ...` etc.), never as run-on prose, so it never lands as a
+  giant paragraph on the Logs page.
 - **Default behavior, no prompting needed:** log after every state-changing
   operation, including small ones (one file edit, one command run, one config
   tweak) — a tight edit+build+commit may be one entry, but don't skip logging
@@ -182,7 +199,7 @@ compress the reminder, not the record.
 | Mistake | Reality |
 |---|---|
 | Reporting a discussion or doc tweak "to be safe" | Reports are for code changes only. A rules/doc edit is not a code change — log it, don't report it. |
-| Hand-editing `operations.log` to fix a typo | Always go through `logger.py`. The Logs page is regenerated from the log; hand-edits desync the two and can corrupt parsing. |
+| Hand-editing `log.db` to fix a typo | Always go through `logger.py`. Direct writes can violate the locked schema's CHECK constraints or desync the Logs page. |
 | Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
 | Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |

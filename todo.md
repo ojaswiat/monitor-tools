@@ -1,6 +1,9 @@
-1. When do you log things?
-2. What are you logging per log.
-3. Log into DB.
-4. Update the requirement files with sqlite if required.
-5. Every HTML file is concrete.
-6. Generate a log template and use that.
+
+
+Audit everything for the example project.
+
+1. Remove existing monitor and related files from the `example` project.
+2. Re-install the current version.
+3. Make some changes in the example project and create 4-6 reports and 8-10 log operations.
+4. Verify everything end to end - notice the performance, output and input quality of the text, what fields were added, any inconsistencies. Verify everything.
+5. If there are issues, explain them to me like I'm 12. All issues - One by One.
