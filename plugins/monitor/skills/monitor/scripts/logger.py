@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Append one validated operation entry to monitor/logs/operations.mtr.
 
-The schema is LOCKED in code (REQUIRED/LEVELS/STATUSES below) — not
-profile-driven, not read from a schema.json. Stamps the entry with the
-current branch, writes newest-first, then regenerates the Logs page. Never
-hand-edit the log — always go through this script.
+The schema is LOCKED in code (REQUIRED/LEVELS/STATUSES below), identical
+across every project. Stamps the entry with the current branch, writes
+newest-first, then regenerates the Logs page. Never hand-edit the log —
+always go through this script.
 
 Usage:
   python3 logger.py --project-root <repo> --operation edit-file --tool Edit \\

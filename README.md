@@ -45,9 +45,9 @@ This seeds `monitor/profile.json` (just the project's directory name — monitor
 
 From then on:
 ```
-/monitor:record    # log the operation, and report it if code changed — the common case
-/monitor:log        # log only
-/monitor:report      # report only
+/monitor:record   # log the operation, and report it if code changed — the common case
+/monitor:log      # log only
+/monitor:report   # report only
 ```
 
 ## Commands
@@ -100,3 +100,7 @@ monitor-marketplace/
 - **Don't copy another project's top-level `monitor/` data folder.** It's per-project generated content (its reports, logs, profile). `/monitor:init` creates a fresh one — only the `.claude/skills/monitor` engine and `.claude/commands` are portable.
 - **The engine finds itself in both install modes.** Commands resolve it via `$CLAUDE_PLUGIN_ROOT` when installed as a plugin, and fall back to `.claude/skills/monitor` when copied manually.
 - **Nothing beyond Python 3 is required.** Companion skills are pure enhancement.
+
+## License
+
+[MIT](LICENSE)
