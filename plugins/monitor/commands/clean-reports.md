@@ -19,6 +19,6 @@ exactly —
    and show the user the exact report files that will be deleted.
 3. On confirmation, run without `--dry-run`:
    `python3 monitor/scripts/clean.py --project-root . --reports <N>`
-   (deletes the newest N report files, removes them from `reports/manifest.json`,
-   and re-renders the Reports index + Dashboard).
+   (deletes the newest N report files and re-renders the Reports index +
+   Dashboard — no manifest to keep in sync, the index is scanned fresh).
 4. Report the new report count.

@@ -3,12 +3,14 @@
 
 Writes (all under monitor/):
   reports/template.html    the canonical report template (brand + KPIs)
-  reports/index.html       the Reports listing (from reports/manifest.json)
+  reports/index.html       the Reports listing (scanned from reports/*.html)
   index.html               the top Dashboard (links Reports + Logs)
 
 Reports themselves are authored by the agent from template.html; this script
-only (re)builds the generated indexes/schema. A manifest is seeded from any
-existing index the first time so historical reports are preserved.
+only (re)builds the generated indexes. There is no manifest file — the
+Reports index and Dashboard are built by scanning the reports/ directory and
+reading each report's own title/branch/summary straight out of its HTML.
+Nothing to hand-edit, nothing that can desync from the actual files on disk.
 
 Usage:  python3 render_report.py --project-root <repo>
         python3 render_report.py --project-root <repo> --lock-report reports/<file>.html
@@ -23,15 +25,11 @@ import argparse
 import html as _html
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import monitor_lib as mlib
 import render_logs
-
-ROW_RE = re.compile(
-    r'<td class="timestamp">([^<]*)</td>\s*'
-    r'<td><a href="([^"]+)">(.*?)</a></td>\s*'
-    r'<td class="description">(.*?)</td>', re.S)
 
 STYLE_RE = re.compile(r"<style>.*?</style>", re.S)
 SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S | re.I)
@@ -61,54 +59,63 @@ def lock_report_style(root: Path, report_rel_path: str) -> bool:
     return False
 
 
-def seed_manifest(root: Path) -> list[dict]:
-    """Build reports/manifest.json from an existing index if none exists.
+_H1_RE = re.compile(r"<h1>(.*?)</h1>", re.S)
+_BRANCH_CHIP_RE = re.compile(r"<b>Branch</b><span class=\"mono\">(.*?)</span>", re.S)
+_SUMMARY_RE = re.compile(
+    r'<h2>Summary</h2>\s*<p>(.*?)</p>', re.S)
+_TAG_RE = re.compile(r"<[^>]+>")
+_RESERVED = {"index.html", "template.html"}
+_PAGE_FILE_RE_TOP = re.compile(r"^page-\d+\.html$")
 
-    Manifest invariant: newest-first (new entries are prepended at index 0). We
-    ENFORCE it on every load with a stable date-descending sort — this keeps the
-    within-date order (already newest-first) intact while preventing an appended
-    entry from corrupting cross-date order over time.
-    """
-    mdir = mlib.monitor_dir(root)
-    man_path = mdir / "reports" / "manifest.json"
-    existing = mlib.load_json(man_path, None)
-    if existing is not None:
-        ordered = sorted(existing, key=lambda i: i.get("date", ""), reverse=True)
-        if ordered != existing:  # persist the repair only when order changed
-            mlib.save_json(man_path, ordered)
-        return ordered
-    def plain(s: str) -> str:
-        # Unescape to a fixpoint so re-seeding from an already-escaped index
-        # can't accumulate &amp;amp;… — render escapes exactly once afterwards.
-        prev = None
-        while prev != s:
-            prev, s = s, _html.unescape(s)
-        return s.strip()
 
-    def file_date(name: str, fallback: str = "") -> str:
-        # The filename prefix (YYYY-MM-DD-slug.html) is the canonical date;
-        # timestamp cells in older reports hold a time-of-day, not a date.
-        return name[:10] if re.match(r"\d{4}-\d\d-\d\d", name) else fallback
+def _truncate(s: str, limit: int) -> str:
+    """Truncate on a word boundary with an ellipsis, never mid-word."""
+    if len(s) <= limit:
+        return s
+    cut = s[:limit].rsplit(" ", 1)[0]
+    return cut.rstrip(",.;:") + "…"
 
+
+def _plain(s: str) -> str:
+    """Strip tags, unescape entities to a fixpoint, collapse whitespace."""
+    s = _TAG_RE.sub("", s)
+    prev = None
+    while prev != s:
+        prev, s = s, _html.unescape(s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def scan_reports(root: Path) -> list[dict]:
+    """Build the report list by reading reports/*.html directly — no manifest
+    file. Each report's own title (<h1>), branch (its Branch meta-chip), and
+    a short description (first line of its Summary section) come straight out
+    of the file; date comes from the filename prefix (YYYY-MM-DD-slug.html),
+    falling back to the file's mtime for anything non-conforming. Ordered
+    newest-first by (date, mtime) so same-day reports still sort correctly
+    without any hand-maintained index."""
+    reports_dir = mlib.monitor_dir(root) / "reports"
     items: list[dict] = []
-    for idx in (mdir / "reports" / "index.html", mdir / "index.html"):
-        if idx.exists():
-            for date, href, title, desc in ROW_RE.findall(idx.read_text(encoding="utf-8")):
-                file = href.split("/")[-1]
-                if file and file != "index.html" and not any(i["file"] == file for i in items):
-                    items.append({"date": file_date(file, date.strip()), "file": file,
-                                  "title": plain(title), "description": plain(desc)})
-    # Fall back to scanning report files for any not captured above.
-    for f in sorted((mdir / "reports").glob("20*-*.html"), reverse=True):
-        if f.name == "index.html" or any(i["file"] == f.name for i in items):
+    for f in reports_dir.glob("*.html"):
+        if f.name in _RESERVED or _PAGE_FILE_RE_TOP.match(f.name):
             continue
-        m = re.search(r"<h1>(.*?)</h1>", f.read_text(encoding="utf-8"), re.S)
-        title = plain(re.sub(r"\s+", " ", m.group(1))) if m else f.stem
-        items.append({"date": file_date(f.name), "file": f.name, "title": title,
-                      "description": ""})
-    # Stable sort by date desc — preserves each day's curated newest-first order.
-    items.sort(key=lambda i: i["date"], reverse=True)
-    mlib.save_json(man_path, items)
+        text = f.read_text(encoding="utf-8")
+        m = re.match(r"(\d{4}-\d\d-\d\d)", f.name)
+        mtime = f.stat().st_mtime
+        date = m.group(1) if m else datetime.fromtimestamp(mtime).strftime("%Y-%m-%d")
+        h1 = _H1_RE.search(text)
+        title = _plain(h1.group(1)) if h1 else f.stem
+        branch_m = _BRANCH_CHIP_RE.search(text)
+        branch = _plain(branch_m.group(1)) if branch_m else ""
+        if branch in ("{{ branch }}", ""):
+            branch = ""
+        summary_m = _SUMMARY_RE.search(text)
+        description = _truncate(_plain(summary_m.group(1)), 160) if summary_m else ""
+        items.append({"date": date, "file": f.name, "title": title,
+                      "description": description, "branch": branch,
+                      "_mtime": mtime})
+    items.sort(key=lambda i: (i["date"], i["_mtime"]), reverse=True)
+    for it in items:
+        del it["_mtime"]
     return items
 
 
@@ -228,7 +235,7 @@ def _prune_stale_report_pages(reports_dir: Path, total_pages: int) -> None:
 def render_reports_index(profile: dict, items: list[dict], root: Path,
                          branch: str = "") -> None:
     """Paginated Reports index — page 1 is reports/index.html, page N>1 is
-    reports/page-N.html. `items` is the full newest-first manifest; each page
+    reports/page-N.html. `items` is the full newest-first report list (from scan_reports); each page
     only renders its own slice (mlib.PAGE_SIZE items)."""
     brand = mlib.project_name(profile, root)
     reports_dir = mlib.monitor_dir(root) / "reports"
@@ -315,7 +322,7 @@ def render_all(root: Path) -> None:
     (mdir / "logs").mkdir(parents=True, exist_ok=True)
     branch = mlib.git_branch(root)
     render_template(profile, root)
-    items = seed_manifest(root)
+    items = scan_reports(root)
     render_reports_index(profile, items, root, branch)
     render_dashboard(profile, len(items), root, branch)
 

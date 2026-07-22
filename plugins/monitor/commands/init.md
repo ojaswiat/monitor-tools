@@ -21,7 +21,8 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    companion skill like `graphify` instead.)
 4. Generate project-specific assets from the profile:
    `python3 monitor/scripts/render_report.py` (writes `reports/template.html`,
-   `reports/index.html`, `index.html`, seeds `reports/manifest.json`) and
+   `reports/index.html`, `index.html` — the Reports index is scanned fresh
+   from `reports/*.html`, no manifest file) and
    `python3 monitor/scripts/render_logs.py` (creates an empty-state Logs
    page if there is no log yet).
 5. Probe companion skills (graphify, superpowers, openwiki, ui-ux-pro-max,

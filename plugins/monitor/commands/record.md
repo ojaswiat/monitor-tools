@@ -38,8 +38,7 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    section, never the `<style>` block, palette, layout, or class names. Then
    lock the design: `python3 monitor/scripts/render_report.py --lock-report
    reports/<file>.html` (force-corrects the file back onto the canonical
-   palette before it's indexed). **Prepend** `{date,file,title,description,branch}`
-   to `monitor/reports/manifest.json` (index 0), then run
+   palette before it's indexed). There is no manifest to update — just run
    `python3 monitor/scripts/render_report.py` to rebuild the Reports index +
    Dashboard.
 3. Relay what was logged and whether a report was written (with its path).

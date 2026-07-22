@@ -40,19 +40,10 @@ def clean_logs(root: Path, n: int, dry: bool) -> int:
 
 def clean_reports(root: Path, n: int, dry: bool) -> int:
     mdir = mlib.monitor_dir(root)
-    man_path = mdir / "reports" / "manifest.json"
-    items = render_report.seed_manifest(root)  # ensures manifest exists
+    items = render_report.scan_reports(root)  # already newest-first
     n = max(0, min(n, len(items)))
-    # Deterministic "newest" order. Manifest invariant: newest-first (entries
-    # added at index 0), so within a date LOWER index = newer. A STABLE sort by
-    # date descending preserves that within-date order, giving a well-defined
-    # newest-first view even when reports share a date. `kept` preserves the
-    # original manifest order so the re-rendered index is unchanged.
-    newest_first = sorted(range(len(items)), key=lambda i: items[i]["date"],
-                          reverse=True)
-    removed_idx = set(newest_first[:n])
-    removed = [items[i] for i in newest_first[:n]]
-    kept = [items[i] for i in range(len(items)) if i not in removed_idx]
+    removed = items[:n]
+    kept = items[n:]
     print(f"removing {n} newest of {len(items)} reports:")
     for it in removed:
         print(f"  - {it['file']}  ({it['title']})")
@@ -62,7 +53,6 @@ def clean_reports(root: Path, n: int, dry: bool) -> int:
         f = mdir / "reports" / it["file"]
         if f.exists():
             f.unlink()
-    mlib.save_json(man_path, kept)
     profile = mlib.load_profile(root)
     branch = mlib.git_branch(root)
     render_report.render_reports_index(profile, kept, root, branch)

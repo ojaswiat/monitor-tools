@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Shared library for the `monitor` engine.
 
-Provides project-root resolution, profile/schema/manifest IO, the shared
+Provides project-root resolution, profile/JSON IO, the shared
 self-contained page CSS, and the Dashboard chrome (masthead + Reports/Logs
 tab-nav) used by every generated page. All engine scripts import this.
 

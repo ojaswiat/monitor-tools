@@ -24,7 +24,7 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
   usage.md               companion skills present + how monitor uses each
   index.html             Dashboard (links Reports + Logs)
   scripts/               project copy of the engine (run these)
-  reports/  template.html  manifest.json  index.html  <date>-<slug>.html
+  reports/  template.html  index.html  <date>-<slug>.html  (no manifest — index is scanned)
   logs/     operations.mtr  index.html
 ```
 
@@ -152,9 +152,10 @@ label.
   single pre-merge report. Don't ask whether to report; do it, then proceed
   with the merge.
 - Author from `reports/template.html` into `reports/<date>-<slug>.html`: fill the
-  `{{ branch }}` placeholders with the branch the work was done on, **prepend**
-  `{date,file,title,description,branch}` to `reports/manifest.json` (index 0), and
-  run `render_report.py` to rebuild the Reports index + Dashboard.
+  `{{ branch }}` placeholders with the branch the work was done on, then run
+  `render_report.py` to rebuild the Reports index + Dashboard. No manifest to
+  update — the index is scanned fresh from `reports/*.html` every time, reading
+  each report's own `<h1>`/Branch chip/Summary directly out of the file.
 - **Design is locked, independent of content requests.** A request about the
   *content* — audience, reading level, tone, language, "explain it like I'm
   11", humor, formality — changes only the prose written into each section.

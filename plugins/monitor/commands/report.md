@@ -29,8 +29,8 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
 3. **Lock the design** — force-correct the file back onto the canonical
    palette in case authoring drifted, before it's indexed:
    `python3 monitor/scripts/render_report.py --lock-report reports/<file>.html`.
-4. **Prepend** `{date,file,title,description,branch}` to
-   `monitor/reports/manifest.json` (newest-first — insert at index 0), then run
-   `python3 monitor/scripts/render_report.py` to rebuild the Reports index +
-   Dashboard.
+4. Run `python3 monitor/scripts/render_report.py` to rebuild the Reports
+   index + Dashboard. There is no manifest to update — the new report is
+   picked up automatically by scanning `reports/*.html` and reading its own
+   `<h1>`/Branch chip/Summary straight out of the file.
 5. Relay the report path to the user.
