@@ -17,6 +17,9 @@ from pathlib import Path
 
 import monitor_lib as mlib
 
+# The "since" on each entry below is documentation only — _merge_list() always
+# stamps the actual reconcile-time version on write, so these literals never
+# reach a profile.json as-is.
 DEFAULT_LOG_FIELDS = [
     {"key": "timestamp", "required": True,  "since": 1},
     {"key": "level",     "required": True,  "since": 1,
@@ -34,15 +37,11 @@ DEFAULT_LOG_FIELDS = [
     {"key": "branch",    "required": False, "since": 2},
 ]
 
+# Same "since" caveat as DEFAULT_LOG_FIELDS above.
 DEFAULT_KPIS = [
     {"key": "tests",  "label": "Tests",  "since": 1},
     {"key": "commit", "label": "Commit", "since": 1},
-    {"key": "status", "label": "Status", "since": 1},
 ]
-
-DEFAULT_SECTIONS = ["summary", "asked", "done", "evidence", "files",
-                    "risks", "followups", "steps"]
-
 
 def detect(root: Path) -> dict:
     """Best-effort project detection. Language + build/test commands."""
@@ -90,7 +89,6 @@ def _merge_list(existing: list, defaults: list, added: list, kind: str,
 
 def reconcile(existing: dict, det: dict) -> tuple[dict, list]:
     added: list[str] = []
-    first = not existing
     version = int(existing.get("profileVersion", 0)) + 1
     prof = dict(existing)
     prof["profileVersion"] = version
@@ -114,10 +112,6 @@ def reconcile(existing: dict, det: dict) -> tuple[dict, list]:
                                added, "kpi", version)
     prof["logFields"] = _merge_list(existing.get("logFields", []),
                                     DEFAULT_LOG_FIELDS, added, "logField", version)
-    if "reportSections" not in existing:
-        prof["reportSections"] = list(DEFAULT_SECTIONS)
-        if not first:
-            added.append("reportSections")
     prof.setdefault("notes", existing.get("notes", {}))
     return prof, added
 

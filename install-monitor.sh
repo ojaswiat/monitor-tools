@@ -49,7 +49,7 @@ mkdir -p "$TARGET/.claude/skills" "$DEST_CMD"
 rm -rf "$DEST_SKILL" "$DEST_CMD/monitor"
 rm -f "$DEST_CMD/monitor.md"
 cp -R "$PLUGIN/skills/monitor" "$DEST_SKILL"
-rm -rf "$DEST_SKILL/scripts/__pycache__"
+find "$DEST_SKILL" -name "__pycache__" -type d -exec rm -rf {} +
 # Nest the flat command files under commands/monitor/ so they invoke as /monitor:<cmd>.
 mkdir -p "$DEST_CMD/monitor"
 cp "$PLUGIN"/commands/*.md "$DEST_CMD/monitor/"

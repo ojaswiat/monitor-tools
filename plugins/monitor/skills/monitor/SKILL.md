@@ -192,7 +192,7 @@ compress the reminder, not the record.
 
 | Skill | Role | Fallback if absent |
 |---|---|---|
-| **ui-ux-pro-max** | design the report/Logs template + palette | `assets/base_template.html` |
+| **ui-ux-pro-max** | not used for design — UI is fixed (`mlib.PALETTE_CSS`), identical across every project | n/a |
 | **superpowers** | `verification-before-completion` gates reports on real build/test output | render but mark **unverified** |
 | **graphify** | orientation only — find related code (query/path/explain) | grep / raw reads |
 | **openwiki** | doc sync after commits | skip; note in follow-ups |

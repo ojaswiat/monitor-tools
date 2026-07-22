@@ -74,7 +74,7 @@ From then on:
 
 | Skill | Role | Fallback if absent |
 |---|---|---|
-| `ui-ux-pro-max` | Designs the report/Logs template + palette | `assets/base_template.html` |
+| `ui-ux-pro-max` | Not used for design — UI is fixed and identical across every project | n/a |
 | `superpowers` | Gates reports on real build/test verification | Render but mark **unverified** |
 | `graphify` | Orientation — find related code | grep / raw reads |
 | `openwiki` | Doc sync after commits | Skip; note in follow-ups |

@@ -208,6 +208,7 @@ PALETTE_CSS = """
   .filter label:hover { color: var(--text); }
   #f-all:checked ~ label[for="f-all"], #f-success:checked ~ label[for="f-success"], #f-partial:checked ~ label[for="f-partial"], #f-fail:checked ~ label[for="f-fail"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
   body:has(#f-success:checked) .logcard:not(.success), body:has(#f-partial:checked) .logcard:not(.partial), body:has(#f-fail:checked) .logcard:not(.fail) { display: none; }
+  @supports not selector(:has(a)) { .filter { display: none; } }
   .log { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
   .logcard { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--muted); padding: 14px 16px; }
   .logcard.success { border-left-color: var(--pass); } .logcard.partial { border-left-color: var(--warn); } .logcard.fail { border-left-color: var(--fail); }

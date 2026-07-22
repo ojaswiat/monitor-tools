@@ -64,8 +64,9 @@ def clean_reports(root: Path, n: int, dry: bool) -> int:
             f.unlink()
     mlib.save_json(man_path, kept)
     profile = mlib.load_profile(root)
-    render_report.render_reports_index(profile, kept, root)
-    render_report.render_dashboard(profile, len(kept), root)
+    branch = mlib.git_branch(root)
+    render_report.render_reports_index(profile, kept, root, branch)
+    render_report.render_dashboard(profile, len(kept), root, branch)
     return 0
 
 

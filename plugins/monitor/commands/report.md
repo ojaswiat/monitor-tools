@@ -18,8 +18,9 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
 1. Gate on `superpowers:verification-before-completion` if available (else mark
    the report status **unverified**).
 2. Author the report from `monitor/reports/template.html` into
-   `monitor/reports/<YYYY-MM-DD>-<slug>.html` (use `ui-ux-pro-max` to (re)design
-   the template if available). Fill every `{{ branch }}` placeholder with the
+   `monitor/reports/<YYYY-MM-DD>-<slug>.html`. The template's design is fixed
+   (`mlib.PALETTE_CSS`, identical across every project) — only fill in content.
+   Fill every `{{ branch }}` placeholder with the
    branch the work was done on (`git rev-parse --abbrev-ref HEAD`). **Only the
    text content changes** — a request about tone, audience, reading level, or
    language (e.g. "explain it like I'm 11") changes the words in each section,

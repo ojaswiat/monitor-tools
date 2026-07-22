@@ -28,9 +28,10 @@ exactly —
    `python3 monitor/scripts/render_logs.py`.
    Existing report HTML files are immutable snapshots — they are not touched;
    `operations.log` is preserved and re-rendered tolerant of older entries.
-4. Refresh `monitor/usage.md` from the current companion-skill availability. If
-   `ui-ux-pro-max` is available, offer to re-design `reports/template.html`;
-   apply only additively (new KPIs/sections), preserving existing structure.
+4. Refresh `monitor/usage.md` from the current companion-skill availability.
+   The template's design is fixed (`mlib.PALETTE_CSS`, identical across every
+   project) — regeneration only adds new KPIs/sections from the profile, never
+   a custom palette or layout.
 5. Refresh the `<!-- monitor:start -->` / `<!-- monitor:end -->` block in the
    project's `CLAUDE.md` (same content as `/monitor:init` step 7) — replace the
    block in place if present, append it if the file exists without one, or
