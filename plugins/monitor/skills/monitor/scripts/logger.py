@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append one validated operation entry to monitor/logs/operations.log.
+"""Append one validated operation entry to monitor/logs/operations.mtr.
 
 The schema is LOCKED in code (REQUIRED/LEVELS/STATUSES below) — not
 profile-driven, not read from a schema.json. Stamps the entry with the
@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -25,6 +26,24 @@ SEPARATOR = "=" * 80
 STATUSES = ("success", "partial", "failure")
 LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 REQUIRED = ("timestamp", "level", "operation", "tool", "summary", "status")
+
+# Strips ASCII control bytes (NUL..BS, VT, FF, SO..US, DEL) — e.g. the raw
+# ANSI escape codes a backtick-quoted example command can splice into a field
+# via accidental shell command substitution. Tab is left alone; real newlines
+# are handled separately in sanitize() since they'd break the block format.
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def sanitize(value: str) -> str:
+    """Every field is sanitized before it ever reaches operations.mtr: strip
+    control characters, flatten real newlines to spaces (the log is
+    block/line-based — a raw newline inside a field would corrupt parsing),
+    and trim. This runs on every entry regardless of caller; there is no way
+    to write an unsanitized field to the log."""
+    if value is None:
+        return value
+    value = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    return _CONTROL_CHARS.sub("", value).strip()
 
 
 def validate(entry: dict) -> None:
@@ -64,14 +83,15 @@ def log_operation(root: Path, *, operation, tool, summary, status,
         branch = mlib.git_branch(root)
     entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3],
-        "level": level, "operation": operation, "tool": tool,
-        "summary": summary, "status": status,
-        "branch": branch,
-        "task": task, "details": details, "files": list(files or []),
-        "extra": dict(extra or {}),
+        "level": sanitize(level), "operation": sanitize(operation),
+        "tool": sanitize(tool), "summary": sanitize(summary),
+        "status": sanitize(status), "branch": sanitize(branch),
+        "task": sanitize(task), "details": sanitize(details),
+        "files": [sanitize(f) for f in (files or [])],
+        "extra": {sanitize(k): sanitize(v) for k, v in (extra or {}).items()},
     }
     validate(entry)
-    log_path = mlib.monitor_dir(root) / "logs" / "operations.log"
+    log_path = mlib.monitor_dir(root) / "logs" / "operations.mtr"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     block = render_entry(entry) + "\n" + SEPARATOR + "\n"
     previous = log_path.read_text(encoding="utf-8") if log_path.exists() else ""

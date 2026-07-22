@@ -21,9 +21,9 @@ SEPARATOR = "=" * 80
 
 
 def clean_logs(root: Path, n: int, dry: bool) -> int:
-    log_path = mlib.monitor_dir(root) / "logs" / "operations.log"
+    log_path = mlib.monitor_dir(root) / "logs" / "operations.mtr"
     if not log_path.exists():
-        print("no operations.log")
+        print("no operations.mtr")
         return 0
     text = log_path.read_text(encoding="utf-8")
     blocks = [b for b in text.split(SEPARATOR + "\n") if b.strip("\n")]

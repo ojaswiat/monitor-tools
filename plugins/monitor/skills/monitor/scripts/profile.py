@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """Detect and reconcile monitor/profile.json — the project's source of truth.
 
+Monitor has exactly two jobs: log and report. It does not detect a project's
+language, guess its build/test commands, or otherwise inspect what the
+project *is* or *does* — that would be guessing, not recording. The only
+thing profile.json auto-fills is the project's own directory name (needed to
+brand the Dashboard/Reports/Logs pages) — nothing else is detected.
+
 Reconcile is strictly ADDITIVE: new detected keys/fields are added (stamped with
 the new profileVersion); keys already present are left as-is (hand edits win);
-nothing is ever removed or renamed. This is what makes schema/template upgrades
+nothing is ever removed or renamed. This is what makes template upgrades
 backward compatible.
 
 Usage:  python3 profile.py --project-root <repo>   [--print]
@@ -25,34 +31,11 @@ DEFAULT_KPIS = [
     {"key": "commit", "label": "Commit", "since": 1},
 ]
 
+
 def detect(root: Path) -> dict:
-    """Best-effort project detection. Language + build/test commands."""
-    det = {"project": {"name": root.name}, "commands": {}}
-    if (root / ".git").exists():
-        det["project"]["vcs"] = "git"
-    checks = [
-        ("Package.swift", "swift", None, "swift test"),
-        ("package.json", "javascript", None, "npm test"),
-        ("Cargo.toml", "rust", "cargo build", "cargo test"),
-        ("go.mod", "go", "go build ./...", "go test ./..."),
-        ("pyproject.toml", "python", None, "pytest"),
-        ("requirements.txt", "python", None, "pytest"),
-        ("pom.xml", "java", "mvn package", "mvn test"),
-    ]
-    for fname, lang, build, test in checks:
-        if (root / fname).exists():
-            det["project"]["language"] = lang
-            if build:
-                det["commands"]["build"] = build
-            if test:
-                det["commands"]["test"] = test
-            break
-    # Prefer a build.sh if present (common for hand-rolled builds).
-    if (root / "build.sh").exists():
-        det["commands"]["build"] = "./build.sh"
-    if (root / "package.json").exists():
-        det["commands"].setdefault("build", "npm run build")
-    return det
+    """The only thing auto-filled: the project's own directory name, for
+    branding pages. No language/build/test guessing, no code execution."""
+    return {"project": {"name": root.name}}
 
 
 def _merge_list(existing: list, defaults: list, added: list, kind: str,
@@ -75,20 +58,13 @@ def reconcile(existing: dict, det: dict) -> tuple[dict, list]:
     prof = dict(existing)
     prof["profileVersion"] = version
 
-    # project + commands: fill only missing keys (hand edits win).
+    # project: fill only missing keys (hand edits win).
     proj = dict(existing.get("project", {}))
     for k, v in det.get("project", {}).items():
         if k not in proj:
             proj[k] = v
             added.append(f"project.{k}")
     prof["project"] = proj
-
-    cmds = dict(existing.get("commands", {}))
-    for k, v in det.get("commands", {}).items():
-        if k not in cmds:
-            cmds[k] = v
-            added.append(f"commands.{k}")
-    prof["commands"] = cmds
 
     prof["kpis"] = _merge_list(existing.get("kpis", []), DEFAULT_KPIS,
                                added, "kpi", version)

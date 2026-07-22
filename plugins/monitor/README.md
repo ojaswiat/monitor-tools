@@ -1,6 +1,6 @@
 # monitor (plugin)
 
-A portable logging + reporting workflow for Claude Code projects. Adds a project-local `monitor/` folder — a **Dashboard** linking a **Reports** page (self-contained HTML report per task/change) and a **Logs** page (rendered from a canonical newest-first `operations.log`). The report template is seeded per project from `monitor/profile.json` and evolves **additively** (backward compatible); the log schema itself is locked in code, identical across every project.
+A portable logging + reporting workflow for Claude Code projects. Adds a project-local `monitor/` folder — a **Dashboard** linking a **Reports** page (self-contained HTML report per task/change) and a **Logs** page (rendered from a canonical newest-first `operations.mtr`). The report template is seeded per project from `monitor/profile.json` and evolves **additively** (backward compatible); the log schema itself is locked in code, identical across every project.
 
 ## Components
 - **Skill:** `skills/monitor/SKILL.md` + `skills/monitor/scripts/` (engine: `monitor_lib`, `profile`, `logger`, `render_logs`, `render_report`, `clean` — all Python 3 stdlib) + `skills/monitor/assets/base_template.html` (fallback template).

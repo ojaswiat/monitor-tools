@@ -235,6 +235,15 @@ PALETTE_CSS = """
   .navcard:hover { text-decoration: none; background: var(--code-bg); }
   .navcard h3 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
   .navcard p { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
+  .rsection { border: 1px solid var(--border); background: var(--surface); padding: 20px 22px; margin-top: 16px; }
+  .rsection h2 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px; }
+  .rsection p { font-size: 0.95rem; line-height: 1.6; }
+  .rsection ul, .rsection ol:not(.steps) { padding-left: 1.4em; font-size: 0.92rem; line-height: 1.65; }
+  .rsection li { margin-top: 4px; }
+  .rsection pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 12px 14px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55; }
+  ol.steps { list-style: none; counter-reset: step; padding-left: 0; }
+  ol.steps li { counter-increment: step; display: flex; gap: 12px; margin-top: 10px; font-size: 0.92rem; line-height: 1.5; }
+  ol.steps li::before { content: counter(step); flex: 0 0 auto; width: 22px; height: 22px; border: 1px solid var(--accent); color: var(--accent); font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
   .pagenav { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 28px 0 4px; padding-top: 18px; border-top: 1px solid var(--hairline); }
   .pagenav a { border: 1px solid var(--border); padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }

@@ -15,7 +15,10 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    python3 "$ENGINE/scripts/profile.py" --project-root .
    mkdir -p monitor/scripts && cp "$ENGINE"/scripts/*.py monitor/scripts/
    ```
-   (`profile.py` detects language, build/test commands, VCS.)
+   (`profile.py` only fills in the project's directory name — monitor's two
+   jobs are log and report, it never detects language/build/test commands or
+   otherwise inspects the project. For real project orientation, use a
+   companion skill like `graphify` instead.)
 4. Generate project-specific assets from the profile:
    `python3 monitor/scripts/render_report.py` (writes `reports/template.html`,
    `reports/index.html`, `index.html`, seeds `reports/manifest.json`) and
@@ -41,7 +44,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    This project has **monitor** installed: a local logging/reporting workflow.
    It keeps a project-local `monitor/` folder — a Dashboard linking a **Reports**
    page (one self-contained HTML report per task/change) and a **Logs** page
-   (rendered from `monitor/logs/operations.log`, a locked-schema text log). Rules for using it live in
+   (rendered from `monitor/logs/operations.mtr`, a locked-schema text log). Rules for using it live in
    the skill at `SKILL.md` (or `$CLAUDE_PLUGIN_ROOT/skills/monitor/SKILL.md`
    when installed as a plugin) — read it before running any command below.
 
@@ -82,7 +85,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    **Rules:**
    - Every command except `/monitor:init` requires `monitor/profile.json` to
      exist — it fails fast otherwise. Run init first if it's missing.
-   - Never hand-edit `monitor/logs/operations.log` — always go through
+   - Never hand-edit `monitor/logs/operations.mtr` — always go through
      `logger.py` (via `/monitor:log` or `/monitor:record`); hand-edits desync
      the log from the rendered Logs page.
    - Reports are immutable snapshots — never rewrite an old report when the

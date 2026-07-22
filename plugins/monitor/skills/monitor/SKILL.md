@@ -25,7 +25,7 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
   index.html             Dashboard (links Reports + Logs)
   scripts/               project copy of the engine (run these)
   reports/  template.html  manifest.json  index.html  <date>-<slug>.html
-  logs/     operations.log  index.html
+  logs/     operations.mtr  index.html
 ```
 
 ## Commands
@@ -49,14 +49,20 @@ missing, do not run any engine script — prompt for `/monitor:init` and stop. T
 engine scripts also fail fast (exit 2) when it is absent; only `profile.py`
 (which creates it) is exempt.
 
+## Monitor has exactly two jobs: log and report
+Monitor never detects a project's language, guesses its build/test commands,
+or otherwise inspects what the project does. That's guessing, not recording
+or presenting — out of scope, whether the project is brand new or years old.
+`profile.json` only auto-fills the project's directory name (to brand pages)
+plus the report KPI list. If an agent needs real project orientation to write
+a good report, use a companion skill like `graphify` for that — not monitor.
+
 ## profile.json evolves additively
-`profile.json` carries project identity (name, VCS, language, build/test
-commands) and the report KPI list. The log schema lives in code in
-`logger.py` (see Logging below), identical across every project. Reconcile
-(`/monitor:update`) only ADDS detected keys/fields and bumps
+Reconcile (`/monitor:update`) only ADDS detected keys/fields and bumps
 `profileVersion`; it never changes, removes, or renames existing keys. The
 profile is always a superset of every prior version — that is what keeps upgrades
-backward compatible.
+backward compatible. The log schema lives in code in `logger.py` (see Logging
+below), identical across every project.
 
 ## Branch tracking
 Pages (Dashboard/Reports/Logs) show the **current** branch (SVG git-branch chip +
@@ -67,11 +73,21 @@ detects the branch (`git rev-parse --abbrev-ref HEAD`); outside a repo it shows
 field show no chip.
 
 ## Logging
-- Log through the engine only — never hand-edit `operations.log`:
+- Log through the engine only — never hand-edit `operations.mtr`:
   `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--set k=v]`.
 - The schema is **locked in code** (`REQUIRED`/`LEVELS`/`STATUSES` constants in
   `logger.py`), identical across every project. It
   validates required fields and the `level`/`status` enums before writing.
+- **Every field is sanitized before it reaches the log, no exceptions.**
+  `logger.py`'s `sanitize()` runs on every field of every entry — strips
+  control characters, flattens real newlines to spaces. This exists because
+  a field can pick up garbage you didn't intend: e.g. writing an example
+  shell command in backticks inside `--details` gets command-substituted by
+  the shell before `logger.py` ever sees it, splicing that command's raw
+  output (including ANSI escape codes) into the field. **Avoid backticks
+  around example commands in `--details`/`--summary`** — use single quotes
+  or no quoting-sensitive characters at all — since sanitize() cleans up
+  control bytes but can't undo a command that already ran.
 - Each entry is written newest-first with a `=`×80 separator and stamps the
   current branch; `render_logs.py` regenerates the Logs page from the log
   text. `branch` is auto-detected; pass `--branch` only to override.
@@ -195,7 +211,7 @@ compress the reminder, not the record.
 | Mistake | Reality |
 |---|---|
 | Reporting a discussion or doc tweak "to be safe" | Reports are for code changes only. A rules/doc edit is not a code change — log it, don't report it. |
-| Hand-editing `operations.log` to fix a typo | Always go through `logger.py`. The Logs page is regenerated from the log; hand-edits desync the two and can corrupt parsing. |
+| Hand-editing `operations.mtr` to fix a typo | Always go through `logger.py`. The Logs page is regenerated from the log; hand-edits desync the two and can corrupt parsing. |
 | Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
 | Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |

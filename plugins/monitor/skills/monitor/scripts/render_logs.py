@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render monitor/logs/operations.log into paginated monitor/logs/*.html.
+"""Render monitor/logs/operations.mtr into paginated monitor/logs/*.html.
 
 The text log stays canonical; this is a tolerant, human-readable, paginated
 view of it — mlib.PAGE_SIZE entries per page, page 1 is logs/index.html, page
@@ -108,7 +108,7 @@ def _frag_card(e: dict) -> str:
          '      <span class="op">⚠ unparseable log fragment</span>',
          '      <span class="spacer"></span>',
          '      <span class="tag fail">SKIPPED</span>', '    </div>',
-         '    <p class="summary">A log block did not start with a valid header line and was skipped by the renderer. The canonical <code>operations.log</code> text is unchanged.</p>',
+         '    <p class="summary">A log block did not start with a valid header line and was skipped by the renderer. The canonical <code>operations.mtr</code> text is unchanged.</p>',
          '    <details>', '      <summary>Raw fragment</summary>',
          f'      <p><code>{mlib.esc(e["fragment"])}</code></p>',
          '    </details>', '  </article>']
@@ -156,7 +156,7 @@ def build_html(page_entries: list[dict], brand: str, branch: str, *, total: int,
                f'<div class="value">{n_frags}</div></div>') if n_frags else ""
     header = f"""  <header class="report">
     <h1>Logs</h1>
-    <p class="subtitle">Agent operation log — newest first. Rendered from <code>monitor/logs/operations.log</code>.</p>
+    <p class="subtitle">Agent operation log — newest first. Rendered from <code>monitor/logs/operations.mtr</code>.</p>
     {mlib.tabnav("logs", "../")}
   </header>
 
@@ -183,7 +183,7 @@ def build_html(page_entries: list[dict], brand: str, branch: str, *, total: int,
     else:
         body = '  <div class="empty">No operations logged yet.</div>'
     body += "\n" + mlib.pagination_nav(page_num, total_pages, total)
-    footer = (f'  <footer><span>Rendered from monitor/logs/operations.log · {total} entries.</span>'
+    footer = (f'  <footer><span>Rendered from monitor/logs/operations.mtr · {total} entries.</span>'
               f'<span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>')
     title = "Logs" if total_pages <= 1 else f"Logs (page {page_num}/{total_pages})"
     return mlib.page(f"{title} — {brand} Monitor", brand, "info", "Monitor · Logs",
@@ -201,7 +201,7 @@ def render(root: Path) -> Path:
     mdir = mlib.monitor_dir(root)
     logs_dir = mdir / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
-    log_path = logs_dir / "operations.log"
+    log_path = logs_dir / "operations.mtr"
     text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
     profile = mlib.load_profile(root)
     brand = mlib.project_name(profile, root)
