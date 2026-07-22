@@ -20,7 +20,7 @@ plugins/monitor/
     SKILL.md                        the skill spec agents read to operate monitor
     scripts/                        the engine (all stdlib Python 3, no deps)
       monitor_lib.py                shared lib: project-root resolution, JSON IO, palette CSS, page/masthead chrome, pagination
-      profile.py                    detects/reconciles monitor/profile.json (additive only; no log schema in it)
+      profile.py                    detects/reconciles monitor/profile.json (additive only)
       logger.py                     appends one entry to operations.log; schema locked in code (REQUIRED/LEVELS/STATUSES)
       render_logs.py                renders operations.log -> paginated logs/*.html
       render_report.py              regenerates reports/template.html, paginated reports/*.html, dashboard index.html
@@ -32,7 +32,7 @@ Commands (`plugins/monitor/commands/*.md`) are thin prompts for the agent; the a
 
 ## Architecture — how the engine works when installed in a target project
 
-- **`monitor/profile.json` is the source of truth for project identity** (name, VCS, language, build/test commands, report KPI list) — the log schema is *not* part of it; that's locked in code in `logger.py` (`REQUIRED`/`LEVELS`/`STATUSES`), identical across every project. `/monitor:init` seeds the profile (auto-detected project info); `/monitor:update` reconciles it.
+- **`monitor/profile.json` is the source of truth for project identity** (name, VCS, language, build/test commands, report KPI list). The log schema lives in code in `logger.py` (`REQUIRED`/`LEVELS`/`STATUSES`), identical across every project. `/monitor:init` seeds the profile (auto-detected project info); `/monitor:update` reconciles it.
 - **Reconciliation is strictly additive.** `profile.py` only ever adds detected keys/fields and bumps `profileVersion` — it never removes, renames, or overwrites existing keys (hand edits win). This is what keeps template upgrades backward compatible: the profile is always a superset of every prior version.
 - **Init-gated.** Every script except `profile.py` calls `mlib.require_init()` and exits 2 if `monitor/profile.json` is missing. Commands must not run any other engine script before `/monitor:init`.
 - **Path model.** Each script resolves its own project root via `Path(__file__).resolve().parents[2]` when it lives at `monitor/scripts/<x>.py` inside the target project (all scripts also accept `--project-root` to override). Never hardcode a project path.
@@ -43,11 +43,11 @@ Commands (`plugins/monitor/commands/*.md`) are thin prompts for the agent; the a
 - **The logging/reporting policy is mirrored into memory.** `/monitor:init` and `/monitor:update` save it as compressed `feedback`-type memory (when a persistent memory system is available to the installing agent) so later sessions apply it without re-reading `SKILL.md` in full; the target project's `CLAUDE.md` gets the same policy as a durable fallback.
 - **Branch-aware.** `monitor_lib.git_branch()` shells out to `git rev-parse --abbrev-ref HEAD`; returns `""` outside a repo (rendered as "no branch") or `detached@<sha>` on detached HEAD. Every page shows the *current* branch in the masthead; every log entry/report records the branch its *change* was made on — these can legitimately differ.
 - **Shared page chrome lives in `monitor_lib.py`**: `PALETTE_CSS` (single source of truth for styling — sharp corners, dual light/dark theme via `prefers-color-scheme`, tabular numerals), `page()` (page shell), `branch_chip()`, `tabnav()`. All generated HTML is self-contained (no external assets, no `<script>` in reports).
-- **Companion skills are optional and degrade gracefully**: `ui-ux-pro-max` (not used for design — the UI is fixed via `mlib.PALETTE_CSS` and identical across every project, so there's nothing for it to design), `superpowers` (verification gate on reports → falls back to marking reports *unverified*), `graphify` (orientation/find related code → falls back to grep), `openwiki` (doc sync → skipped, noted in follow-ups), `find-skills`, `copywriting` (report prose → written plainly). The engine itself never requires any of them.
+- **Companion skills are optional and degrade gracefully**: `ui-ux-pro-max` (the UI is fixed via `mlib.PALETTE_CSS`, identical across every project), `superpowers` (verification gate on reports → falls back to marking reports *unverified*), `graphify` (orientation/find related code → falls back to grep), `openwiki` (doc sync → skipped, noted in follow-ups), `find-skills`, `copywriting` (report prose → written plainly). The engine itself never requires any of them.
 
 ## Editing the engine
 
-- Any change to the additive-reconcile guarantee in `profile.py` must preserve backward compatibility — never repurpose or remove a `since`-versioned field. The log schema locked in `logger.py` (`REQUIRED`/`LEVELS`/`STATUSES`) is intentionally not profile-driven — keep it that way.
+- Any change to the additive-reconcile guarantee in `profile.py` must preserve backward compatibility — never repurpose or remove a `since`-versioned field. The log schema lives in `logger.py` (`REQUIRED`/`LEVELS`/`STATUSES`) — keep it fixed in code, identical across every project.
 - Changes to `PALETTE_CSS` / `page()` in `monitor_lib.py` affect every generated page (Dashboard, Reports, Logs, and the report template) — check all three render scripts after editing shared chrome.
 - After changing `plugins/monitor/skills/monitor/`, bump `version` in `plugins/monitor/.claude-plugin/plugin.json` so installed marketplaces pick up the update via `/plugin marketplace update monitor-tools`.
 - `install-monitor.sh` and the plugin path must stay in sync: both ultimately expose `/monitor:init|log|report|record|update|clean-logs|clean-reports` — the plugin path via `$CLAUDE_PLUGIN_ROOT` + plugin namespace, the manual-copy path via commands nested under `.claude/commands/monitor/`.

@@ -51,9 +51,9 @@ engine scripts also fail fast (exit 2) when it is absent; only `profile.py`
 
 ## profile.json evolves additively
 `profile.json` carries project identity (name, VCS, language, build/test
-commands) and the report KPI list. The log schema is **not** profile-driven —
-it's locked in code in `logger.py` (see Logging below), identical across every
-project. Reconcile (`/monitor:update`) only ADDS detected keys/fields and bumps
+commands) and the report KPI list. The log schema lives in code in
+`logger.py` (see Logging below), identical across every project. Reconcile
+(`/monitor:update`) only ADDS detected keys/fields and bumps
 `profileVersion`; it never changes, removes, or renames existing keys. The
 profile is always a superset of every prior version — that is what keeps upgrades
 backward compatible.
@@ -70,7 +70,7 @@ field show no chip.
 - Log through the engine only — never hand-edit `operations.log`:
   `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--set k=v]`.
 - The schema is **locked in code** (`REQUIRED`/`LEVELS`/`STATUSES` constants in
-  `logger.py`) — not profile-driven, identical across every project. It
+  `logger.py`), identical across every project. It
   validates required fields and the `level`/`status` enums before writing.
 - Each entry is written newest-first with a `=`×80 separator and stamps the
   current branch; `render_logs.py` regenerates the Logs page from the log
@@ -205,7 +205,7 @@ compress the reminder, not the record.
 
 | Skill | Role | Fallback if absent |
 |---|---|---|
-| **ui-ux-pro-max** | not used for design — UI is fixed (`mlib.PALETTE_CSS`), identical across every project | n/a |
+| **ui-ux-pro-max** | UI is fixed (`mlib.PALETTE_CSS`), identical across every project | n/a |
 | **superpowers** | `verification-before-completion` gates reports on real build/test output | render but mark **unverified** |
 | **graphify** | orientation only — find related code (query/path/explain) | grep / raw reads |
 | **openwiki** | doc sync after commits | skip; note in follow-ups |

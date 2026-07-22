@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ title }} — {{ brand }} Report</title>
 <!--
-  monitor · FALLBACK report template.
-  Used when profile.json has not tailored monitor/reports/template.html yet, or
-  when ui-ux-pro-max is unavailable. Self-contained (inline CSS, no JS needed).
-  Placeholders: {{ title }} {{ subtitle }} {{ brand }} {{ date }} {{ commit }}
-  {{ status }} {{ status_class:pass|warn|fail|info }}. Fill the section cards.
+  monitor · static reference copy of the report template shape.
+  The live template.html is generated per project by render_report.py from
+  monitor_lib.PALETTE_CSS — this file is not read by any script. Self-contained
+  (inline CSS, no JS needed). Placeholders: {{ title }} {{ subtitle }}
+  {{ brand }} {{ date }} {{ commit }} {{ status }}
+  {{ status_class:pass|warn|fail|info }}. Fill the section cards.
 -->
 <style>
   :root {
