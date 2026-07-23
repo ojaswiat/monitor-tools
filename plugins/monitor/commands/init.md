@@ -33,11 +33,12 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    user-gated (on approval, run only their init, e.g. `graphify update .`,
    `/openwiki:wiki init`).
 6. Ensure `.gitignore` contains `monitor/scripts/__pycache__/`.
-7. Add or update a **monitor** section in the project's `CLAUDE.md` (create the
-   file if it does not exist). Write it between
-   `<!-- monitor:start -->` / `<!-- monitor:end -->` markers so re-running
-   `/monitor:init` or `/monitor:update` replaces the block instead of
-   duplicating it. Content:
+7. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`
+   at the project root (create whichever file doesn't exist — different
+   agents/tools read one or the other, so both get the same block). Write it
+   between `<!-- monitor:start -->` / `<!-- monitor:end -->` markers in each
+   file so re-running `/monitor:init` or `/monitor:update` replaces the block
+   instead of duplicating it. Same content in both files:
    ```markdown
    <!-- monitor:start -->
    ## monitor — operations log + reports
@@ -115,7 +116,8 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      the current branch into its base if the branch has unreported changes —
      don't wait to be asked. Why: reports are the per-branch decision record;
      merging without one loses the branch's rationale once it's squashed.
-   If no memory system is available, skip this step silently — the `CLAUDE.md`
-   block from step 7 is the fallback that keeps the policy discoverable.
+   If no memory system is available, skip this step silently — the
+   `CLAUDE.md`/`AGENTS.md` blocks from step 7 are the fallback that keeps the
+   policy discoverable.
 
 Report the created tree and the detected profile summary.

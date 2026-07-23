@@ -32,10 +32,12 @@ exactly —
    The template's design is fixed (`mlib.PALETTE_CSS`, identical across every
    project) — regeneration only adds new KPIs/sections from the profile, never
    a custom palette or layout.
-5. Refresh the `<!-- monitor:start -->` / `<!-- monitor:end -->` block in the
-   project's `CLAUDE.md` (same content as `/monitor:init` step 7) — replace the
-   block in place if present, append it if the file exists without one, or
-   skip silently if `CLAUDE.md` was deleted (don't recreate it here).
+5. Refresh the `<!-- monitor:start -->` / `<!-- monitor:end -->` block in
+   **both** `CLAUDE.md` and `AGENTS.md` (same content as `/monitor:init` step
+   7), independently per file — replace the block in place if present, append
+   it if a file exists without one, or skip that file silently if it was
+   deleted (don't recreate a deleted file here; that's init's job, not
+   update's).
 6. If a persistent memory system is available and already holds the monitor
    logging/reporting policy from a prior `/monitor:init`, refresh those
    entries in place (same content as `/monitor:init` step 8) rather than

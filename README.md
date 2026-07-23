@@ -1,4 +1,4 @@
-# monitor-tools
+# Monitor
 
 A Claude Code plugin marketplace distributing **`monitor`** — a portable logging + reporting workflow that gives any project a local `monitor/` folder (a **Dashboard** linking **Reports** and **Logs** pages), backed by a canonical text log with a schema locked in code, and a report template that evolves additively. The engine is **stdlib-only Python 3** — no pip installs, no external assets, no hardcoded paths.
 
@@ -9,7 +9,7 @@ A Claude Code plugin marketplace distributing **`monitor`** — a portable loggi
 - **Zero dependencies.** Pure Python 3 stdlib. No `pip install`, no CDN assets, no hardcoded project paths — the engine resolves its own root wherever it's copied.
 - **Backward-compatible by construction.** `monitor/profile.json` reconciles additively — only ever adds fields, never removes or renames. The log schema itself is locked in code and never migrated; a breaking change there is a new engine version.
 - **Branch-aware.** Every page shows the current git branch; every log entry and report records the branch its change was made on.
-- **Self-documenting install.** `/monitor:init` writes the logging/reporting policy into the target project's `CLAUDE.md` and, when a persistent memory system is available, mirrors it into memory — so the policy applies automatically without re-reading the skill spec every session.
+- **Self-documenting install.** `/monitor:init` writes the logging/reporting policy into the target project's `CLAUDE.md` and `AGENTS.md` (creating whichever is missing) and, when a persistent memory system is available, mirrors it into memory — so the policy applies automatically without re-reading the skill spec every session.
 - **Graceful degradation.** Optional companion skills (`ui-ux-pro-max`, `superpowers`, `graphify`, `openwiki`, `find-skills`, `copywriting`) are used when present and skipped cleanly when absent.
 
 ## What you get
@@ -41,7 +41,7 @@ In the target project, run once:
 ```
 /monitor:init
 ```
-This seeds `monitor/profile.json` (just the project's directory name — monitor's two jobs are log and report, it never detects language/build/test commands), copies the engine into `monitor/scripts/`, generates the Dashboard/Reports/Logs pages, writes the policy into `CLAUDE.md`, and mirrors it to memory when available. Every other command refuses to run until `monitor/profile.json` exists.
+This seeds `monitor/profile.json` (just the project's directory name — monitor's two jobs are log and report, it never detects language/build/test commands), copies the engine into `monitor/scripts/`, generates the Dashboard/Reports/Logs pages, writes the policy into `CLAUDE.md` and `AGENTS.md`, and mirrors it to memory when available. Every other command refuses to run until `monitor/profile.json` exists.
 
 From then on:
 ```
