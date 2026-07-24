@@ -27,40 +27,38 @@ itself and ships nowhere.
 
 ```
 /test-e2e
-  1. rm -rf examples/*, recreate examples/ empty (each run is a fresh drill,
-     not an accumulating history — the persistent artifact users actually
-     want is the combined HTML report, not old clones)
-  2. WebSearch fresh (no hardcoded repo list): find 1 small real
+  1. WebSearch fresh (no hardcoded repo list): find 1 small real
      Python CLI repo, 1 small real Node/JS CLI repo, 1 small real
      Go-or-docs-only repo
-  3. Spawn 3 Agent calls (subagent_type: general-purpose) in ONE message
-     so they run in parallel, run_in_background: true, no isolation flag
-     (plain agents — see "Why no worktree isolation" below):
-       Agent A → clone into examples/<python-slug>/   companions: NONE
-       Agent B → clone into examples/<node-slug>/      companions: SOME (2-3)
-       Agent C → clone into examples/<go-or-docs-slug>/ companions: ALL (6)
-  4. Wait for all 3 completion notifications (event-driven, no polling)
-  5. Read back each project's own monitor/ folder (profile.json,
+  2. Spawn 3 Agent calls (subagent_type: general-purpose) in ONE message
+     so they run in parallel, isolation: "worktree", run_in_background: true.
+     Each gets its own isolated git worktree of monitor-tools; inside that
+     worktree it works under its own examples/<slug>/ (same path convention
+     in every worktree, but each worktree is a physically separate checkout,
+     so the 3 test projects never collide on disk):
+       Agent A → examples/<python-slug>/    companions: NONE
+       Agent B → examples/<node-slug>/       companions: SOME (2-3)
+       Agent C → examples/<go-or-docs-slug>/ companions: ALL (6)
+  3. Wait for all 3 completion notifications (event-driven, no polling)
+  4. Read back each project's own monitor/ folder (profile.json,
      logs/operations.mtr, reports/*.html) plus each subagent's returned
-     summary
-  6. Invoke ui-ux-pro-max, then write one combined HTML report to
-     temp/test-e2e-runs/<YYYY-MM-DD>.html (gitignored, same as examples/)
-  7. SendUserFile the combined report
+     summary — from within its worktree path
+  5. Invoke ui-ux-pro-max, then write one combined HTML report to
+     temp/test-e2e-runs/<YYYY-MM-DD>.html (gitignored, in the main
+     working tree, not any worktree)
+  6. SendUserFile the combined report
 ```
 
-### Why no worktree isolation
+### Why worktree isolation
 
-`Agent` tool's `isolation: "worktree"` gives each subagent an isolated git
-checkout of *this* repo. But the requirement is that all 3 cloned test
-projects end up as sibling directories under one `examples/` folder in the
-*main* working tree, inspectable together afterward — worktrees don't share
-untracked directories with each other or with the main checkout, so that
-would scatter the 3 examples across invisible copies instead. Since
-`examples/*` are external clones with no relationship to monitor-tools' own
-git history (gitignored, same treatment as the old singular `example/`),
-there's nothing about them that needs git-level isolation — directory
-separation (each subagent confined to its own `examples/<slug>/` by prompt)
-is sufficient and is what the past manual drills already relied on.
+Each subagent gets `isolation: "worktree"` — a separate, isolated git
+checkout of monitor-tools per agent, so nothing one subagent does (installing
+companions, running arbitrary project commands, editing files) can collide
+with another subagent or with the main working tree. `examples/<slug>/`
+inside each worktree is just the on-disk convention for where that worktree's
+one cloned test project lives — it's gitignored so nothing about it needs
+committing, and worktree isolation means each of the 3 use that same relative
+path independently without ever touching each other's copy.
 
 ## Subagent prompt template
 
@@ -116,7 +114,8 @@ with real per-project data pulled from those files — not fabricated.
 
 - Hardcoding the 3 candidate repos (explicitly rejected — fresh WebSearch
   every run, matching the manual drills so far, accepting non-determinism)
-- Persisting cross-run history/trends (each run wipes `examples/` first)
+- Persisting cross-run history/trends (each run gets 3 fresh worktrees;
+  nothing accumulates in the main working tree except the dated HTML report)
 - Making this skill part of the shipped `monitor` plugin — it stays a
   project-local skill in `monitor-tools`, since it depends on this repo's own
   `install-monitor.sh` and companion-source knowledge
