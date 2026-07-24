@@ -2,9 +2,9 @@
 
 # Monitor
 
-**A portable logging + reporting workflow for Claude Code — one `monitor/` folder, a Dashboard, and nothing but stdlib Python underneath.**
+**A portable logging + reporting workflow for Claude Code — a session-to-session memory for agentic work that git was never built to hold.**
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue)](plugins/monitor/.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue)](plugins/monitor/.claude-plugin/plugin.json)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](#why-monitor)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
@@ -12,6 +12,15 @@
 </div>
 
 Monitor gives any project a local `monitor/` folder — a **Dashboard** linking a **Reports** page (one self-contained HTML report per task or change) and a **Logs** page (a canonical, append-only text log rendered to filterable, paginated HTML). It's a Claude Code plugin, but the engine underneath is plain Python 3 stdlib with zero dependencies — no `pip install`, no CDN assets, no server.
+
+## Monitor and git
+
+Git already does what it does well: timestamped, immutable, chained history of every commit that made the cut. Monitor doesn't replace that, and doesn't try to be a second source of truth for what shipped — git stays authoritative there.
+
+What git can't hold is everything that happened *before* something became a commit worth keeping: the approach that was tried and abandoned, the decision and the alternative it beat, a failed run logged honestly with `status=failure`. None of that reaches `git add`, and a squash-merge erases whatever per-commit reasoning did make it in. Monitor's log is append-only specifically so that record survives past the squash.
+
+> [!NOTE]
+> Monitor doesn't replace git. It records the part git structurally can't: everything that happened on the way to what you kept.
 
 ## Why monitor
 
@@ -72,8 +81,8 @@ From then on:
 | `/monitor:report` | Author one HTML report and rebuild the Reports index. |
 | `/monitor:record` | Log an operation and, if code changed, write a report — in one step. |
 | `/monitor:update` | Additively reconcile the profile and regenerate the template/indexes. |
-| `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
-| `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |
+| `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
+| `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
 
 ## What you get
 

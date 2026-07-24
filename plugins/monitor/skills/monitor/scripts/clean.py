@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Delete the most recent N logs or reports, then re-render the affected pages.
+"""Delete the oldest N logs or reports, then re-render the affected pages.
 
 Usage:
   python3 clean.py --project-root <repo> --logs N
@@ -26,10 +26,10 @@ def clean_logs(root: Path, n: int, dry: bool) -> int:
         print("no operations.mtr")
         return 0
     text = log_path.read_text(encoding="utf-8")
-    blocks = [b for b in text.split(SEPARATOR + "\n") if b.strip("\n")]
+    blocks = [b for b in text.split(SEPARATOR + "\n") if b.strip("\n")]  # newest-first
     n = max(0, min(n, len(blocks)))
-    kept = blocks[n:]
-    print(f"removing {n} newest of {len(blocks)} log entries")
+    kept = blocks[:len(blocks) - n]
+    print(f"removing {n} oldest of {len(blocks)} log entries")
     if dry:
         return 0
     new_text = "".join(b + SEPARATOR + "\n" for b in kept)
@@ -42,9 +42,9 @@ def clean_reports(root: Path, n: int, dry: bool) -> int:
     mdir = mlib.monitor_dir(root)
     items = render_report.scan_reports(root)  # already newest-first
     n = max(0, min(n, len(items)))
-    removed = items[:n]
-    kept = items[n:]
-    print(f"removing {n} newest of {len(items)} reports:")
+    kept = items[:len(items) - n]
+    removed = items[len(items) - n:]
+    print(f"removing {n} oldest of {len(items)} reports:")
     for it in removed:
         print(f"  - {it['file']}  ({it['title']})")
     if dry:
@@ -63,8 +63,8 @@ def clean_reports(root: Path, n: int, dry: bool) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     mlib.add_root_arg(ap)
-    ap.add_argument("--logs", type=int, help="Delete the newest N log entries")
-    ap.add_argument("--reports", type=int, help="Delete the newest N reports")
+    ap.add_argument("--logs", type=int, help="Delete the oldest N log entries")
+    ap.add_argument("--reports", type=int, help="Delete the oldest N reports")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     root = mlib.resolve_root(args)

@@ -36,8 +36,8 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 | `/monitor:log` | Append one operation entry to the log. |
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
 | `/monitor:record` | Log **and** (when code changed) report, in one step. |
-| `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
-| `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |
+| `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
+| `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
 
 Commands are agent-only. Internally the agent runs the engine via
 `python3 monitor/scripts/<script>.py [args]` (each resolves its own project
@@ -220,14 +220,24 @@ compress the reminder, not the record.
 ## Companion skills (all optional, with fallbacks)
 `usage.md` records which are present and how monitor uses each.
 
-| Skill | Role | Fallback if absent |
-|---|---|---|
-| **ui-ux-pro-max** | UI is fixed (`mlib.PALETTE_CSS`), identical across every project | n/a |
-| **superpowers** | `verification-before-completion` gates reports on real build/test output | render but mark **unverified** |
-| **graphify** | orientation only — find related code (query/path/explain) | grep / raw reads |
-| **openwiki** | doc sync after commits | skip; note in follow-ups |
-| **find-skills** | improve skill discovery at init | recommend from this table |
-| **copywriting** | polish report prose | write plainly |
+| Skill | Role | Fallback if absent | Install (project-scoped preferred) |
+|---|---|---|---|
+| **ui-ux-pro-max** | UI is fixed (`mlib.PALETTE_CSS`), identical across every project | n/a | Plugin marketplace `nextlevelbuilder/ui-ux-pro-max-skill`, plugin `ui-ux-pro-max` |
+| **superpowers** | `verification-before-completion` gates reports on real build/test output | render but mark **unverified** | Plugin marketplace `anthropics/claude-plugins-official`, plugin `superpowers` |
+| **openwiki** | doc sync after commits | skip; note in follow-ups | Plugin marketplace `SoulKyu/openwiki-cc`, plugin `openwiki` |
+| **find-skills** | improve skill discovery at init | recommend from this table | `npx skills add vercel-labs/skills@find-skills` (no `-g`) |
+| **copywriting** | polish report prose | write plainly | `npx skills add coreyhaines31/marketingskills@copywriting` (no `-g`) |
+| **graphify** | orientation only — find related code (query/path/explain) | grep / raw reads | `pip install graphifyy && graphify install` — **global only**, no project-scoped install exists |
+
+The three plugins install project-scoped via `.claude/settings.json`'s
+`extraKnownMarketplaces` (registers the marketplace source so every clone of
+the repo gets it, not just the machine that ran init) plus `enabledPlugins`
+(turns the plugin on). The two `npx skills` packages install project-scoped by
+omitting `-g` — they land under the project's own skills path and are
+committed with the repo. `graphify` has no project-scoped install path in its
+own installer; it always goes to `~/.claude/skills/graphify` via `pip`/`pipx`,
+so it's the one companion that's necessarily global. See "Installing
+companions" in `/monitor:init` for the actual install step.
 
 The engine never requires any companion — it is stdlib Python. Language servers
 and other project-specific plugins are intentionally out of scope.
