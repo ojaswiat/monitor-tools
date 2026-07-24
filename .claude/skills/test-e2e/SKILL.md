@@ -45,7 +45,10 @@ session but run 3-at-once with varying companion-install levels.
    2. From the repo root (one level up from {project_dir}), run:
       ./install-monitor.sh {project_dir}
    3. Companion skill level for this run: {companion_level}.
-      - If "none": skip this step entirely.
+      - If "none": don't install any companion — but still let monitor's own
+        `/monitor:init` probing step run normally and write `monitor/usage.md`
+        showing all 6 as ABSENT. "None installed" means nothing to install,
+        not "skip the probe" — those are different steps.
       - If "some": install superpowers and graphify only, project-scoped:
         - superpowers: merge into {project_dir}/.claude/settings.json —
           "extraKnownMarketplaces": {"claude-plugins-official": {"source":
@@ -103,7 +106,9 @@ session but run 3-at-once with varying companion-install levels.
    inconsistencies, compliance gaps) drawn from both the subagent's report
    and your own spot-check in step 4.
 
-6. **Send the report** to the user with `SendUserFile`, `status: "proactive"`.
+6. **Publish the report** with the `Artifact` tool (`file_path` pointing at
+   the HTML file just written, a short `title`/`description`, and a
+   `favicon`). `SendUserFile` does not exist in this harness — don't use it.
 
 ## Notes
 
