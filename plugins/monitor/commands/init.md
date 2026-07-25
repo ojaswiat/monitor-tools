@@ -71,13 +71,11 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    whatever was just installed.
 6. Ensure `.gitignore` contains `monitor/scripts/__pycache__/` — and **only**
    that. `monitor/` itself (`profile.json`, `logs/`, `reports/`) is committed
-   by default in every installed project — never add a blanket `monitor/` (or
-   `/monitor/`) ignore rule here. (The one exception anywhere is
-   `monitor-tools`' own source repo dogfooding itself, which gitignores its
-   top-level `monitor/` specifically because it already ships the plugin
-   source under `plugins/monitor/` and its own `CLAUDE.md` forbids committing
-   generated data from that repo — that's a repo-specific carve-out, never a
-   pattern to copy into a normal installed project.)
+   by default — never add a blanket `monitor/` (or `/monitor/`) ignore rule.
+   If `.gitignore` already has one — a standalone `monitor/`, `/monitor/`,
+   `monitor`, or `/monitor` line (not `monitor/scripts/...` or any other
+   narrower path) — remove it, and tell the user why: `monitor/` needs to be
+   committed for logs and reports to work as a session-to-session record.
 7. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`
    at the project root (create whichever file doesn't exist — different
    agents/tools read one or the other, so both get the same block). Write it
