@@ -117,6 +117,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    | `/monitor:log` | Append one operation entry to the log. |
    | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
    | `/monitor:record` | Log, and if code changed, report — in one step. |
+   | `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
    | `/monitor:update` | Re-detect + additively reconcile the profile, refresh assets. |
    | `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
    | `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |

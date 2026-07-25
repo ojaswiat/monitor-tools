@@ -36,6 +36,7 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 | `/monitor:log` | Append one operation entry to the log. |
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
 | `/monitor:record` | Log **and** (when code changed) report, in one step. |
+| `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
 | `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
 | `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
 
