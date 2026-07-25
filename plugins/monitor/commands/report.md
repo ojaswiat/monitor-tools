@@ -21,7 +21,12 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    `monitor/reports/<YYYY-MM-DD>-<slug>.html`. The template's design is fixed
    (`mlib.PALETTE_CSS`, identical across every project) — only fill in content.
    Fill every `{{ branch }}` placeholder with the
-   branch the work was done on (`git rev-parse --abbrev-ref HEAD`). **Only the
+   branch the work was done on (`git rev-parse --abbrev-ref HEAD`). Fill
+   `{{ commit }}` with the range of commits this report covers, as
+   `<first-short-sha>..<last-short-sha>` (e.g. `58e342a..bd3ecb7`) — the
+   first commit unique to this branch's work through the current `HEAD`; if
+   the report covers exactly one commit, use just that single short sha with
+   no range. **Only the
    text content changes** — a request about tone, audience, reading level, or
    language (e.g. "explain it like I'm 11") changes the words in each section,
    never the `<style>` block, palette, layout, or class names. The design is
