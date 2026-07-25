@@ -130,8 +130,8 @@ to how much a cold-start agent would actually need.
 Every log entry automatically records the git `HEAD` short sha at the moment
 it's logged (`last_commit_hash`, captured by `logger.py` itself — no manual
 step, works even for entries the user triggers by hand). It's searchable via
-`/monitor:search --query <sha>` and is what reports use to fill their
-`{{ commit }}` range.
+`/monitor:search <sha>` and pins each entry to the commit the working tree
+was at when it was logged.
 
 **Formatting — never write a run-on list.** Join fields with a literal `\n`
 inside the `--details` string, **one field per line** — do **not** write

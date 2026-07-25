@@ -24,9 +24,9 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    branch the work was done on (`git rev-parse --abbrev-ref HEAD`). Fill
    `{{ commit }}` with the range of commits this report covers, as
    `<first-short-sha>..<last-short-sha>` (e.g. `58e342a..bd3ecb7`) — the
-   first commit unique to this branch's work through the current `HEAD`; if
-   the report covers exactly one commit, use just that single short sha with
-   no range. **Only the
+   first commit unique to this branch's work through the current `HEAD` (e.g.
+   `git log --oneline <base-branch>..HEAD`); if the report covers exactly one
+   commit, use just that single short sha with no range. **Only the
    text content changes** — a request about tone, audience, reading level, or
    language (e.g. "explain it like I'm 11") changes the words in each section,
    never the `<style>` block, palette, layout, or class names. The design is

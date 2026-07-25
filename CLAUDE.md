@@ -15,7 +15,7 @@ This repo has no build step, package manager, or test suite. There is nothing to
 install-monitor.sh                  fallback installer (copy without a marketplace)
 plugins/monitor/
   .claude-plugin/plugin.json        plugin manifest (name, version, author) — bump version on release
-  commands/*.md                     flat command files -> /monitor:init|log|report|record|update|clean-logs|clean-reports
+  commands/*.md                     flat command files -> /monitor:init|log|report|record|search|update|clean-logs|clean-reports
   skills/monitor/
     SKILL.md                        the skill spec agents read to operate monitor
     scripts/                        the engine (all stdlib Python 3, no deps)
@@ -51,7 +51,7 @@ Commands (`plugins/monitor/commands/*.md`) are thin prompts for the agent; the a
 - Any change to the additive-reconcile guarantee in `profile.py` must preserve backward compatibility — never repurpose or remove a `since`-versioned field. The log schema lives in `logger.py` (`REQUIRED`/`LEVELS`/`STATUSES`) — keep it fixed in code, identical across every project.
 - Changes to `PALETTE_CSS` / `page()` in `monitor_lib.py` affect every generated page (Dashboard, Reports, Logs, and the report template) — check all three render scripts after editing shared chrome.
 - After changing `plugins/monitor/skills/monitor/`, bump `version` in `plugins/monitor/.claude-plugin/plugin.json` so installed marketplaces pick up the update via `/plugin marketplace update monitor-tools`.
-- `install-monitor.sh` and the plugin path must stay in sync: both ultimately expose `/monitor:init|log|report|record|update|clean-logs|clean-reports` — the plugin path via `$CLAUDE_PLUGIN_ROOT` + plugin namespace, the manual-copy path via commands nested under `.claude/commands/monitor/`.
+- `install-monitor.sh` and the plugin path must stay in sync: both ultimately expose `/monitor:init|log|report|record|search|update|clean-logs|clean-reports` — the plugin path via `$CLAUDE_PLUGIN_ROOT` + plugin namespace, the manual-copy path via commands nested under `.claude/commands/monitor/`.
 - Never commit a generated per-project `monitor/` data folder (profile.json, logs, reports) from this repo or from a consumer project — it's project-local generated content, not portable engine code.
 
 ## Testing changes locally

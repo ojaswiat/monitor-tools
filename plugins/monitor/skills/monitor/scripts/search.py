@@ -17,6 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
+import logger
 import monitor_lib as mlib
 import render_logs
 
@@ -32,6 +33,8 @@ def _haystack(e: dict) -> str:
 def search(root: Path, query: str, *, branch: str | None = None,
            status: str | None = None, level: str | None = None,
            limit: int = 20) -> list[dict]:
+    if limit <= 0:
+        return []
     log_path = mlib.monitor_dir(root) / "logs" / "operations.mtr"
     text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
     entries = [e for e in render_logs.parse_log(text) if e.get("fragment") is None]
@@ -77,8 +80,8 @@ def main() -> int:
                     help="Case-insensitive substring, matched across operation, "
                          "tool, summary, task, details, branch, commit, and extra fields.")
     ap.add_argument("--branch", default=None)
-    ap.add_argument("--status", default=None, choices=("success", "partial", "failure"))
-    ap.add_argument("--level", default=None, choices=("DEBUG", "INFO", "WARNING", "ERROR"))
+    ap.add_argument("--status", default=None, choices=logger.STATUSES)
+    ap.add_argument("--level", default=None, choices=logger.LEVELS)
     ap.add_argument("--limit", type=int, default=20)
     args = ap.parse_args()
     root = mlib.resolve_root(args)
