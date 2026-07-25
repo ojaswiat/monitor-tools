@@ -138,6 +138,19 @@ def git_branch(root: Path) -> str:
     return name
 
 
+def git_last_commit(root: Path) -> str:
+    """Short sha of HEAD at call time, or "" when unavailable (no repo, or a
+    repo with no commits yet). Mirrors git_branch()'s never-raises contract."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5)
+    except Exception:  # noqa: BLE001 — git missing/unusable is not an error here
+        return ""
+    sha = out.stdout.strip()
+    return sha if out.returncode == 0 and sha else ""
+
+
 # The single source of truth for the report/log palette. Sharp corners, dual
 # theme (light: near-black on off-white; dark: yellow on near-black), tabular
 # numerals. Kept verbatim in generated pages so each file is self-contained.

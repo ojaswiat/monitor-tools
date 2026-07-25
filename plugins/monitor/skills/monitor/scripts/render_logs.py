@@ -81,7 +81,8 @@ def parse_log(text: str) -> list[dict]:
         tool, summary = _extract_tool(rest)
         e = {"timestamp": timestamp, "level": level, "operation": operation,
              "tool": tool, "summary": summary, "status": status,
-             "task": "", "files": [], "details": "", "branch": "", "extra": {}}
+             "task": "", "files": [], "details": "", "branch": "", "extra": {},
+             "last_commit_hash": ""}
         for line in lines[1:]:
             if ":" not in line:
                 continue
@@ -89,6 +90,8 @@ def parse_log(text: str) -> list[dict]:
             key, val = key.strip(), val.strip()
             if key == "branch":
                 e["branch"] = val
+            elif key == "last_commit_hash":
+                e["last_commit_hash"] = val
             elif key == "task":
                 e["task"] = val
             elif key == "files":
@@ -130,6 +133,8 @@ def _card(e: dict) -> str:
     # entry predates the field, so old entries stay clean rather than look wrong.
     if e.get("branch"):
         p.append("      " + mlib.branch_chip(e["branch"]))
+    if e.get("last_commit_hash"):
+        p.append(f'      <span class="toolchip">commit: {mlib.esc(e["last_commit_hash"])}</span>')
     for k, v in e["extra"].items():
         p.append(f'      <span class="xchip">{mlib.esc(k)}: {mlib.esc(v)}</span>')
     p.append('      <span class="spacer"></span>')

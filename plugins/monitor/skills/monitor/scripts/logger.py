@@ -63,6 +63,8 @@ def render_entry(entry: dict) -> str:
     ]
     if entry.get("branch"):
         lines.append(f"branch:  {entry['branch']}")
+    if entry.get("last_commit_hash"):
+        lines.append(f"last_commit_hash: {entry['last_commit_hash']}")
     if entry.get("task"):
         lines.append(f"task:    {entry['task']}")
     if entry.get("files"):
@@ -76,11 +78,13 @@ def render_entry(entry: dict) -> str:
 
 def log_operation(root: Path, *, operation, tool, summary, status,
                   level="INFO", details="", files=None, task="", extra=None,
-                  branch=None) -> None:
+                  branch=None, last_commit_hash=None) -> None:
     # The branch the change was made on. Detected at log time so every entry
     # records where it happened; --branch overrides, "" when not in a repo.
     if branch is None:
         branch = mlib.git_branch(root)
+    if last_commit_hash is None:
+        last_commit_hash = mlib.git_last_commit(root)
     entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3],
         "level": sanitize(level), "operation": sanitize(operation),
@@ -89,6 +93,7 @@ def log_operation(root: Path, *, operation, tool, summary, status,
         "task": sanitize(task), "details": sanitize(details),
         "files": [sanitize(f) for f in (files or [])],
         "extra": {sanitize(k): sanitize(v) for k, v in (extra or {}).items()},
+        "last_commit_hash": sanitize(last_commit_hash),
     }
     validate(entry)
     log_path = mlib.monitor_dir(root) / "logs" / "operations.mtr"
