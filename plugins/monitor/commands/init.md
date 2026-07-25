@@ -28,10 +28,47 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
 5. Probe companion skills (graphify, superpowers, openwiki, ui-ux-pro-max,
    find-skills, copywriting) via `.claude/settings.json` enabledPlugins and the
    skills folder. Write `monitor/usage.md`: for each, PRESENT/ABSENT and how
-   monitor uses it here (from the SKILL.md companion table). For absent high-fit
-   skills, recommend them with the enable command — installation stays
-   user-gated (on approval, run only their init, e.g. `graphify update .`,
-   `/openwiki:wiki init`).
+   monitor uses it here (from the SKILL.md companion table). For absent
+   high-fit skills, recommend them and offer to install now — installation
+   stays user-gated, never automatic.
+
+   **Installing companions (optional, only on explicit user approval):**
+   Ask once, listing which absent skills you'd install and how, before
+   running anything. Prefer project-scoped install so every clone of the
+   repo gets the same companions, not just this machine:
+   - **ui-ux-pro-max / superpowers / openwiki** (plugins): add the
+     marketplace + enable the plugin in the project's `.claude/settings.json`
+     — merge in (don't clobber existing keys):
+     ```json
+     {
+       "extraKnownMarketplaces": {
+         "ui-ux-pro-max-skill": {"source": {"source": "github", "repo": "nextlevelbuilder/ui-ux-pro-max-skill"}},
+         "claude-plugins-official": {"source": {"source": "github", "repo": "anthropics/claude-plugins-official"}},
+         "openwiki-cc": {"source": {"source": "github", "repo": "SoulKyu/openwiki-cc"}}
+       },
+       "enabledPlugins": {
+         "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+         "superpowers@claude-plugins-official": true,
+         "openwiki@openwiki-cc": true
+       }
+     }
+     ```
+     Only add entries for skills the user approved; leave others out.
+   - **find-skills / copywriting** (skills-CLI packages): install
+     project-scoped by omitting `-g` (lands under the project, committed with
+     the repo, shared with every clone):
+     ```bash
+     npx skills add vercel-labs/skills@find-skills
+     npx skills add coreyhaines31/marketingskills@copywriting
+     ```
+   - **graphify**: no project-scoped install exists — its own installer
+     always targets `~/.claude/skills/graphify`, so this one is necessarily
+     global, on approval:
+     ```bash
+     pip install graphifyy && graphify install
+     ```
+   After installing, re-probe and update `monitor/usage.md` to PRESENT for
+   whatever was just installed.
 6. Ensure `.gitignore` contains `monitor/scripts/__pycache__/`.
 7. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`
    at the project root (create whichever file doesn't exist — different
@@ -81,8 +118,8 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
    | `/monitor:record` | Log, and if code changed, report — in one step. |
    | `/monitor:update` | Re-detect + additively reconcile the profile, refresh assets. |
-   | `/monitor:clean-logs <N>` | Delete the newest N log entries; re-render Logs. |
-   | `/monitor:clean-reports <N>` | Delete the newest N reports; re-render Reports + Dashboard. |
+   | `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
+   | `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
 
    **Rules:**
    - Every command except `/monitor:init` requires `monitor/profile.json` to

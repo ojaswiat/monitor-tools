@@ -1,8 +1,8 @@
 ---
-description: Delete the most recent N log entries and re-render the Logs page.
+description: Delete the oldest N log entries and re-render the Logs page.
 ---
 
-Delete the newest **$ARGUMENTS** log entries via the monitor engine.
+Delete the oldest **$ARGUMENTS** log entries via the monitor engine.
 
 **PRECONDITION — monitor must be initialised (check this FIRST).**
 Verify `monitor/profile.json` exists (`test -f monitor/profile.json`). If it does
@@ -19,5 +19,5 @@ exactly —
    and show the user how many of how many entries will be removed.
 3. On confirmation, run without `--dry-run`:
    `python3 monitor/scripts/clean.py --project-root . --logs <N>`
-   (removes the newest N entries from `operations.mtr` and re-renders the Logs page).
+   (removes the oldest N entries from `operations.mtr` and re-renders the Logs page).
 4. Report the new entry count.

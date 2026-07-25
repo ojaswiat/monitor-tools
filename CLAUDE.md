@@ -24,7 +24,7 @@ plugins/monitor/
       logger.py                     appends one entry to operations.mtr; schema locked in code (REQUIRED/LEVELS/STATUSES)
       render_logs.py                renders operations.mtr -> paginated logs/*.html
       render_report.py              regenerates reports/template.html, paginated reports/*.html, dashboard index.html
-      clean.py                      deletes newest N logs/reports, re-renders affected pages
+      clean.py                      deletes oldest N logs, oldest N reports, re-renders affected pages
     assets/base_template.html       fallback report template
 ```
 
