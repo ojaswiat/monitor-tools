@@ -106,6 +106,11 @@ def log_operation(root: Path, *, operation, tool, summary, status,
         render_logs.render(root)
     except Exception as err:  # noqa: BLE001 — best-effort view refresh
         print(f"warning: could not refresh Logs page: {err}", file=sys.stderr)
+    try:
+        import render_report
+        render_report.refresh_dashboard(root)
+    except Exception as err:  # noqa: BLE001 — best-effort view refresh
+        print(f"warning: could not refresh Dashboard: {err}", file=sys.stderr)
 
 
 def main() -> int:

@@ -26,7 +26,9 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    `--set`. Structure `--details` yourself (labeled lines / numbered /
    bulleted, joined by literal `\n`) — it's stored and rendered as given. The
    **branch** is recorded automatically — pass `--branch <name>` only to
-   override it.
+   override it. `logger.py` itself refreshes the Logs page and the
+   Dashboard's KPIs after every call — don't separately run `render_logs.py`
+   here, it's redundant.
 2. **Report** — only if code changed or the user explicitly asked. Gate on
    `superpowers:verification-before-completion` if available (else mark the report
    status **unverified**). Author it from `monitor/reports/template.html` into

@@ -274,7 +274,8 @@ def render_reports_index(profile: dict, items: list[dict], root: Path,
                  '\n      </tbody></table></div>') if page_items else \
                 '  <div class="empty">No reports yet.</div>'
         table += "\n" + mlib.pagination_nav(page_num, total_pages, total)
-        footer = ('  <footer><span>' + str(total) + ' reports.</span>'
+        noun = "report" if total == 1 else "reports"
+        footer = ('  <footer><span>' + str(total) + f' {noun}.</span>'
                   '<span><a href="../index.html">← Dashboard</a> · '
                   '<a href="#top">↑ Back to Top</a></span></footer>')
         title = "Reports" if total_pages <= 1 else f"Reports (page {page_num}/{total_pages})"
@@ -313,6 +314,20 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
     out = mlib.page(f"{brand} · Monitor", brand, "info", "Monitor", header, body,
                     footer, branch=branch)
     (mdir / "index.html").write_text(out, encoding="utf-8")
+
+
+def refresh_dashboard(root: Path) -> None:
+    """Lightweight Dashboard-only refresh — recomputes both KPIs (log count
+    reads operations.mtr fresh inside render_dashboard(); report count comes
+    from scan_reports()) and rewrites just index.html. Called by logger.py
+    after every log entry so the Dashboard's "Log entries" KPI doesn't lag
+    until the next report — render_all() below is the heavier report-time
+    path that also rebuilds template.html and the Reports index, neither of
+    which changes on a log-only entry."""
+    profile = mlib.load_profile(root)
+    branch = mlib.git_branch(root)
+    n_reports = len(scan_reports(root))
+    render_dashboard(profile, n_reports, root, branch)
 
 
 def render_all(root: Path) -> None:
