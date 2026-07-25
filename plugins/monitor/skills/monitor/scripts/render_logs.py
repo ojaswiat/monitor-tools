@@ -188,7 +188,8 @@ def build_html(page_entries: list[dict], brand: str, branch: str, *, total: int,
     else:
         body = '  <div class="empty">No operations logged yet.</div>'
     body += "\n" + mlib.pagination_nav(page_num, total_pages, total)
-    footer = (f'  <footer><span>Rendered from monitor/logs/operations.mtr · {total} entries.</span>'
+    noun = "entry" if total == 1 else "entries"
+    footer = (f'  <footer><span>Rendered from monitor/logs/operations.mtr · {total} {noun}.</span>'
               f'<span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>')
     title = "Logs" if total_pages <= 1 else f"Logs (page {page_num}/{total_pages})"
     return mlib.page(f"{title} — {brand} Monitor", brand, "info", "Monitor · Logs",

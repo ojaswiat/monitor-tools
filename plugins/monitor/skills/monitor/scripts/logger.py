@@ -149,6 +149,7 @@ def main() -> int:
     except ValueError as err:
         print(f"log entry rejected: {err}", file=sys.stderr)
         return 1
+    print(f"logged: {args.operation} ({args.status})")
     return 0
 
 
