@@ -43,9 +43,4 @@ exactly —
    entries in place (same content as `/monitor:init` step 8) rather than
    duplicating them. If none exist yet, save them now. If no memory system is
    available, skip silently.
-7. **Check `.gitignore` for a blanket `monitor/` rule and remove it.**
-   A standalone `monitor/`, `/monitor/`, `monitor`, or `/monitor` line (not
-   `monitor/scripts/...` or any other narrower path) means `monitor/` isn't
-   being committed. `monitor/` is committed by default — delete any such
-   line and tell the user what was removed and why.
-8. Report the profile diff and which assets were regenerated.
+7. Report the profile diff and which assets were regenerated.
