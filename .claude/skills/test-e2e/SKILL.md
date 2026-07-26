@@ -35,7 +35,7 @@ session but run 3-at-once with varying companion-install levels.
    | Agent | Language | companion_level |
    |---|---|---|
    | A | Python repo | `none` |
-   | B | Node repo | `some` (install `superpowers` + `graphify` only) |
+   | B | Node repo | `some` (install `superpowers` only — see step 3) |
    | C | Go-or-docs repo | `all` (install all 6) |
 
    If any of the 3 `Agent` calls comes back denied by the auto-mode
@@ -48,7 +48,11 @@ session but run 3-at-once with varying companion-install levels.
    ```
    You're doing a real end-to-end usage test of a Claude Code plugin called
    "monitor" inside a fresh clone of a small open-source project. Work only
-   inside this project's folder — don't touch anything outside it.
+   inside this project's folder — don't touch anything outside it. Never
+   run a command that reads or lists paths outside it either — no
+   `find`/`ls`/`grep` rooted at `/`, `~`, or any home-directory folder
+   (Documents, Desktop, Downloads, etc.); those trigger OS permission
+   prompts on the user's machine that have nothing to do with this test.
 
    1. Clone {repo_url} into {project_dir} (relative to the repo root you're
       in), then cd into it. Verify the clone succeeded and contains real
@@ -62,15 +66,18 @@ session but run 3-at-once with varying companion-install levels.
         `/monitor:init` probing step run normally and write `monitor/usage.md`
         showing all 6 as ABSENT. "None installed" means nothing to install,
         not "skip the probe" — those are different steps.
-      - If "some": install superpowers and graphify only, project-scoped:
+      - If "some": install superpowers only, project-scoped:
         - superpowers: merge into {project_dir}/.claude/settings.json —
           "extraKnownMarketplaces": {"claude-plugins-official": {"source":
           {"source": "github", "repo": "anthropics/claude-plugins-official"}}},
           "enabledPlugins": {"superpowers@claude-plugins-official": true}
-        - graphify: pip install graphifyy && graphify install (global —
-          only needs doing once per machine, safe to re-run)
-      - If "all": install all 6 companions, project-scoped where a
-        project-scoped path exists:
+        - graphify has no project-scoped install path (it only installs
+          globally, outside this repo) — leave it uninstalled and let the
+          probe record it ABSENT, same as any other companion you're not
+          installing at this level.
+      - If "all": install the 5 companions that have a project-scoped
+        path (skip graphify — see above, it can't be installed without
+        touching global machine state):
         - ui-ux-pro-max: marketplace nextlevelbuilder/ui-ux-pro-max-skill,
           plugin ui-ux-pro-max — same extraKnownMarketplaces/enabledPlugins
           pattern as above
@@ -81,7 +88,6 @@ session but run 3-at-once with varying companion-install levels.
           from inside {project_dir}, no -g flag)
         - copywriting: npx skills add coreyhaines31/marketingskills@copywriting
           (same, no -g)
-        - graphify: pip install graphifyy && graphify install (global)
    4. Now act like a real developer who just opened this project, with no
       special knowledge of monitor beyond what you discover in the project
       itself. Look around, pick several small real things worth doing (a
@@ -141,6 +147,10 @@ session but run 3-at-once with varying companion-install levels.
   copied into `plugins/monitor/`.
 - Repos are found fresh every run — don't reuse or hardcode candidates from
   a previous run.
+- **The orchestrator (you) is bound by the same containment rule as the
+  subagents.** Don't run `find`/`ls`/`grep` rooted outside this repo (`/`,
+  `~`, or any home-directory folder) while investigating drill state —
+  scope every lookup to this repo's own path.
 - **After publishing the report, run `git worktree list`.** Each
   subagent's worktree is disposable, and the harness usually auto-prunes
   it once the subagent stops — but not always: stray worktrees from a past
