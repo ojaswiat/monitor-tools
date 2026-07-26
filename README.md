@@ -4,7 +4,7 @@
 
 **A portable logging + reporting workflow for Claude Code — a session-to-session memory for agentic work that git was never built to hold.**
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue)](plugins/monitor/.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-1.11.2-blue)](plugins/monitor/.claude-plugin/plugin.json)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](#why-monitor)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)

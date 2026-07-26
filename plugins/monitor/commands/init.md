@@ -173,6 +173,13 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      report...` line may appear at the start of a turn. That is monitor's
      pending-state gate reporting unlogged/unreported work, not a bug —
      answer Y to record it now, or N to defer.
+   - **Never record development history, version changelogs, or reasoning
+     leakage in any user-facing documentation** (READMEs, skill files,
+     this project's own `CLAUDE.md`/`AGENTS.md`, generated docs). Write
+     every doc as clean, state-only content describing *current* behavior —
+     never "this used to work differently" or "version X did Y before it
+     was removed." Version history belongs in git commits only. The
+     verbose *why* belongs in monitor's logs/reports, not in shipped docs.
    <!-- monitor:end -->
    ```
 9. **If a persistent memory system is available to you** (a memory directory
