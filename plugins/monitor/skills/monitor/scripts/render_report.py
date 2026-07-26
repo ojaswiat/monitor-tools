@@ -356,6 +356,11 @@ def main() -> int:
         rel = args.lock_report.split("reports/", 1)[-1]
         changed = lock_report_style(root, rel)
         print(f"{'corrected' if changed else 'already canonical'}: {args.lock_report}")
+        try:
+            import pending
+            pending.clear_report(root)
+        except Exception as err:  # noqa: BLE001 — best-effort pending-state update
+            print(f"warning: could not update pending state: {err}", file=sys.stderr)
         return 0
     render_all(root)
     print("regenerated template.html, reports/index.html, index.html")

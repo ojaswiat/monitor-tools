@@ -111,6 +111,12 @@ def log_operation(root: Path, *, operation, tool, summary, status,
         render_report.refresh_dashboard(root)
     except Exception as err:  # noqa: BLE001 — best-effort view refresh
         print(f"warning: could not refresh Dashboard: {err}", file=sys.stderr)
+    try:
+        import pending
+        if entry.get("last_commit_hash"):
+            pending.clear_log(root, entry["last_commit_hash"])
+    except Exception as err:  # noqa: BLE001 — best-effort pending-state update
+        print(f"warning: could not update pending state: {err}", file=sys.stderr)
 
 
 def main() -> int:
