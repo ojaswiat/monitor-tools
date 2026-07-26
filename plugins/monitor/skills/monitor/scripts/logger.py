@@ -9,7 +9,8 @@ always go through this script.
 Usage:
   python3 logger.py --project-root <repo> --operation edit-file --tool Edit \\
       --summary "..." --status success [--details "..."] [--files a b] \\
-      [--task "..."] [--level INFO] [--branch feat/x] [--set tests=54/54]
+      [--task "..."] [--level INFO] [--branch feat/x] [--set tests=54/54] \\
+      [--last-commit-hash <sha>]
 """
 
 from __future__ import annotations
@@ -137,6 +138,11 @@ def main() -> int:
     ap.add_argument("--task", default="")
     ap.add_argument("--branch", default=None,
                     help="Branch the change was made on (default: detected).")
+    ap.add_argument("--last-commit-hash", default=None,
+                    help="Commit sha this entry is about (default: current "
+                         "HEAD). Pass the entry's own sha when working "
+                         "through several pending_logs entries, so each log "
+                         "clears its own pending entry rather than HEAD's.")
     ap.add_argument("--set", action="append", default=[], metavar="key=value",
                     help="Extra profile field, repeatable.")
     args = ap.parse_args()
@@ -151,7 +157,8 @@ def main() -> int:
         log_operation(root, operation=args.operation, tool=args.tool,
                       summary=args.summary, status=args.status,
                       level=args.level, details=args.details, files=args.files,
-                      task=args.task, extra=extra, branch=args.branch)
+                      task=args.task, extra=extra, branch=args.branch,
+                      last_commit_hash=args.last_commit_hash)
     except ValueError as err:
         print(f"log entry rejected: {err}", file=sys.stderr)
         return 1
