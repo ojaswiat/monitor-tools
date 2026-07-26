@@ -2,20 +2,24 @@
 """Track and check monitor's pending log/report state (monitor/.pending.json).
 
 Stdlib-only. `track` and `check` are the plain, directly-testable CLI
-commands; `hook-post-tool-use` and `hook-user-prompt-submit` (added in a
-later task) are the actual Claude Code hook entrypoints that speak the real
-hook I/O contract. See "Pending-state enforcement" in SKILL.md.
+commands; `hook-post-tool-use` and `hook-user-prompt-submit` are the actual
+Claude Code hook entrypoints that speak the real hook I/O contract (JSON on
+stdin; UserPromptSubmit prints a hookSpecificOutput envelope to inject
+context). See "Pending-state enforcement" in SKILL.md.
 
 Usage:
   python3 pending.py --project-root <repo> track --event commit --sha <sha> --message "<msg>"
   python3 pending.py --project-root <repo> track --event merge
   python3 pending.py --project-root <repo> check
+  echo '{"tool_input": {"command": "git commit -m x"}}' | python3 pending.py --project-root <repo> hook-post-tool-use
+  echo '{}' | python3 pending.py --project-root <repo> hook-user-prompt-submit
 """
 
 from __future__ import annotations
 
 import argparse
 import copy
+import json
 import subprocess
 import sys
 from datetime import datetime
@@ -110,6 +114,46 @@ def clear_report(root: Path) -> None:
     save_pending(root, data)
 
 
+_COMMIT_MARKERS = ("git commit",)
+_REPORT_MARKERS = ("git merge", "git rebase")
+
+
+def _monitor_initialized(root: Path) -> bool:
+    return (mlib.monitor_dir(root) / "profile.json").exists()
+
+
+def hook_post_tool_use(root: Path) -> None:
+    """PostToolUse hook entrypoint. Silent no-op unless the Bash command that
+    just ran was a git commit/merge/rebase — matcher only filters on tool
+    name ("Bash"), so this reads tool_input.command itself to self-filter."""
+    if not _monitor_initialized(root):
+        return
+    try:
+        payload = json.load(sys.stdin)
+    except Exception:  # noqa: BLE001 — malformed/empty stdin, nothing to do
+        return
+    command = (payload.get("tool_input") or {}).get("command", "") or ""
+    if any(m in command for m in _COMMIT_MARKERS):
+        track(root, "commit", None, command.strip()[:200])
+    elif any(m in command for m in _REPORT_MARKERS):
+        event = "rebase" if "git rebase" in command else "merge"
+        track(root, event, None, command.strip()[:200])
+
+
+def hook_user_prompt_submit(root: Path) -> None:
+    """UserPromptSubmit hook entrypoint. Prints the JSON envelope Claude Code
+    requires to inject additionalContext; prints nothing if not initialized
+    or nothing is pending."""
+    if not _monitor_initialized(root):
+        return
+    text = check_text(root)
+    if text:
+        print(json.dumps({
+            "continue": True,
+            "hookSpecificOutput": {"additionalContext": text},
+        }))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     mlib.add_root_arg(ap)
@@ -121,11 +165,20 @@ def main() -> int:
     t.add_argument("--message", default="")
 
     sub.add_parser("check")
+    sub.add_parser("hook-post-tool-use")
+    sub.add_parser("hook-user-prompt-submit")
 
     args = ap.parse_args()
     root = mlib.resolve_root(args)
-    mlib.require_init(root)
 
+    if args.cmd == "hook-post-tool-use":
+        hook_post_tool_use(root)
+        return 0
+    if args.cmd == "hook-user-prompt-submit":
+        hook_user_prompt_submit(root)
+        return 0
+
+    mlib.require_init(root)
     if args.cmd == "track":
         track(root, args.event, args.sha, args.message)
     elif args.cmd == "check":
