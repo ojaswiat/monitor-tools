@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import subprocess
 import sys
 from datetime import datetime
@@ -31,9 +32,10 @@ def pending_path(root: Path) -> Path:
 
 
 def load_pending(root: Path) -> dict:
-    data = mlib.load_json(pending_path(root), dict(_DEFAULT))
+    data = mlib.load_json(pending_path(root), copy.deepcopy(_DEFAULT))
     for key, default in _DEFAULT.items():
-        data.setdefault(key, default)
+        if key not in data:
+            data[key] = copy.deepcopy(default)
     return data
 
 
@@ -41,11 +43,12 @@ def save_pending(root: Path, data: dict) -> None:
     mlib.save_json(pending_path(root), data)
 
 
-def _sha_exists(root: Path, sha: str) -> bool:
+def _sha_reachable(root: Path, sha: str) -> bool:
     try:
-        out = subprocess.run(["git", "-C", str(root), "cat-file", "-e", sha],
-                              capture_output=True, timeout=5)
-    except Exception:  # noqa: BLE001 — git missing/unusable means "doesn't exist"
+        out = subprocess.run(
+            ["git", "-C", str(root), "merge-base", "--is-ancestor", sha, "HEAD"],
+            capture_output=True, timeout=5)
+    except Exception:  # noqa: BLE001 — git missing/unusable means "not reachable"
         return False
     return out.returncode == 0
 
@@ -65,7 +68,7 @@ def track(root: Path, event: str, sha: str | None, message: str) -> None:
         # since_sha instead of tracked individually. A no-op filter on a
         # plain merge (no rewrite happened).
         data["pending_logs"] = [e for e in data["pending_logs"]
-                                 if _sha_exists(root, e["sha"])]
+                                 if _sha_reachable(root, e["sha"])]
         data["pending_report"] = {
             "event": event, "since_sha": data.get("last_report_sha") or "",
             "detected_at": now,
