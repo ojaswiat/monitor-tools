@@ -28,24 +28,6 @@ STATUSES = ("success", "partial", "failure")
 LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 REQUIRED = ("timestamp", "level", "operation", "tool", "summary", "status")
 
-# Strips ASCII control bytes (NUL..BS, VT, FF, SO..US, DEL) — e.g. the raw
-# ANSI escape codes a backtick-quoted example command can splice into a field
-# via accidental shell command substitution. Tab is left alone; real newlines
-# are handled separately in sanitize() since they'd break the block format.
-_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-
-
-def sanitize(value: str) -> str:
-    """Every field is sanitized before it ever reaches operations.mtr: strip
-    control characters, flatten real newlines to spaces (the log is
-    block/line-based — a raw newline inside a field would corrupt parsing),
-    and trim. This runs on every entry regardless of caller; there is no way
-    to write an unsanitized field to the log."""
-    if value is None:
-        return value
-    value = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
-    return _CONTROL_CHARS.sub("", value).strip()
-
 
 def validate(entry: dict) -> None:
     missing = [k for k in REQUIRED if not entry.get(k)]
@@ -88,13 +70,13 @@ def log_operation(root: Path, *, operation, tool, summary, status,
         last_commit_hash = mlib.git_last_commit(root)
     entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3],
-        "level": sanitize(level), "operation": sanitize(operation),
-        "tool": sanitize(tool), "summary": sanitize(summary),
-        "status": sanitize(status), "branch": sanitize(branch),
-        "task": sanitize(task), "details": sanitize(details),
-        "files": [sanitize(f) for f in (files or [])],
-        "extra": {sanitize(k): sanitize(v) for k, v in (extra or {}).items()},
-        "last_commit_hash": sanitize(last_commit_hash),
+        "level": mlib.sanitize(level), "operation": mlib.sanitize(operation),
+        "tool": mlib.sanitize(tool), "summary": mlib.sanitize(summary),
+        "status": mlib.sanitize(status), "branch": mlib.sanitize(branch),
+        "task": mlib.sanitize(task), "details": mlib.sanitize(details),
+        "files": [mlib.sanitize(f) for f in (files or [])],
+        "extra": {mlib.sanitize(k): mlib.sanitize(v) for k, v in (extra or {}).items()},
+        "last_commit_hash": mlib.sanitize(last_commit_hash),
     }
     validate(entry)
     log_path = mlib.monitor_dir(root) / "logs" / "operations.mtr"

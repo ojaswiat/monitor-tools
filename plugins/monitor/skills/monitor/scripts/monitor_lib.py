@@ -111,6 +111,23 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+# Strips ASCII control bytes (NUL..BS, VT, FF, SO..US, DEL) — e.g. the raw
+# ANSI escape codes a backtick-quoted example command can splice into a field
+# via accidental shell command substitution. Tab is left alone; real newlines
+# are handled separately since they'd break the block format.
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def sanitize(value):
+    """Every field written to an .mtr file is sanitized first: strip control
+    characters, flatten real newlines to spaces (the log is block/line-based —
+    a raw newline inside a field would corrupt parsing), and trim."""
+    if value is None:
+        return value
+    value = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    return _CONTROL_CHARS.sub("", value).strip()
+
+
 # ---------------------------------------------------------------- vcs
 
 def git_branch(root: Path) -> str:
