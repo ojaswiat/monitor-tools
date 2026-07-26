@@ -19,7 +19,12 @@ session but run 3-at-once with varying companion-install levels.
    - a small Go project, or a small docs-only project if no small Go repo
      turns up
    Prefer repos with a handful of files, not sprawling ones — small enough
-   that a subagent can orient in one read pass.
+   that a subagent can orient in one read pass. WebSearch results go stale
+   or hallucinate paths (hit this live: a search-recommended repo didn't
+   exist under the given owner) — the subagent template's step 1 below
+   makes cloning-and-verifying the subagent's own job, so a bad candidate
+   fails fast as a clear report instead of the subagent improvising a
+   replacement repo mid-task.
 
 2. **Spawn 3 subagents in parallel — one message, three `Agent` calls,**
    each with `subagent_type: "general-purpose"`, `isolation: "worktree"`,
@@ -33,15 +38,23 @@ session but run 3-at-once with varying companion-install levels.
    | B | Node repo | `some` (install `superpowers` + `graphify` only) |
    | C | Go-or-docs repo | `all` (install all 6) |
 
+   If any of the 3 `Agent` calls comes back denied by the auto-mode
+   classifier (seen in practice — it's launch-time flakiness, not a
+   problem with the request), retry that one call alone; don't resend the
+   whole batch or swap in a different repo/level for it.
+
    **Subagent prompt template:**
 
    ```
    You're doing a real end-to-end usage test of a Claude Code plugin called
    "monitor" inside a fresh clone of a small open-source project. Work only
-   inside this worktree — don't touch anything outside it.
+   inside this project's folder — don't touch anything outside it.
 
    1. Clone {repo_url} into {project_dir} (relative to the repo root you're
-      in), then cd into it.
+      in), then cd into it. Verify the clone succeeded and contains real
+      files — if it fails, or the repo is empty/archived/unrelated to what
+      the name implies, stop and report that back instead of substituting
+      a different repo yourself.
    2. From the repo root (one level up from {project_dir}), run:
       ./install-monitor.sh {project_dir}
    3. Companion skill level for this run: {companion_level}.
@@ -73,34 +86,46 @@ session but run 3-at-once with varying companion-install levels.
       special knowledge of monitor beyond what you discover in the project
       itself. Look around, pick several small real things worth doing (a
       bug fix, a missing test, a docs fix, dead code removal — your call),
-      and do them. Follow whatever CLAUDE.md/AGENTS.md tells you once
-      /monitor:init has been run — don't be told monitor's command names
-      directly, discover them the way a real user would.
+      and do them. Once setup above is done, the project's own
+      CLAUDE.md/AGENTS.md explains how to use whatever's now available —
+      follow that, in your own words, the way a real user encountering it
+      cold would. Don't quote or rely on any tool/command name from these
+      setup instructions; let the project's own docs teach you the
+      vocabulary.
    5. Do at least 5 separate rounds of small changes so there's real log
       and report volume to inspect afterward.
    6. Report back in plain language: what you changed, whether/how you
       used monitor (which commands, how many times), and anything that
       looked broken, confusing, inconsistent, or undocumented — including
       anything about the companion-install step if companion_level wasn't
-      "none".
+      "none". Your worktree will likely be gone by the time this is read,
+      so paste the real evidence inline rather than describing it: the
+      final log-entry count and report count, and one full `--details`
+      block copied verbatim from `operations.mtr` (not paraphrased) so it
+      can be checked for real content vs. placeholder text.
    ```
 
 3. **Wait for all 3 to complete** (event-driven completion notifications —
    never poll or sleep-loop for this).
 
-4. **Read back real data from each worktree**, not just each subagent's
-   self-report: for each of the 3, open `{project_dir}/monitor/profile.json`,
-   `{project_dir}/monitor/logs/operations.mtr`, and list
-   `{project_dir}/monitor/reports/*.html`. Count log entries and reports,
-   and spot-check that `--details` fields look like real content (not
-   corrupted, not placeholder text). This is the same
-   verify-before-trusting-a-subagent's-claims practice used in every manual
-   drill so far — don't just relay what the subagent said happened.
+4. **Verify, don't just relay.** Try reading each worktree directly first —
+   `{project_dir}/monitor/profile.json`, `logs/operations.mtr`, and
+   `reports/*.html` — and cross-check counts and `--details` content
+   against what the subagent claimed. In every run so far the worktree was
+   already gone by this point (auto-pruned by the harness once the
+   subagent stopped), so treat that as the expected case, not an error:
+   fall back to checking the verbatim log-entry count, report count, and
+   `--details` excerpt each subagent was told to paste into its own report
+   (step 6 above) for internal consistency and real content, same
+   verify-before-trusting-a-subagent's-claims practice as any manual
+   drill — just against pasted evidence instead of live files.
 
 5. **Synthesize one combined HTML report.** Invoke the `ui-ux-pro-max`
    skill, then write a single self-contained HTML file to
    `temp/test-e2e-runs/<YYYY-MM-DD>.html` (today's date, in the **main**
-   working tree — not inside any worktree) covering, per project: repo
+   working tree — not inside any worktree). If a file for today already
+   exists (a second run same day), append `-round-N` rather than
+   overwriting it. Cover, per project: repo
    name/language, companion level, number of commits/changes made, log
    entry count, report count, and a short findings list (bugs,
    inconsistencies, compliance gaps) drawn from both the subagent's report
@@ -116,6 +141,12 @@ session but run 3-at-once with varying companion-install levels.
   copied into `plugins/monitor/`.
 - Repos are found fresh every run — don't reuse or hardcode candidates from
   a previous run.
-- Each subagent's worktree is disposable — nothing under it needs to
-  survive after the report is written, but nothing in this flow deletes it
-  either; that's a manual cleanup call for whoever ran it.
+- **After publishing the report, run `git worktree list`.** Each
+  subagent's worktree is disposable, and the harness usually auto-prunes
+  it once the subagent stops — but not always: stray worktrees from a past
+  run have been found still sitting there, unrelated to the current run,
+  confusing enough on their own (no tracked-file changes, just an old
+  untracked clone) that they were once mistaken for two agents having
+  collided by accident. If any remain, `git worktree remove --force` them
+  and delete the matching `worktree-agent-*` branch — don't leave this for
+  "whoever runs it next."
