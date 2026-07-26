@@ -214,6 +214,29 @@ themselves stay short (rule + why + how-to-apply, caveman-compressed); the
 *log and report content itself* stays verbose per "Context capture" above —
 compress the reminder, not the record.
 
+## Pending-state enforcement
+
+Two Claude Code hooks (installed by `/monitor:init`/`/monitor:update` into
+the project's `.claude/settings.json`) back a soft, real reminder instead of
+pure discretion: a `PostToolUse` hook fires `pending.py hook-post-tool-use`
+after every `git commit`/`merge`/`rebase`, recording it in
+`monitor/.pending.json`. A `UserPromptSubmit` hook fires `pending.py
+hook-user-prompt-submit` on your next turn — if anything is pending, its
+`[Warn!]` text becomes injected context, and you must surface it to the
+user and get a Y/N before continuing:
+
+- **Y** → work through `monitor/.pending.json`'s `pending_logs` (one
+  `/monitor:log` per entry) and `pending_report` (one `/monitor:report`
+  covering `git log <since_sha>..HEAD`), then continue the user's original
+  request.
+- **N** → say so, leave `.pending.json` untouched (it stays pending and
+  reminds again next turn), and do whatever the user asks instead.
+
+`monitor/.pending.json` is committed like the rest of `monitor/` — it's
+per-branch state, not local scratch. `logger.py` and `render_report.py`
+(on `--lock-report`) clear the matching entries automatically on success;
+nothing else should ever hand-edit this file.
+
 ## Common mistakes
 | Mistake | Reality |
 |---|---|

@@ -70,7 +70,40 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    After installing, re-probe and update `monitor/usage.md` to PRESENT for
    whatever was just installed.
 6. Ensure `.gitignore` contains `monitor/scripts/__pycache__/`.
-7. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`
+7. **Install the pending-state hooks.** Merge these two entries into the
+   project's `.claude/settings.json` under a top-level `"hooks"` key
+   (merge in — don't clobber any existing `hooks` entries for other tools):
+   ```json
+   {
+     "hooks": {
+       "PostToolUse": [
+         {
+           "matcher": "Bash",
+           "hooks": [
+             {"type": "command", "command": "python3",
+              "args": ["${CLAUDE_PROJECT_DIR}/monitor/scripts/pending.py",
+                        "hook-post-tool-use", "--project-root",
+                        "${CLAUDE_PROJECT_DIR}"]}
+           ]
+         }
+       ],
+       "UserPromptSubmit": [
+         {
+           "matcher": "*",
+           "hooks": [
+             {"type": "command", "command": "python3",
+              "args": ["${CLAUDE_PROJECT_DIR}/monitor/scripts/pending.py",
+                        "hook-user-prompt-submit", "--project-root",
+                        "${CLAUDE_PROJECT_DIR}"]}
+           ]
+         }
+       ]
+     }
+   }
+   ```
+   These are silent unless something is actually pending — see "Pending-state
+   enforcement" in `SKILL.md`.
+8. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`
    at the project root (create whichever file doesn't exist — different
    agents/tools read one or the other, so both get the same block). Write it
    between `<!-- monitor:start -->` / `<!-- monitor:end -->` markers in each
@@ -134,7 +167,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      detected fields, never removes or renames existing ones.
    <!-- monitor:end -->
    ```
-8. **If a persistent memory system is available to you** (a memory directory
+9. **If a persistent memory system is available to you** (a memory directory
    you write files to and that is loaded back into future sessions — check
    for one before assuming it's absent), save the logging/reporting policy
    there now as `feedback`-type memory so future sessions apply it without
