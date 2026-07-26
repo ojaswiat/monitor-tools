@@ -9,7 +9,7 @@ always go through this script.
 Usage:
   python3 logger.py --project-root <repo> --operation edit-file --tool Edit \\
       --summary "..." --status success [--details "..."] [--files a b] \\
-      [--task "..."] [--level INFO] [--branch feat/x] [--set tests=54/54] \\
+      [--task-id "..."] [--level INFO] [--branch feat/x] [--set tests=54/54] \\
       [--last-commit-hash <sha>]
 """
 
@@ -48,8 +48,8 @@ def render_entry(entry: dict) -> str:
         lines.append(f"branch:  {entry['branch']}")
     if entry.get("last_commit_hash"):
         lines.append(f"last_commit_hash: {entry['last_commit_hash']}")
-    if entry.get("task"):
-        lines.append(f"task:    {entry['task']}")
+    if entry.get("task_id"):
+        lines.append(f"task_id: {entry['task_id']}")
     if entry.get("files"):
         lines.append(f"files:   {', '.join(entry['files'])}")
     for k, v in entry.get("extra", {}).items():
@@ -60,7 +60,7 @@ def render_entry(entry: dict) -> str:
 
 
 def log_operation(root: Path, *, operation, tool, summary, status,
-                  level="INFO", details="", files=None, task="", extra=None,
+                  level="INFO", details="", files=None, task_id=None, extra=None,
                   branch=None, last_commit_hash=None) -> None:
     # The branch the change was made on. Detected at log time so every entry
     # records where it happened; --branch overrides, "" when not in a repo.
@@ -73,7 +73,8 @@ def log_operation(root: Path, *, operation, tool, summary, status,
         "level": mlib.sanitize(level), "operation": mlib.sanitize(operation),
         "tool": mlib.sanitize(tool), "summary": mlib.sanitize(summary),
         "status": mlib.sanitize(status), "branch": mlib.sanitize(branch),
-        "task": mlib.sanitize(task), "details": mlib.sanitize(details),
+        "task_id": mlib.sanitize(task_id) if task_id else "",
+        "details": mlib.sanitize(details),
         "files": [mlib.sanitize(f) for f in (files or [])],
         "extra": {mlib.sanitize(k): mlib.sanitize(v) for k, v in (extra or {}).items()},
         "last_commit_hash": mlib.sanitize(last_commit_hash),
@@ -117,7 +118,9 @@ def main() -> int:
                          "Structuring this well is the caller's job — the "
                          "renderer only decodes what it's given.")
     ap.add_argument("--files", nargs="*", default=None)
-    ap.add_argument("--task", default="")
+    ap.add_argument("--task-id", dest="task_id", default=None,
+                    help="Optional foreign key into monitor/tasks/tasks.mtr — "
+                         "the task this log entry happened during.")
     ap.add_argument("--branch", default=None,
                     help="Branch the change was made on (default: detected).")
     ap.add_argument("--last-commit-hash", default=None,
@@ -139,7 +142,7 @@ def main() -> int:
         log_operation(root, operation=args.operation, tool=args.tool,
                       summary=args.summary, status=args.status,
                       level=args.level, details=args.details, files=args.files,
-                      task=args.task, extra=extra, branch=args.branch,
+                      task_id=args.task_id, extra=extra, branch=args.branch,
                       last_commit_hash=args.last_commit_hash)
     except ValueError as err:
         print(f"log entry rejected: {err}", file=sys.stderr)

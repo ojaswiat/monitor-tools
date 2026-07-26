@@ -81,7 +81,7 @@ def parse_log(text: str) -> list[dict]:
         tool, summary = _extract_tool(rest)
         e = {"timestamp": timestamp, "level": level, "operation": operation,
              "tool": tool, "summary": summary, "status": status,
-             "task": "", "files": [], "details": "", "branch": "", "extra": {},
+             "task_id": "", "files": [], "details": "", "branch": "", "extra": {},
              "last_commit_hash": ""}
         for line in lines[1:]:
             if ":" not in line:
@@ -92,8 +92,8 @@ def parse_log(text: str) -> list[dict]:
                 e["branch"] = val
             elif key == "last_commit_hash":
                 e["last_commit_hash"] = val
-            elif key == "task":
-                e["task"] = val
+            elif key == "task_id":
+                e["task_id"] = val
             elif key == "files":
                 e["files"] = [f.strip() for f in val.split(",") if f.strip()]
             elif key == "details":
@@ -135,6 +135,8 @@ def _card(e: dict) -> str:
         p.append("      " + mlib.branch_chip(e["branch"]))
     if e.get("last_commit_hash"):
         p.append(f'      <span class="toolchip">commit: {mlib.esc(e["last_commit_hash"])}</span>')
+    if e.get("task_id"):
+        p.append(f'      <span class="toolchip">task: {mlib.esc(e["task_id"])}</span>')
     for k, v in e["extra"].items():
         p.append(f'      <span class="xchip">{mlib.esc(k)}: {mlib.esc(v)}</span>')
     p.append('      <span class="spacer"></span>')
@@ -142,8 +144,6 @@ def _card(e: dict) -> str:
     p.append('    </div>')
     if e["summary"]:
         p.append(f'    <p class="summary">{mlib.esc(e["summary"])}</p>')
-    if e["task"]:
-        p.append(f'    <p class="task"><b>Task</b> {mlib.esc(e["task"])}</p>')
     if e["files"]:
         chips = "".join(f'<span class="file">{mlib.esc(f)}</span>' for f in e["files"])
         p.append(f'    <div class="files">{chips}</div>')
