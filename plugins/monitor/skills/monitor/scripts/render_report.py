@@ -30,6 +30,7 @@ from pathlib import Path
 
 import monitor_lib as mlib
 import render_logs
+import render_tasks
 
 STYLE_RE = re.compile(r"<style>.*?</style>", re.S)
 SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S | re.I)
@@ -293,9 +294,10 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
     log_path = mdir / "logs" / "operations.mtr"
     n_logs = len([e for e in render_logs.parse_log(log_path.read_text(encoding="utf-8"))
                   if e.get("fragment") is None]) if log_path.exists() else 0
+    n_open_tasks = render_tasks.count_open(root)
     header = f"""  <header class="report">
     <h1>{mlib.esc(brand)} · Monitor</h1>
-    <p class="subtitle">Reports and logs for this project's agent workflow.</p>
+    <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
     {mlib.tabnav("", "")}
   </header>
 
@@ -303,11 +305,13 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">{mlib.esc(branch or mlib.NO_BRANCH)}</div></div>
     <div class="kpi"><div class="label">Reports</div><div class="value">{n_reports}</div></div>
     <div class="kpi"><div class="label">Log entries</div><div class="value">{n_logs}</div></div>
+    <div class="kpi warn"><div class="label">Open tasks</div><div class="value">{n_open_tasks}</div></div>
     <div class="kpi"><div class="label">Profile</div><div class="value small mono">v{profile.get("profileVersion", 1)}</div></div>
   </div>"""
     body = """  <div class="card-grid">
     <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
     <a class="navcard" href="logs/index.html"><h3>Logs →</h3><p>Every logged operation with status and details.</p></a>
+    <a class="navcard" href="tasks/index.html"><h3>Tasks →</h3><p>Lifecycle-tracked units of work with self-reported metrics.</p></a>
   </div>"""
     footer = ('  <footer><span>monitor · project dashboard</span>'
               '<span><a href="#top">↑ Back to Top</a></span></footer>')
@@ -335,6 +339,7 @@ def render_all(root: Path) -> None:
     mdir = mlib.monitor_dir(root)
     (mdir / "reports").mkdir(parents=True, exist_ok=True)
     (mdir / "logs").mkdir(parents=True, exist_ok=True)
+    (mdir / "tasks").mkdir(parents=True, exist_ok=True)
     branch = mlib.git_branch(root)
     render_template(profile, root)
     items = scan_reports(root)
