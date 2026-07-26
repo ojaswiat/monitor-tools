@@ -81,16 +81,17 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
            "matcher": "Bash",
            "hooks": [
              {"type": "command",
-              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use"}
+              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
+              "timeout": 10}
            ]
          }
        ],
        "UserPromptSubmit": [
          {
-           "matcher": "*",
            "hooks": [
              {"type": "command",
-              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit"}
+              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit",
+              "timeout": 10}
            ]
          }
        ]
@@ -100,7 +101,10 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    A command hook is a single shell string — there is no `args` array. Note
    `--project-root` comes *before* the subcommand: `pending.py` registers it
    as a top-level argument, so argparse rejects it if it trails the
-   subcommand.
+   subcommand. `UserPromptSubmit` carries **no** `matcher` key — matchers scope
+   a hook to a tool, and that event has no tool (only `PostToolUse` is
+   tool-scoped, on `Bash`). The `timeout` bounds git subprocess calls in a
+   large repo so a slow hook fails fast instead of stalling the turn.
    These are silent unless something is actually pending — see "Pending-state
    enforcement" in `SKILL.md`.
 8. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`

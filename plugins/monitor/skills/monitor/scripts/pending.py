@@ -59,14 +59,15 @@ def _sha_reachable(root: Path, sha: str) -> bool:
 
 
 _SEGMENT_RE = re.compile(r"^\s*git\s+(commit|merge|rebase)\b(.*)$")
-_EXCLUDED_FLAGS = ("--abort", "--dry-run", "--quit")
+_EXCLUDED_FLAGS = ("--abort", "--continue", "--dry-run", "--quit")
 
 
 def _classify(command: str) -> str | None:
     """Return "commit", "merge", or "rebase" if `command` contains a real git
     commit/merge/rebase invocation as one of its shell segments (split on
-    &&/||/;/|), skipping --abort/--dry-run/--quit variants (mid-workflow
-    calls that don't represent a completed action). None otherwise."""
+    &&/||/;/|), skipping --abort/--continue/--dry-run/--quit variants
+    (mid-workflow calls that don't represent a completed action). None
+    otherwise."""
     for segment in re.split(r"&&|\|\||;|\|", command):
         m = _SEGMENT_RE.match(segment)
         if not m:
@@ -130,11 +131,13 @@ def track(root: Path, event: str, sha: str | None, message: str) -> None:
     save_pending(root, data)
 
 
-WARNING = (
-    "[Warn!] Monitor: Pending logs and report. Do you want Monitor to record now [Y/N]\n\n"
+INSTRUCTIONS = (
     "If Y: read monitor/.pending.json. For each pending_logs entry, run "
     "/monitor:log for it (its stored message is a starting point — "
-    "DECISION/WHY/etc are still your judgment). For a set pending_report, "
+    "DECISION/WHY/etc are still your judgment). When more than one entry is "
+    "pending, pass --last-commit-hash <that entry's sha> to /monitor:log for "
+    "every entry that is not the current HEAD, so each log clears its own "
+    "entry instead of always clearing HEAD's. For a set pending_report, "
     "run `git log <since_sha>..HEAD` (since_sha is in monitor/.pending.json; "
     "if it's empty, this is the first report ever — use the full branch "
     "history instead, e.g. `git log HEAD` or against the branch's actual "
@@ -145,12 +148,29 @@ WARNING = (
     "again next turn."
 )
 
+# Kept as a module-level name for callers/tests that import it; check_text()
+# builds the real first line from what is actually pending.
+WARNING = ("[Warn!] Monitor: Pending logs and report. Do you want Monitor to "
+           "record now [Y/N]\n\n" + INSTRUCTIONS)
+
+
+def _pending_phrase(data: dict) -> str:
+    """"logs", "report", or "logs and report" — only what is really pending."""
+    parts = []
+    if data.get("pending_logs"):
+        parts.append("logs")
+    if data.get("pending_report"):
+        parts.append("report")
+    return " and ".join(parts)
+
 
 def check_text(root: Path) -> str:
     data = load_pending(root)
-    if data.get("pending_logs") or data.get("pending_report"):
-        return WARNING
-    return ""
+    phrase = _pending_phrase(data)
+    if not phrase:
+        return ""
+    return (f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
+            f"record now [Y/N]\n\n" + INSTRUCTIONS)
 
 
 def clear_log(root: Path, sha: str) -> None:

@@ -76,7 +76,7 @@ field show no chip.
 
 ## Logging
 - Log through the engine only — never hand-edit `operations.mtr`:
-  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--set k=v]`.
+  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--last-commit-hash <sha>] [--set k=v]`.
 - The schema is **locked in code** (`REQUIRED`/`LEVELS`/`STATUSES` constants in
   `logger.py`), identical across every project. It
   validates required fields and the `level`/`status` enums before writing.
@@ -241,6 +241,17 @@ user and get a Y/N before continuing:
   request.
 - **N** → say so, leave `.pending.json` untouched (it stays pending and
   reminds again next turn), and do whatever the user asks instead.
+
+**Clearing more than one `pending_logs` entry.** `logger.py` clears the
+pending entry whose sha matches the entry it just wrote, and that sha
+defaults to the *current* `HEAD`. So when several commits are pending at
+once, pass `--last-commit-hash <that entry's sha>` to `/monitor:log` for
+every entry that isn't `HEAD` — otherwise each catch-up log clears (at best)
+whatever `HEAD` happens to be and the older entries never drain.
+
+Commits that touch **only** `monitor/` paths are not tracked as pending —
+committing monitor's own log/report output would otherwise create a pending
+entry demanding a log, whose commit creates another, forever.
 
 `monitor/.pending.json` is committed like the rest of `monitor/` — it's
 per-branch state, not local scratch. `logger.py` and `render_report.py`
