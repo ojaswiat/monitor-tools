@@ -314,14 +314,15 @@ def project_name(profile: dict, root: Path) -> str:
 
 
 def tabnav(active: str, prefix: str) -> str:
-    """Reports/Logs tab-nav. `prefix` is the relative path back to monitor/.
-    active is 'reports' or 'logs'."""
+    """Reports/Logs/Tasks tab-nav. `prefix` is the relative path back to
+    monitor/. active is 'reports', 'logs', or 'tasks'."""
     def a(name, href, key):
         cls = ' class="active" aria-current="page"' if key == active else ''
         return f'<a href="{href}"{cls}>{name}</a>'
     return (f'<nav class="tabnav" aria-label="Dashboard pages">'
             f'{a("Reports", prefix + "reports/index.html", "reports")}'
-            f'{a("Logs", prefix + "logs/index.html", "logs")}</nav>')
+            f'{a("Logs", prefix + "logs/index.html", "logs")}'
+            f'{a("Tasks", prefix + "tasks/index.html", "tasks")}</nav>')
 
 
 PAGE_SIZE = 10
