@@ -25,6 +25,7 @@ plugins/monitor/
       render_logs.py                renders operations.mtr -> paginated logs/*.html
       render_report.py              regenerates reports/template.html, paginated reports/*.html, dashboard index.html
       clean.py                      deletes oldest N logs, oldest N reports, re-renders affected pages
+      pending.py                    tracks monitor/.pending.json (unlogged commits, unreported merges/rebases); hook entrypoints back the pending-state gate
       search.py                     greps operations.mtr by keyword + optional branch/status/level filters, plain-text output
     assets/base_template.html       fallback report template
 ```

@@ -22,6 +22,7 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 <repo>/monitor/          per-project data — created by /monitor:init
   profile.json           SOURCE OF TRUTH (auto-detected, hand-refinable)
   usage.md               companion skills present + how monitor uses each
+  .pending.json          pending-state tracker for the enforcement gate (committed, not gitignored)
   index.html             Dashboard (links Reports + Logs)
   scripts/               project copy of the engine (run these)
   reports/  template.html  index.html  <date>-<slug>.html  (no manifest — index is scanned)

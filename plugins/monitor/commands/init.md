@@ -80,10 +80,8 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
          {
            "matcher": "Bash",
            "hooks": [
-             {"type": "command", "command": "python3",
-              "args": ["${CLAUDE_PROJECT_DIR}/monitor/scripts/pending.py",
-                        "hook-post-tool-use", "--project-root",
-                        "${CLAUDE_PROJECT_DIR}"]}
+             {"type": "command",
+              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use"}
            ]
          }
        ],
@@ -91,16 +89,18 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
          {
            "matcher": "*",
            "hooks": [
-             {"type": "command", "command": "python3",
-              "args": ["${CLAUDE_PROJECT_DIR}/monitor/scripts/pending.py",
-                        "hook-user-prompt-submit", "--project-root",
-                        "${CLAUDE_PROJECT_DIR}"]}
+             {"type": "command",
+              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit"}
            ]
          }
        ]
      }
    }
    ```
+   A command hook is a single shell string — there is no `args` array. Note
+   `--project-root` comes *before* the subcommand: `pending.py` registers it
+   as a top-level argument, so argparse rejects it if it trails the
+   subcommand.
    These are silent unless something is actually pending — see "Pending-state
    enforcement" in `SKILL.md`.
 8. Add or update a **monitor** section in **both** `CLAUDE.md` and `AGENTS.md`
@@ -165,6 +165,10 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      template changes; only new reports pick up new sections.
    - `monitor/profile.json` evolves additively only — `/monitor:update` adds
      detected fields, never removes or renames existing ones.
+   - After a commit, merge, or rebase, a `[Warn!] Monitor: Pending logs and
+     report...` line may appear at the start of a turn. That is monitor's
+     pending-state gate reporting unlogged/unreported work, not a bug —
+     answer Y to record it now, or N to defer.
    <!-- monitor:end -->
    ```
 9. **If a persistent memory system is available to you** (a memory directory

@@ -11,7 +11,7 @@ Usage:
   python3 pending.py --project-root <repo> track --event commit --sha <sha> --message "<msg>"
   python3 pending.py --project-root <repo> track --event merge
   python3 pending.py --project-root <repo> check
-  echo '{"tool_input": {"command": "git commit -m x"}}' | python3 pending.py --project-root <repo> hook-post-tool-use
+  echo '{"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}}' | python3 pending.py --project-root <repo> hook-post-tool-use
   echo '{}' | python3 pending.py --project-root <repo> hook-user-prompt-submit
 """
 
@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -28,7 +29,7 @@ from pathlib import Path
 import monitor_lib as mlib
 
 _DEFAULT = {"branch": "", "pending_logs": [], "pending_report": None,
-            "last_report_sha": ""}
+            "last_report_sha": "", "last_seen_sha": ""}
 
 
 def pending_path(root: Path) -> Path:
@@ -57,15 +58,62 @@ def _sha_reachable(root: Path, sha: str) -> bool:
     return out.returncode == 0
 
 
+_SEGMENT_RE = re.compile(r"^\s*git\s+(commit|merge|rebase)\b(.*)$")
+_EXCLUDED_FLAGS = ("--abort", "--dry-run", "--quit")
+
+
+def _classify(command: str) -> str | None:
+    """Return "commit", "merge", or "rebase" if `command` contains a real git
+    commit/merge/rebase invocation as one of its shell segments (split on
+    &&/||/;/|), skipping --abort/--dry-run/--quit variants (mid-workflow
+    calls that don't represent a completed action). None otherwise."""
+    for segment in re.split(r"&&|\|\||;|\|", command):
+        m = _SEGMENT_RE.match(segment)
+        if not m:
+            continue
+        verb, rest = m.group(1), m.group(2)
+        if any(flag in rest for flag in _EXCLUDED_FLAGS):
+            continue
+        return verb
+    return None
+
+
+def _commit_subject(root: Path, sha: str) -> str:
+    try:
+        out = subprocess.run(["git", "-C", str(root), "log", "-1", "--pretty=%s", sha],
+                              capture_output=True, text=True, timeout=5)
+    except Exception:  # noqa: BLE001
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+def _commit_touches_only_monitor(root: Path, sha: str) -> bool:
+    """True if every file this commit changed is under monitor/ — a commit
+    that's only the monitor log/report itself shouldn't re-trigger the
+    pending gate (otherwise every /monitor:log commit warns about itself)."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "show", "--name-only", "--pretty=format:", sha],
+            capture_output=True, text=True, timeout=5)
+    except Exception:  # noqa: BLE001
+        return False
+    files = [f for f in out.stdout.splitlines() if f.strip()]
+    return bool(files) and all(f.startswith("monitor/") for f in files)
+
+
 def track(root: Path, event: str, sha: str | None, message: str) -> None:
     data = load_pending(root)
     data["branch"] = mlib.git_branch(root)
     head = sha or mlib.git_last_commit(root)
     now = datetime.now().isoformat(timespec="seconds")
     if event == "commit":
-        if head and not any(e["sha"] == head for e in data["pending_logs"]):
-            data["pending_logs"].append(
-                {"sha": head, "message": message, "committed_at": now})
+        if (head and head != data.get("last_seen_sha")
+                and not _commit_touches_only_monitor(root, head)
+                and not any(e["sha"] == head for e in data["pending_logs"])):
+            data["pending_logs"].append({
+                "sha": head, "message": _commit_subject(root, head) or message,
+                "committed_at": now,
+            })
     else:  # "merge" or "rebase"
         # Rebase rewrites shas — drop any pending_logs entry whose sha no
         # longer resolves; its content is folded into the report range via
@@ -77,6 +125,8 @@ def track(root: Path, event: str, sha: str | None, message: str) -> None:
             "event": event, "since_sha": data.get("last_report_sha") or "",
             "detected_at": now,
         }
+    if head:
+        data["last_seen_sha"] = head
     save_pending(root, data)
 
 
@@ -85,9 +135,11 @@ WARNING = (
     "If Y: read monitor/.pending.json. For each pending_logs entry, run "
     "/monitor:log for it (its stored message is a starting point — "
     "DECISION/WHY/etc are still your judgment). For a set pending_report, "
-    "run `git log <since_sha>..HEAD` (since_sha is in monitor/.pending.json) "
-    "to get the real commit range, then author one /monitor:report covering "
-    "it. Continue with the user's original request afterward.\n"
+    "run `git log <since_sha>..HEAD` (since_sha is in monitor/.pending.json; "
+    "if it's empty, this is the first report ever — use the full branch "
+    "history instead, e.g. `git log HEAD` or against the branch's actual "
+    "base) to get the real commit range, then author one /monitor:report "
+    "covering it. Continue with the user's original request afterward.\n"
     "If N: say \"Skipping monitor. What next?\" and leave "
     "monitor/.pending.json untouched — it stays pending and will remind "
     "again next turn."
@@ -102,8 +154,25 @@ def check_text(root: Path) -> str:
 
 
 def clear_log(root: Path, sha: str) -> None:
+    """Clear one pending commit per logged operation.
+
+    Prefers the entry whose sha matches exactly. When several commits landed
+    before any of them was logged, every catch-up log is written at the same
+    HEAD, so no exact match exists for the older ones — fall back to draining
+    the oldest already-reached entry. Without that fallback those entries can
+    never be cleared and the warning sticks forever."""
     data = load_pending(root)
-    data["pending_logs"] = [e for e in data["pending_logs"] if e["sha"] != sha]
+    entries = data["pending_logs"]
+    for i, entry in enumerate(entries):
+        if entry["sha"] == sha:
+            del entries[i]
+            break
+    else:
+        for i, entry in enumerate(entries):
+            if _sha_reachable(root, entry["sha"]):
+                del entries[i]
+                break
+    data["pending_logs"] = entries
     save_pending(root, data)
 
 
@@ -112,10 +181,6 @@ def clear_report(root: Path) -> None:
     data["pending_report"] = None
     data["last_report_sha"] = mlib.git_last_commit(root)
     save_pending(root, data)
-
-
-_COMMIT_MARKERS = ("git commit",)
-_REPORT_MARKERS = ("git merge", "git rebase")
 
 
 def _monitor_initialized(root: Path) -> bool:
@@ -132,12 +197,12 @@ def hook_post_tool_use(root: Path) -> None:
         payload = json.load(sys.stdin)
     except Exception:  # noqa: BLE001 — malformed/empty stdin, nothing to do
         return
+    if (payload.get("tool_name") or "") != "Bash":
+        return
     command = (payload.get("tool_input") or {}).get("command", "") or ""
-    if any(m in command for m in _COMMIT_MARKERS):
-        track(root, "commit", None, command.strip()[:200])
-    elif any(m in command for m in _REPORT_MARKERS):
-        event = "rebase" if "git rebase" in command else "merge"
-        track(root, event, None, command.strip()[:200])
+    event = _classify(command)
+    if event:
+        track(root, event, None, "")
 
 
 def hook_user_prompt_submit(root: Path) -> None:
@@ -150,7 +215,10 @@ def hook_user_prompt_submit(root: Path) -> None:
     if text:
         print(json.dumps({
             "continue": True,
-            "hookSpecificOutput": {"additionalContext": text},
+            "hookSpecificOutput": {
+                "hookEventName": "UserPromptSubmit",
+                "additionalContext": text,
+            },
         }))
 
 
