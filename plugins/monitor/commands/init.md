@@ -188,7 +188,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      don't wait to be asked. Why: reports are the per-branch decision record;
      merging without one loses the branch's rationale once it's squashed.
    If no memory system is available, skip this step silently — the
-   `CLAUDE.md`/`AGENTS.md` blocks from step 7 are the fallback that keeps the
+   `CLAUDE.md`/`AGENTS.md` blocks from step 8 are the fallback that keeps the
    policy discoverable.
 
 Report the created tree and the detected profile summary.

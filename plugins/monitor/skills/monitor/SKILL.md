@@ -214,6 +214,15 @@ themselves stay short (rule + why + how-to-apply, caveman-compressed); the
 *log and report content itself* stays verbose per "Context capture" above —
 compress the reminder, not the record.
 
+## Common mistakes
+| Mistake | Reality |
+|---|---|
+| Reporting a discussion or doc tweak "to be safe" | Reports are for code changes only. A rules/doc edit is not a code change — log it, don't report it. |
+| Hand-editing `operations.mtr` to fix a typo | Always go through `logger.py`. The Logs page is regenerated from the log; hand-edits desync the two and can corrupt parsing. |
+| Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
+| Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
+| Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
+
 ## Pending-state enforcement
 
 Two Claude Code hooks (installed by `/monitor:init`/`/monitor:update` into
@@ -236,15 +245,6 @@ user and get a Y/N before continuing:
 per-branch state, not local scratch. `logger.py` and `render_report.py`
 (on `--lock-report`) clear the matching entries automatically on success;
 nothing else should ever hand-edit this file.
-
-## Common mistakes
-| Mistake | Reality |
-|---|---|
-| Reporting a discussion or doc tweak "to be safe" | Reports are for code changes only. A rules/doc edit is not a code change — log it, don't report it. |
-| Hand-editing `operations.mtr` to fix a typo | Always go through `logger.py`. The Logs page is regenerated from the log; hand-edits desync the two and can corrupt parsing. |
-| Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
-| Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
-| Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
 
 ## Companion skills (all optional, with fallbacks)
 `usage.md` records which are present and how monitor uses each.
