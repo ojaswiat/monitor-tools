@@ -37,7 +37,9 @@ SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S | re.I)
 
 
 def lock_report_style(root: Path, report_rel_path: str) -> bool:
-    """Force a freshly authored report back onto the canonical palette/theme.
+    """Force a freshly authored report back onto the canonical palette/theme,
+    and stamp {{ last_modified }} with the lock moment — the point a report
+    is considered finalized.
 
     Content-tone requests (audience, reading level, language, humor) must only
     ever change the prose inside a report's sections — never its `<style>`
@@ -54,6 +56,7 @@ def lock_report_style(root: Path, report_rel_path: str) -> bool:
     text = path.read_text(encoding="utf-8")
     fixed = STYLE_RE.sub(lambda _m: f"<style>{mlib.PALETTE_CSS}</style>", text, count=1)
     fixed = SCRIPT_RE.sub("", fixed)
+    fixed = fixed.replace("{{ last_modified }}", datetime.now().strftime("%Y-%m-%d %H:%M"))
     if fixed != text:
         path.write_text(fixed, encoding="utf-8")
         return True
@@ -133,6 +136,8 @@ def render_template(profile: dict, root: Path) -> None:
     <p class="subtitle">{{{{ subtitle }}}}</p>
     <div class="meta-chips">
       <span class="chip"><b>Generated</b><span class="mono">{{{{ date }}}}</span></span>
+      <span class="chip"><b>Created</b><span class="mono">{{{{ date_created }}}}</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">{{{{ last_modified }}}}</span></span>
       <span class="chip"><b>Branch</b><span class="mono">{{{{ branch }}}}</span></span>
       <span class="chip"><b>Commit</b><span class="mono">{{{{ commit }}}}</span></span>
       <span class="chip"><b>Status</b><span class="tag {{{{ status_class }}}}">{{{{ status }}}}</span></span>
