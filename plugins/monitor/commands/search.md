@@ -17,6 +17,7 @@ Read the **monitor** skill (`SKILL.md`) first. Then search via the engine:
 
 ```
 python3 monitor/scripts/search.py --project-root . --query "<text>" \
+    [--scope logs|reports|tasks|all] \
     [--branch <name>] [--status success|partial|failure] [--level LEVEL] [--limit N]
 ```
 
@@ -27,4 +28,6 @@ results page: a search result is different every time it's run, while every
 other monitor page is static and pre-built, so generating one here would be
 both extra work and immediately stale. Relay the matches (or "no matches
 found") to the user in your own words rather than dumping the raw output
-verbatim.
+verbatim. `--scope` defaults to `all` (every source); narrow to
+`logs`/`reports`/`tasks` to search just one. `--branch`/`--status`/`--level`
+only apply when the effective scope includes logs.

@@ -20,6 +20,8 @@ from pathlib import Path
 import logger
 import monitor_lib as mlib
 import render_logs
+import render_report
+import render_tasks
 
 
 def _haystack(e: dict) -> str:
@@ -30,9 +32,30 @@ def _haystack(e: dict) -> str:
     return " ".join(parts).lower()
 
 
-def search(root: Path, query: str, *, branch: str | None = None,
+def search(root: Path, query: str, *, scope: str = "logs", branch: str | None = None,
            status: str | None = None, level: str | None = None,
-           limit: int = 20) -> list[dict]:
+           limit: int = 20):
+    """scope="logs" (default) returns list[dict] — the original, unchanged
+    behavior every existing caller relies on. scope="reports"/"tasks" return
+    list[dict] from search_reports()/search_tasks(). scope="all" returns a
+    dict {"logs": [...], "reports": [...], "tasks": [...]}."""
+    if scope == "reports":
+        return search_reports(root, query, limit=limit)
+    if scope == "tasks":
+        return search_tasks(root, query, limit=limit)
+    if scope == "all":
+        return {
+            "logs": _search_logs(root, query, branch=branch, status=status,
+                                 level=level, limit=limit),
+            "reports": search_reports(root, query, limit=limit),
+            "tasks": search_tasks(root, query, limit=limit),
+        }
+    return _search_logs(root, query, branch=branch, status=status, level=level, limit=limit)
+
+
+def _search_logs(root: Path, query: str, *, branch: str | None = None,
+                 status: str | None = None, level: str | None = None,
+                 limit: int = 20) -> list[dict]:
     if limit <= 0:
         return []
     log_path = mlib.monitor_dir(root) / "logs" / "operations.mtr"
@@ -53,6 +76,60 @@ def search(root: Path, query: str, *, branch: str | None = None,
         if len(matches) >= limit:
             break
     return matches
+
+
+def search_reports(root: Path, query: str, *, limit: int = 20) -> list[dict]:
+    if limit <= 0:
+        return []
+    q = query.lower()
+    matches = []
+    for item in render_report.scan_reports(root):
+        path = mlib.monitor_dir(root) / "reports" / item["file"]
+        text = render_report._plain(path.read_text(encoding="utf-8"))
+        if q not in text.lower():
+            continue
+        idx = text.lower().find(q)
+        start = max(0, idx - 40)
+        excerpt = text[start:idx + len(query) + 40].strip()
+        matches.append({"file": item["file"], "title": item["title"],
+                        "date": item["date"], "excerpt": excerpt})
+        if len(matches) >= limit:
+            break
+    return matches
+
+
+def search_tasks(root: Path, query: str, *, limit: int = 20) -> list[dict]:
+    if limit <= 0:
+        return []
+    tasks_path = mlib.monitor_dir(root) / "tasks" / "tasks.mtr"
+    if not tasks_path.exists():
+        return []
+    entries = render_tasks.parse_tasks(tasks_path.read_text(encoding="utf-8"))
+    q = query.lower()
+    matches = []
+    for e in entries:
+        haystack = " ".join([e.get("title", ""), e.get("summary", ""),
+                             e.get("details", "")]).lower()
+        if q not in haystack:
+            continue
+        matches.append(e)
+        if len(matches) >= limit:
+            break
+    return matches
+
+
+def format_report_match(m: dict) -> str:
+    return f"{m['date']}  {m['title']}  ({m['file']})\n  ...{m['excerpt']}..."
+
+
+def format_task_match(e: dict) -> str:
+    lines = [f"{e['timestamp']} {e['level']} [{e['event']}] "
+             f"({e['task_id']}) {e['summary']} -- {e['status']}"]
+    if e.get("title"):
+        lines.append(f"  title:   {e['title']}")
+    if e.get("details"):
+        lines.append(f"  details: {e['details']}")
+    return "\n".join(lines)
 
 
 def format_match(e: dict) -> str:
@@ -79,6 +156,7 @@ def main() -> int:
     ap.add_argument("--query", required=True,
                     help="Case-insensitive substring, matched across operation, "
                          "tool, summary, task_id, details, branch, commit, and extra fields.")
+    ap.add_argument("--scope", default="all", choices=("logs", "reports", "tasks", "all"))
     ap.add_argument("--branch", default=None)
     ap.add_argument("--status", default=None, choices=logger.STATUSES)
     ap.add_argument("--level", default=None, choices=logger.LEVELS)
@@ -86,15 +164,32 @@ def main() -> int:
     args = ap.parse_args()
     root = mlib.resolve_root(args)
     mlib.require_init(root)
-    matches = search(root, args.query, branch=args.branch, status=args.status,
-                     level=args.level, limit=args.limit)
-    if not matches:
+    matches = search(root, args.query, scope=args.scope, branch=args.branch,
+                     status=args.status, level=args.level, limit=args.limit)
+    if args.scope != "all":
+        formatter = {"logs": format_match, "reports": format_report_match,
+                    "tasks": format_task_match}[args.scope]
+        if not matches:
+            print(f"no matches for {args.query!r}")
+            return 0
+        print(f"{len(matches)} match(es) for {args.query!r}:\n")
+        for m in matches:
+            print(formatter(m))
+            print("-" * 80)
+        return 0
+    total = sum(len(v) for v in matches.values())
+    if total == 0:
         print(f"no matches for {args.query!r}")
         return 0
-    print(f"{len(matches)} match(es) for {args.query!r}:\n")
-    for e in matches:
-        print(format_match(e))
-        print("-" * 80)
+    print(f"{total} match(es) for {args.query!r}:\n")
+    for source, formatter in (("logs", format_match), ("reports", format_report_match),
+                              ("tasks", format_task_match)):
+        if not matches[source]:
+            continue
+        print(f"## {source}\n")
+        for m in matches[source]:
+            print(formatter(m))
+            print("-" * 80)
     return 0
 
 

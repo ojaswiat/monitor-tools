@@ -267,6 +267,7 @@ compress the reminder, not the record.
 | Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
 | Putting task info in `--details` on a log entry | Tasks are a separate tracked entity, not a log field. Use `/monitor:task-start`/`update`/`close`; cross-reference with `logger.py --task-id`. |
+| Assuming `/monitor:search` only covers logs | It covers logs, reports, and tasks by default (`--scope all`); narrow with `--scope logs|reports|tasks` if you only want one source. |
 
 ## Pending-state enforcement
 
