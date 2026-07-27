@@ -11,7 +11,7 @@ fixture), never this repo's own real `monitor/` directory.
 
 ## Flow
 
-1. Ensure pytest is available: `pip install -r requirements-dev.txt -q`
+1. Ensure pytest is available: `python3 -m pip install -r requirements-dev.txt -q`
    (skip if already importable — check with `python3 -c "import pytest"`
    first, only install on failure).
 2. Run: `PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ -v`

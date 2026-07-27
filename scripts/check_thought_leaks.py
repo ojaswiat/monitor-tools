@@ -23,12 +23,14 @@ TARGET_GLOBS = [
     "plugins/monitor/skills/monitor/SKILL.md",
     "plugins/monitor/commands/*.md",
     "README.md",
-    ".claude/skills/test-e2e/SKILL.md",
-    ".claude/skills/test-unit/SKILL.md",
-    ".claude/skills/test-integration/SKILL.md",
+    ".claude/skills/*/SKILL.md",
     "CLAUDE.md",
     "AGENTS.md",
 ]
+
+# This scanner's own skill doc quotes the banned phrases verbatim to explain
+# what is being looked for, so it always matches itself. Skip it.
+EXCLUDED = {".claude/skills/test-thought-leaks/SKILL.md"}
 
 PATTERNS = [
     re.compile(p, re.I) for p in [
@@ -50,6 +52,8 @@ def find_hits() -> list[tuple[Path, int, str]]:
     for pattern in TARGET_GLOBS:
         for path in sorted(REPO_ROOT.glob(pattern)):
             if path in seen or not path.is_file():
+                continue
+            if path.relative_to(REPO_ROOT).as_posix() in EXCLUDED:
                 continue
             seen.add(path)
             for i, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):

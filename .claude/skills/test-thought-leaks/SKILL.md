@@ -27,6 +27,7 @@ doc files for phrases like "used to", "previously", "removed because",
 
 - This skill is not part of the `monitor` plugin; it is never copied into
   `plugins/monitor/`.
-- The script's target file list is fixed in code
-  (`scripts/check_thought_leaks.py`'s `TARGET_GLOBS`) — if a new shipped
-  doc file is added to the repo, add it there too.
+- The script's target list lives in code
+  (`scripts/check_thought_leaks.py`'s `TARGET_GLOBS`). It globs every
+  `.claude/skills/*/SKILL.md`, so a new skill is covered automatically; a
+  shipped doc outside those globs needs an entry added there.

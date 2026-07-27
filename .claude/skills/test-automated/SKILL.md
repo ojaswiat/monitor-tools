@@ -8,7 +8,7 @@ description: Runs the full automated check set for monitor — unit tests, integ
 Runs, in order, reporting each result separately (never merged into one
 opaque pass/fail):
 
-1. **Unit tests** — `pip install -r requirements-dev.txt -q` (skip if
+1. **Unit tests** — `python3 -m pip install -r requirements-dev.txt -q` (skip if
    pytest already importable), then
    `PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ -v`.
 2. **Integration tests** —
