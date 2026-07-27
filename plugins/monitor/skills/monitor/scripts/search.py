@@ -24,7 +24,7 @@ import render_logs
 
 def _haystack(e: dict) -> str:
     parts = [e.get("operation", ""), e.get("tool", ""), e.get("summary", ""),
-              e.get("task", ""), e.get("details", ""), e.get("branch", ""),
+              e.get("task_id", ""), e.get("details", ""), e.get("branch", ""),
               e.get("last_commit_hash", "")]
     parts += [f"{k} {v}" for k, v in e.get("extra", {}).items()]
     return " ".join(parts).lower()
@@ -62,8 +62,8 @@ def format_match(e: dict) -> str:
         lines.append(f"  branch:  {e['branch']}")
     if e.get("last_commit_hash"):
         lines.append(f"  commit:  {e['last_commit_hash']}")
-    if e.get("task"):
-        lines.append(f"  task:    {e['task']}")
+    if e.get("task_id"):
+        lines.append(f"  task_id: {e['task_id']}")
     if e.get("files"):
         lines.append(f"  files:   {', '.join(e['files'])}")
     for k, v in e.get("extra", {}).items():
@@ -78,7 +78,7 @@ def main() -> int:
     mlib.add_root_arg(ap)
     ap.add_argument("--query", required=True,
                     help="Case-insensitive substring, matched across operation, "
-                         "tool, summary, task, details, branch, commit, and extra fields.")
+                         "tool, summary, task_id, details, branch, commit, and extra fields.")
     ap.add_argument("--branch", default=None)
     ap.add_argument("--status", default=None, choices=logger.STATUSES)
     ap.add_argument("--level", default=None, choices=logger.LEVELS)

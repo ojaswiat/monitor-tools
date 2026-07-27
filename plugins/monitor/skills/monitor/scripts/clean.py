@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Delete the oldest N logs or reports, then re-render the affected pages.
+"""Delete the oldest N logs, reports, or tasks, then re-render the affected pages.
 
 Usage:
   python3 clean.py --project-root <repo> --logs N
   python3 clean.py --project-root <repo> --reports N
+  python3 clean.py --project-root <repo> --tasks N
   add --dry-run to preview without deleting.
 """
 
@@ -16,6 +17,7 @@ from pathlib import Path
 import monitor_lib as mlib
 import render_logs
 import render_report
+import render_tasks
 
 SEPARATOR = "=" * 80
 
@@ -60,11 +62,41 @@ def clean_reports(root: Path, n: int, dry: bool) -> int:
     return 0
 
 
+def clean_tasks(root: Path, n: int, dry: bool) -> int:
+    tasks_path = mlib.monitor_dir(root) / "tasks" / "tasks.mtr"
+    if not tasks_path.exists():
+        print("no tasks.mtr")
+        return 0
+    text = tasks_path.read_text(encoding="utf-8")
+    entries = render_tasks.parse_tasks(text)
+    groups = render_tasks.group_tasks(entries)  # newest-first by task
+    n = max(0, min(n, len(groups)))
+    removed = groups[len(groups) - n:]
+    to_remove = {g["task_id"] for g in removed}
+    print(f"removing {n} oldest of {len(groups)} tasks (all their events):")
+    for g in removed:
+        print(f"  - {g['task_id']}  ({g['title'] or 'untitled'})")
+    if dry:
+        return 0
+    # Membership is decided by each block's OWN parsed task_id (the header
+    # line's `(<task_id>)` field), never by substring-searching the block
+    # text — a block whose details merely mention another task's id must not
+    # be deleted with it.
+    kept_blocks = [b for b in render_tasks.split_blocks(text)
+                   if render_tasks.block_task_id(b) not in to_remove]
+    new_text = "".join(b + "\n" + SEPARATOR + "\n" for b in kept_blocks)
+    tasks_path.write_text(new_text, encoding="utf-8")
+    render_tasks.render(root)
+    render_report.refresh_dashboard(root)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     mlib.add_root_arg(ap)
     ap.add_argument("--logs", type=int, help="Delete the oldest N log entries")
     ap.add_argument("--reports", type=int, help="Delete the oldest N reports")
+    ap.add_argument("--tasks", type=int, help="Delete the oldest N tasks (all their events)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     root = mlib.resolve_root(args)
@@ -73,7 +105,9 @@ def main() -> int:
         return clean_logs(root, args.logs, args.dry_run)
     if args.reports is not None:
         return clean_reports(root, args.reports, args.dry_run)
-    ap.error("one of --logs or --reports is required")
+    if args.tasks is not None:
+        return clean_tasks(root, args.tasks, args.dry_run)
+    ap.error("one of --logs, --reports, or --tasks is required")
 
 
 if __name__ == "__main__":

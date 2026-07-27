@@ -20,7 +20,7 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    ```
    python3 monitor/scripts/logger.py --operation <kebab-name> --tool <Tools> \
      --summary "<one line>" --status success|partial|failure --details "<verbose>" \
-     [--files <paths>] [--task "<task>"] [--set <key=value> …]
+     [--files <paths>] [--task-id <id>] [--set <key=value> …]
    ```
    The schema is locked in code — extra fields go in via
    `--set`. Structure `--details` yourself (labeled lines / numbered /

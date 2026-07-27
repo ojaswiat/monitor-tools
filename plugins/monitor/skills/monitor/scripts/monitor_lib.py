@@ -111,6 +111,23 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+# Strips ASCII control bytes (NUL..BS, VT, FF, SO..US, DEL) — e.g. the raw
+# ANSI escape codes a backtick-quoted example command can splice into a field
+# via accidental shell command substitution. Tab is left alone; real newlines
+# are handled separately since they'd break the block format.
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def sanitize(value):
+    """Every field written to an .mtr file is sanitized first: strip control
+    characters, flatten real newlines to spaces (the log is block/line-based —
+    a raw newline inside a field would corrupt parsing), and trim."""
+    if value is None:
+        return value
+    value = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    return _CONTROL_CHARS.sub("", value).strip()
+
+
 # ---------------------------------------------------------------- vcs
 
 def git_branch(root: Path) -> str:
@@ -297,14 +314,15 @@ def project_name(profile: dict, root: Path) -> str:
 
 
 def tabnav(active: str, prefix: str) -> str:
-    """Reports/Logs tab-nav. `prefix` is the relative path back to monitor/.
-    active is 'reports' or 'logs'."""
+    """Reports/Logs/Tasks tab-nav. `prefix` is the relative path back to
+    monitor/. active is 'reports', 'logs', or 'tasks'."""
     def a(name, href, key):
         cls = ' class="active" aria-current="page"' if key == active else ''
         return f'<a href="{href}"{cls}>{name}</a>'
     return (f'<nav class="tabnav" aria-label="Dashboard pages">'
             f'{a("Reports", prefix + "reports/index.html", "reports")}'
-            f'{a("Logs", prefix + "logs/index.html", "logs")}</nav>')
+            f'{a("Logs", prefix + "logs/index.html", "logs")}'
+            f'{a("Tasks", prefix + "tasks/index.html", "tasks")}</nav>')
 
 
 PAGE_SIZE = 10

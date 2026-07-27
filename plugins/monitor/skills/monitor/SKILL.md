@@ -23,10 +23,11 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
   profile.json           SOURCE OF TRUTH (auto-detected, hand-refinable)
   usage.md               companion skills present + how monitor uses each
   .pending.json          pending-state tracker for the enforcement gate (committed, not gitignored)
-  index.html             Dashboard (links Reports + Logs)
+  index.html             Dashboard (links Reports, Logs, Tasks)
   scripts/               project copy of the engine (run these)
   reports/  template.html  index.html  <date>-<slug>.html  (no manifest — index is scanned)
   logs/     operations.mtr  index.html
+  tasks/    tasks.mtr  index.html
 ```
 
 ## Commands
@@ -38,8 +39,12 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
 | `/monitor:record` | Log **and** (when code changed) report, in one step. |
 | `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
+| `/monitor:task-start "<title>"` | Start a new lifecycle-tracked task; prints the generated `task_id`. |
+| `/monitor:task-update <id>` | Append a status/metrics update to an existing task. |
+| `/monitor:task-close <id>` | Close a task with a terminal status (success/failed/cancelled). |
 | `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
 | `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
+| `/monitor:clean-tasks <N>` | Delete the oldest N tasks (all their events); re-render Tasks + Dashboard. |
 
 Commands are agent-only. Internally the agent runs the engine via
 `python3 monitor/scripts/<script>.py [args]` (each resolves its own project
@@ -51,7 +56,7 @@ missing, do not run any engine script — prompt for `/monitor:init` and stop. T
 engine scripts also fail fast (exit 2) when it is absent; only `profile.py`
 (which creates it) is exempt.
 
-## Monitor has exactly two jobs: log and report
+## Monitor's job: log, report, and track tasks
 Monitor never detects a project's language, guesses its build/test commands,
 or otherwise inspects what the project does. That's guessing, not recording
 or presenting — out of scope, whether the project is brand new or years old.
@@ -76,7 +81,7 @@ field show no chip.
 
 ## Logging
 - Log through the engine only — never hand-edit `operations.mtr`:
-  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--last-commit-hash <sha>] [--set k=v]`.
+  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task-id <id>] [--branch <name>] [--last-commit-hash <sha>] [--set k=v]`.
 - The schema is **locked in code** (`REQUIRED`/`LEVELS`/`STATUSES` constants in
   `logger.py`), identical across every project. It
   validates required fields and the `level`/`status` enums before writing.
@@ -202,6 +207,44 @@ label.
 - Reports are immutable snapshots — never rewrite an old report on a template
   upgrade; only new reports use new sections/KPIs.
 
+## Tasks
+A third tracked entity, separate from logs and reports: a lifecycle-tracked
+unit of work with self-reported metrics, backed by `monitor/tasks/tasks.mtr`
+(same append-only block format as `operations.mtr`) and rendered to a
+paginated `monitor/tasks/index.html`, linked as the third Dashboard tab.
+
+- **Lifecycle:** `open → in_progress → (needs_approval | needs_retry |
+  blocked)* → success | failed | cancelled`. The first 5 are non-terminal
+  (valid on `/monitor:task-start`/`/monitor:task-update`); the last 3 are
+  terminal (valid only on `/monitor:task-close`).
+- **Metrics are self-reported, not instrumented.** `tokens`, `credits`,
+  `cost`, `skills_used`, `tools_called` are CLI flags the agent fills in
+  from its own knowledge of what it did — the engine is stdlib Python with
+  no access to the real session transcript, so it cannot introspect actual
+  token counts or which skills/tools actually ran. Same trust model
+  `--details` already uses.
+- **Metrics accumulate.** Every `task-update`/`task-close` call's numeric
+  metrics add to the task's running total; `skills_used`/`tools_called`
+  union (dedup) across calls.
+- **Log entries can reference a task.** `logger.py --task-id <id>` stores a
+  foreign key into `tasks.mtr` on that log entry, rendered as a chip on the
+  Logs page — purely a cross-reference, not required.
+- **Commands:** `/monitor:task-start "<title>"` (returns and prints the
+  generated `task_id` — relay it to the user, you need it for every
+  subsequent call), `/monitor:task-update <id> --status ...`,
+  `/monitor:task-close <id> --status success|failed|cancelled`.
+
+### Integration points
+- This harness's own `TaskCreate`/`TaskUpdate`/`TaskGet` calls map naturally
+  onto `task-start`/`task-update`/`task-close` — when already tracking a
+  task with the harness's native tool, mirror the same lifecycle into
+  monitor so it's recoverable from the log/report system too, not just the
+  harness's own ephemeral task state.
+- `superpowers:subagent-driven-development`'s per-task dispatch loop
+  (ledger file, one task per implementer round) maps the same way: a
+  `task-start` when a task's implementer is dispatched, `task-update` on
+  each fix-loop round, `task-close` when the ledger marks it done.
+
 ## Memory — apply this policy without re-reading SKILL.md every session
 `/monitor:init` (and `/monitor:update`) save a compressed version of the
 Logging and Reporting defaults above to the agent's persistent memory, as
@@ -223,6 +266,7 @@ compress the reminder, not the record.
 | Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
 | Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
+| Putting task info in `--details` on a log entry | Tasks are a separate tracked entity, not a log field. Use `/monitor:task-start`/`update`/`close`; cross-reference with `logger.py --task-id`. |
 
 ## Pending-state enforcement
 

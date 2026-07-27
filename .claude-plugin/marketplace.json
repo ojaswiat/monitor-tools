@@ -8,7 +8,7 @@
     {
       "name": "monitor",
       "source": "./plugins/monitor",
-      "description": "Portable logging + reporting workflow (project-local Dashboard + Reports + Logs)."
+      "description": "Portable logging + reporting workflow (project-local Dashboard + Reports + Logs + Tasks)."
     }
   ]
 }

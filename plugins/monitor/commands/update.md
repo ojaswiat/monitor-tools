@@ -24,8 +24,8 @@ exactly —
    cp "$ENGINE"/scripts/*.py monitor/scripts/
    ```
 3. Regenerate assets from the reconciled profile:
-   `python3 monitor/scripts/render_report.py` and
-   `python3 monitor/scripts/render_logs.py`.
+   `python3 monitor/scripts/render_report.py` (also rebuilds `tasks/index.html`)
+   and `python3 monitor/scripts/render_logs.py`.
    Existing report HTML files are immutable snapshots — they are not touched;
    `operations.mtr` is preserved and re-rendered tolerant of older entries.
 4. Refresh `monitor/usage.md` from the current companion-skill availability.
