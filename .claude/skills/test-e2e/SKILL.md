@@ -35,7 +35,7 @@ session but run 3-at-once with varying companion-install levels.
    | Agent | Language | companion_level |
    |---|---|---|
    | A | Python repo | `none` |
-   | B | Node repo | `some` (install `superpowers` only — see step 3) |
+   | B | Node repo | `some` (install `superpowers` only — see template step 3) |
    | C | Go-or-docs repo | `all` (install all 6) |
 
    If any of the 3 `Agent` calls comes back denied by the auto-mode
@@ -43,13 +43,15 @@ session but run 3-at-once with varying companion-install levels.
    problem with the request), retry that one call alone; don't resend the
    whole batch or swap in a different repo/level for it.
 
-   Before writing each subagent's prompt, capture the current plugin
-   version so subagents can detect if the branch moves under them between
-   dispatch and worktree creation:
+   Before writing each subagent's prompt, capture this repo's current
+   branch and commit sha, so each subagent can tell whether its worktree's
+   content is behind your HEAD at the moment it was dispatched:
    ```bash
-   grep '"version"' plugins/monitor/.claude-plugin/plugin.json
+   git rev-parse --abbrev-ref HEAD
+   git rev-parse HEAD
    ```
-   Pass the printed value into every subagent's prompt as `{expected_version}`.
+   Pass the branch name into every subagent's prompt as `{base_branch}` and
+   the commit sha as `{expected_head_sha}`.
 
    **Subagent prompt template:**
 
@@ -62,15 +64,13 @@ session but run 3-at-once with varying companion-install levels.
    (Documents, Desktop, Downloads, etc.); those trigger OS permission
    prompts on the user's machine that have nothing to do with this test.
 
-   0. Before anything else, check whether this repo's branch has moved
-      since you were dispatched: run
-      `grep '"version"' plugins/monitor/.claude-plugin/plugin.json` from
-      the repo root you're in. If the printed version does not match
-      `{expected_version}`, the branch advanced after dispatch — run
-      `git merge <base-branch>` (substitute the actual branch name this
-      drill is running on, e.g. `dev` or the feature branch) right now,
-      before proceeding to step 1. If it matches, proceed directly to
-      step 1. State in your final report which case happened.
+   0. Before anything else, check whether your worktree's content is behind
+      the commit the orchestrator was on when it dispatched you: run
+      `git rev-parse HEAD` from the repo root you're in and compare the
+      printed sha against `{expected_head_sha}`. If they differ, your
+      worktree is behind — run `git merge {base_branch}` right now, before
+      proceeding to step 1. If they match, proceed directly to step 1.
+      State in your final report which case happened.
    1. Clone {repo_url} into {project_dir} (relative to the repo root you're
       in), then cd into it. Verify the clone succeeded and contains real
       files — if it fails, or the repo is empty/archived/unrelated to what
@@ -118,29 +118,44 @@ session but run 3-at-once with varying companion-install levels.
    5. Do at least 5 separate rounds of small changes so there's real log
       and report volume to inspect afterward.
    6. As part of (not separate from) those 5 rounds, use the project's
-      task-tracking commands to create, update, and close at least one task
-      — verify it shows up in `monitor/tasks/tasks.mtr` and appears in the
-      Dashboard Tasks count.
+      task-tracking commands to create, update, and close at least one task.
+      Paths below are relative to {project_dir}, which you're already cd'd
+      into. While the task is still open (after creating/updating it, before
+      closing it), check that the Dashboard's open-task KPI counts it. After
+      closing it, verify it appears on the Tasks page with its final status,
+      and that its lifecycle events are recorded in `monitor/tasks/tasks.mtr`.
    7. Somewhere in those same 5 rounds, make at least one real commit
       without logging it first, then simulate what the two installed
       pending-state hooks would do (you cannot trigger Claude Code's real
       PostToolUse/UserPromptSubmit hook dispatch from inside this
       subagent — there's no live interactive session here, so this is a
       deliberate simulation, not the real thing): pipe the same JSON a
-      real hook call would receive directly into
-      `{project_dir}/monitor/scripts/pending.py hook-post-tool-use` and
-      then `hook-user-prompt-submit`. Verify the unlogged commit shows up
-      in `monitor/.pending.json`, the user-prompt-submit simulation
-      produces a sensible warning message, and running the project's
-      actual log command afterward clears the matching pending entry.
+      real hook call would receive into `monitor/scripts/pending.py`. All
+      paths here are relative to {project_dir}, which you're already cd'd
+      into, and `--project-root` must come *before* the subcommand —
+      `pending.py` registers it on the top-level parser, so argparse
+      rejects it if it trails:
+      ```bash
+      echo '{"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}}' \
+        | python3 monitor/scripts/pending.py --project-root . hook-post-tool-use
+      echo '{}' | python3 monitor/scripts/pending.py --project-root . hook-user-prompt-submit
+      ```
+      Verify the unlogged commit shows up in `monitor/.pending.json`, the
+      user-prompt-submit simulation produces a sensible warning message, and
+      running the project's actual log command afterward clears the matching
+      pending entry — run that log command immediately after the test commit,
+      before making any further commits, since the pending entry is matched by
+      the commit sha that was HEAD at log time.
    8. Report back in plain language: what you changed, whether/how you
       used monitor (which commands, how many times), and anything that
       looked broken, confusing, inconsistent, or undocumented — including
       anything about the companion-install step if companion_level wasn't
       "none". Your worktree will likely be gone by the time this is read,
       so paste the real evidence inline rather than describing it: the
-      final log-entry count and report count, task count in `monitor/tasks/tasks.mtr`,
-      one full task's self-reported metrics pasted verbatim, one full `--details`
+      final log-entry count and report count, the number of distinct task_ids
+      in `monitor/tasks/tasks.mtr` (that file is append-only with one block per
+      lifecycle event, so count distinct task_ids, not blocks or lines), one full
+      task's self-reported metrics pasted verbatim, one full `--details`
       block copied verbatim from `operations.mtr` (not paraphrased) so it can be
       checked for real content vs. placeholder text, and the pending-hook test
       outcome from step 7 — pass or fail, with the warning message text pasted
@@ -153,13 +168,15 @@ session but run 3-at-once with varying companion-install levels.
 4. **Verify, don't just relay.** Try reading each worktree directly first —
    `{project_dir}/monitor/profile.json`, `logs/operations.mtr`,
    `reports/*.html`, `tasks/tasks.mtr`, and `.pending.json` — and cross-check
-   counts and `--details` content against what the subagent claimed. In
-   every run so far the worktree was already gone by this point
-   (auto-pruned by the harness once the subagent stopped), so treat that as
-   the expected case, not an error: fall back to checking the verbatim
-   log-entry count, report count, task count, one task's metrics, and the
-   pending-hook pass/fail each subagent was told to paste into its own
-   report (step 8 above) for internal consistency and real content, same
+   counts and `--details` content against what the subagent claimed. When
+   counting tasks, count distinct task_ids in `tasks.mtr`, not blocks (it
+   holds one block per lifecycle event, so a single created→updated→closed
+   task is several blocks). The worktree is usually already gone by this
+   point (auto-pruned by the harness once the subagent stopped), so treat that
+   as the expected case, not an error: fall back to checking the verbatim
+   log-entry count, report count, distinct-task_id count, one task's metrics,
+   and the pending-hook pass/fail each subagent was told to paste into its own
+   report (template step 8) for internal consistency and real content, same
    verify-before-trusting-a-subagent's-claims practice as any manual
    drill — just against pasted evidence instead of live files.
 
@@ -169,10 +186,11 @@ session but run 3-at-once with varying companion-install levels.
    working tree — not inside any worktree). If a file for today already
    exists (a second run same day), append `-round-N` rather than
    overwriting it. Cover, per project: repo name/language, companion level, number of
-   commits/changes made, log entry count, report count, task count, and
+   commits/changes made, log entry count, report count, task count (distinct
+   task_ids, matching how the subagents were told to count), and
    hook-test result (pass/fail, with the one-line reason on fail) — plus a
    short findings list (bugs, inconsistencies, compliance gaps) drawn from
-   both the subagent's report and your own spot-check in step 4.
+   both the subagent's report and your own spot-check in flow step 4.
 
 6. **Publish the report** with the `Artifact` tool (`file_path` pointing at
    the HTML file just written, a short `title`/`description`, and a
