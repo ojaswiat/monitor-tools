@@ -26,11 +26,15 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    `<first-short-sha>..<last-short-sha>` (e.g. `58e342a..bd3ecb7`) — the
    first commit unique to this branch's work through the current `HEAD` (e.g.
    `git log --oneline <base-branch>..HEAD`); if the report covers exactly one
-   commit, use just that single short sha with no range. Fill `{{ date_created }}`
-   with the date the underlying work began (your own judgment, distinct from
-   `{{ date }}`/`{{ last_modified }}`, both of which are stamped automatically).
-   Leave `{{ last_modified }}` alone — `render_report.py --lock-report` fills it in
-   automatically at the end of authoring. **Only the
+   commit, use just that single short sha with no range.
+   Fill `{{ date }}` yourself with today's date (`YYYY-MM-DD`) — this is the
+   "Generated" chip and no script ever substitutes it; an unfilled
+   `{{ date }}` ships verbatim into the published report.
+   Fill `{{ date_created }}` yourself as well, with the date the underlying
+   work began (your own judgment — often earlier than `{{ date }}`).
+   Leave `{{ last_modified }}` alone — that is the only date placeholder that
+   is stamped automatically: `render_report.py --lock-report` fills it in at
+   the end of authoring. **Only the
    text content changes** — a request about tone, audience, reading level, or
    language (e.g. "explain it like I'm 11") changes the words in each section,
    never the `<style>` block, palette, layout, or class names. The design is

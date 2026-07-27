@@ -181,7 +181,9 @@ label.
   published file can't ship off-theme. This is a one-time correction on the
   new file only — never run it against old reports, that would violate the
   immutable-snapshot rule below.
-- HTML/CSS only, self-contained, no `<script>`; sharp corners
+- HTML/CSS only, self-contained, no `<script>` — except the Dashboard
+  (`monitor/index.html`), which carries one small self-contained script for its
+  search box, the single deliberate exception; sharp corners
   (`border-radius:0`), dual theme via `prefers-color-scheme`, status via `.tag`
   (`pass`/`warn`/`fail`/`info`) with the label text carrying meaning.
 - Sections: Summary · What Was Asked · What Was Done · **Decisions & Rationale**
