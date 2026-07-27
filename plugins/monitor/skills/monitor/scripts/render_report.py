@@ -287,6 +287,32 @@ def render_reports_index(profile: dict, items: list[dict], root: Path,
     _prune_stale_report_pages(reports_dir, total_pages)
 
 
+def _build_search_index(root: Path) -> list[dict]:
+    """Small, title/summary-only index for the Dashboard's client-side grep
+    box — deliberately excludes full --details/body text to keep the
+    embedded payload small; this is a quick-find aid, not a replacement
+    for /monitor:search's full-text matching."""
+    mdir = mlib.monitor_dir(root)
+    index: list[dict] = []
+    log_path = mdir / "logs" / "operations.mtr"
+    if log_path.exists():
+        for e in render_logs.parse_log(log_path.read_text(encoding="utf-8")):
+            if e.get("fragment") is not None:
+                continue
+            index.append({"kind": "log", "title": e["summary"],
+                          "href": "logs/index.html"})
+    for item in scan_reports(root):
+        index.append({"kind": "report", "title": item["title"],
+                      "href": f"reports/{item['file']}"})
+    tasks_path = mdir / "tasks" / "tasks.mtr"
+    if tasks_path.exists():
+        for g in render_tasks.group_tasks(render_tasks.parse_tasks(
+                tasks_path.read_text(encoding="utf-8"))):
+            index.append({"kind": "task", "title": g["title"] or g["task_id"],
+                          "href": "tasks/index.html"})
+    return index
+
+
 def render_dashboard(profile: dict, n_reports: int, root: Path,
                      branch: str = "") -> None:
     brand = mlib.project_name(profile, root)
@@ -295,6 +321,7 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
     n_logs = len([e for e in render_logs.parse_log(log_path.read_text(encoding="utf-8"))
                   if e.get("fragment") is None]) if log_path.exists() else 0
     n_open_tasks = render_tasks.count_open(root)
+    search_index = _build_search_index(root)
     header = f"""  <header class="report">
     <h1>{mlib.esc(brand)} · Monitor</h1>
     <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
@@ -307,6 +334,11 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
     <div class="kpi"><div class="label">Log entries</div><div class="value">{n_logs}</div></div>
     <div class="kpi warn"><div class="label">Open tasks</div><div class="value">{n_open_tasks}</div></div>
     <div class="kpi"><div class="label">Profile</div><div class="value small mono">v{profile.get("profileVersion", 1)}</div></div>
+  </div>
+
+  <div class="dsearch">
+    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..." autocomplete="off">
+    <ul id="monitor-search-results"></ul>
   </div>"""
     body = """  <div class="card-grid">
     <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
@@ -315,8 +347,33 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
   </div>"""
     footer = ('  <footer><span>monitor · project dashboard</span>'
               '<span><a href="#top">↑ Back to Top</a></span></footer>')
+    import json as _json
+    script = f"""<script>
+const MONITOR_SEARCH_INDEX = {_json.dumps(search_index)};
+(function() {{
+  const input = document.getElementById('monitor-search');
+  const results = document.getElementById('monitor-search-results');
+  input.addEventListener('input', function() {{
+    const q = input.value.trim().toLowerCase();
+    results.innerHTML = '';
+    if (!q) return;
+    MONITOR_SEARCH_INDEX
+      .filter(item => item.title.toLowerCase().includes(q))
+      .slice(0, 20)
+      .forEach(item => {{
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = item.href;
+        a.textContent = '[' + item.kind + '] ' + item.title;
+        li.appendChild(a);
+        results.appendChild(li);
+      }});
+  }});
+}})();
+</script>"""
     out = mlib.page(f"{brand} · Monitor", brand, "info", "Monitor", header, body,
                     footer, branch=branch)
+    out = out.replace('</body>', script + '\n</body>')
     (mdir / "index.html").write_text(out, encoding="utf-8")
 
 
