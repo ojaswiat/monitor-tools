@@ -292,30 +292,52 @@ def render_reports_index(profile: dict, items: list[dict], root: Path,
     _prune_stale_report_pages(reports_dir, total_pages)
 
 
-def _build_search_index(root: Path) -> list[dict]:
+SEARCH_INDEX_LIMIT = mlib.PAGE_SIZE * 5
+
+
+def _build_search_index(root: Path, limit: int = SEARCH_INDEX_LIMIT) -> list[dict]:
     """Small, title/summary-only index for the Dashboard's client-side grep
     box — deliberately excludes full --details/body text to keep the
     embedded payload small; this is a quick-find aid, not a replacement
-    for /monitor:search's full-text matching."""
+    for /monitor:search's full-text matching. Capped at `limit` newest
+    entries per source (logs/reports/tasks) so the embedded payload stays
+    bounded the same way every other monitor page is bounded by
+    mlib.PAGE_SIZE pagination."""
     mdir = mlib.monitor_dir(root)
-    index: list[dict] = []
+    logs: list[dict] = []
     log_path = mdir / "logs" / "operations.mtr"
     if log_path.exists():
+        # parse_log() is newest-first, so [:limit] keeps the newest entries.
         for e in render_logs.parse_log(log_path.read_text(encoding="utf-8")):
             if e.get("fragment") is not None:
                 continue
-            index.append({"kind": "log", "title": e["summary"],
-                          "href": "logs/index.html"})
-    for item in scan_reports(root):
-        index.append({"kind": "report", "title": item["title"],
-                      "href": f"reports/{item['file']}"})
+            logs.append({"kind": "log", "title": e["summary"],
+                         "href": "logs/index.html"})
+    # scan_reports() is newest-first by (date, mtime).
+    reports = [{"kind": "report", "title": item["title"],
+                "href": f"reports/{item['file']}"}
+               for item in scan_reports(root)]
+    tasks_index: list[dict] = []
     tasks_path = mdir / "tasks" / "tasks.mtr"
     if tasks_path.exists():
-        for g in render_tasks.group_tasks(render_tasks.parse_tasks(
-                tasks_path.read_text(encoding="utf-8"))):
-            index.append({"kind": "task", "title": g["title"] or g["task_id"],
-                          "href": "tasks/index.html"})
-    return index
+        # group_tasks() preserves the newest-first order of parse_tasks().
+        tasks_index = [{"kind": "task", "title": g["title"] or g["task_id"],
+                        "href": "tasks/index.html"}
+                       for g in render_tasks.group_tasks(render_tasks.parse_tasks(
+                           tasks_path.read_text(encoding="utf-8")))]
+    return logs[:limit] + reports[:limit] + tasks_index[:limit]
+
+
+def _json_for_script(value) -> str:
+    """JSON, escaped so it can never break out of the <script> element it is
+    embedded in. JSON escaping alone does not touch `<`, `>` or `&`, so a
+    title containing `</script>` would otherwise terminate the element and
+    inject raw HTML into the page."""
+    import json as _json
+    return (_json.dumps(value)
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("&", "\\u0026"))
 
 
 def render_dashboard(profile: dict, n_reports: int, root: Path,
@@ -352,9 +374,8 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
   </div>"""
     footer = ('  <footer><span>monitor · project dashboard</span>'
               '<span><a href="#top">↑ Back to Top</a></span></footer>')
-    import json as _json
     script = f"""<script>
-const MONITOR_SEARCH_INDEX = {_json.dumps(search_index)};
+const MONITOR_SEARCH_INDEX = {_json_for_script(search_index)};
 (function() {{
   const input = document.getElementById('monitor-search');
   const results = document.getElementById('monitor-search-results');
