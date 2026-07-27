@@ -2,8 +2,8 @@
 
 ## Summary
 
-Five independent fixes/additions to `monitor`, grouped into one implementation
-pass on branch `feat/followup-fixes`:
+Seven independent fixes/additions to `monitor`, grouped into one
+implementation pass on branch `feat/followup-fixes`:
 
 1. Open tasks feed the pending-state hook gate.
 2. `clean --tasks`'s "oldest N" sorts by real creation time, not last-activity.
@@ -19,6 +19,11 @@ pass on branch `feat/followup-fixes`:
 5. Report template gains real `date_created`/`last_modified` placeholders,
    both filled once at authoring time (reports are immutable snapshots —
    neither field ever changes after a report is written).
+6. `test-thought-leaks`: automates the manual dev-history/reasoning-leakage
+   grep passes this session already did by hand.
+7. `test-automated`: a thin orchestration skill running `test-unit` +
+   `test-integration` + `test-thought-leaks` together (not `test-e2e`,
+   which stays manual/on-demand).
 
 ## 1. Open tasks in the pending-hook gate
 
@@ -143,6 +148,48 @@ field is a live-updating value:
   forget it.
 - `{{ date }}` (the existing "Generated" chip) is unchanged — kept for
   backward compatibility with older reports that only have it.
+
+## 6. `test-thought-leaks` skill — automated dev-history/reasoning-leakage check
+
+This repo's `CLAUDE.md` bans development history, version changelogs, and
+reasoning leakage in any user-facing documentation. So far this has been
+checked by hand (manual `grep` passes during this session). Automate it:
+
+**`scripts/check_thought_leaks.py`** (repo-root `scripts/`, not part of the
+shipped engine under `plugins/monitor/`): greps a fixed list of shipped
+doc files —
+`plugins/monitor/skills/monitor/SKILL.md`,
+`plugins/monitor/commands/*.md`,
+`README.md`,
+`.claude/skills/test-e2e/SKILL.md`, `.claude/skills/test-unit/SKILL.md`,
+`.claude/skills/test-integration/SKILL.md` (once those exist),
+this repo's own `CLAUDE.md`/`AGENTS.md` —
+for a fixed list of red-flag regexes: version-narration phrases
+(`\bversion\s+\d+\b`, `\bused to\b`, `\bpreviously\b`, `\bremoved (in|because)\b`,
+`\bearlier version\b`, `\bthis was later\b`, `\bdeprecated\b`,
+`\bearlier (implementation|approach)\b`), each compiled case-insensitively.
+A hit prints `file:line: <matched text>`; the script exits 1 if anything
+matched, 0 if clean — same pass/fail contract as a test. False positives
+are possible (e.g. a legitimate use of "previously" in an unrelated
+sentence) — the script's job is to flag candidates for a human/agent to
+confirm, not to auto-fail a commit; the skill wrapping it relays every hit
+for review rather than treating a hit as an automatic failure.
+
+**`.claude/skills/test-thought-leaks/SKILL.md`**: runs the script, relays
+every match with its file/line for the invoking agent to judge (confirm
+real leakage and fix, or confirm false positive and move on) — mirrors
+how this session's manual passes worked, just no longer requiring the
+agent to write the `grep` commands from scratch each time.
+
+## 7. `test-automated` skill — runs unit + integration + thought-leaks together
+
+**`.claude/skills/test-automated/SKILL.md`**: a thin orchestration skill —
+run `test-unit`'s check (`pytest tests/unit`), then `test-integration`'s
+(`pytest tests/integration`), then `test-thought-leaks`'s (the leak
+script), and report one combined pass/fail summary (each of the three
+named individually, not merged into a single opaque verdict). Does not
+invoke `test-e2e` — that stays manual/on-demand per the earlier decision
+(non-goals, item 3).
 
 ## Non-goals
 
