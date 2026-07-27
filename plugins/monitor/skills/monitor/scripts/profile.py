@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Detect and reconcile monitor/profile.json — the project's source of truth.
 
-Monitor has exactly two jobs: log and report. It does not detect a project's
+Monitor's job is to log, report, and track tasks. It does not detect a project's
 language, guess its build/test commands, or otherwise inspect what the
 project *is* or *does* — that would be guessing, not recording. The only
 thing profile.json auto-fills is the project's own directory name (needed to
-brand the Dashboard/Reports/Logs pages) — nothing else is detected.
+brand the Dashboard/Reports/Logs/Tasks pages) — nothing else is detected.
 
 Reconcile is strictly ADDITIVE: new detected keys/fields are added (stamped with
 the new profileVersion); keys already present are left as-is (hand edits win);

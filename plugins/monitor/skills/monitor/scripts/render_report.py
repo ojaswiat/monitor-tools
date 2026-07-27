@@ -4,7 +4,7 @@
 Writes (all under monitor/):
   reports/template.html    the canonical report template (brand + KPIs)
   reports/index.html       the Reports listing (scanned from reports/*.html)
-  index.html               the top Dashboard (links Reports + Logs)
+  index.html               the top Dashboard (links Reports, Logs, Tasks)
 
 Reports themselves are authored by the agent from template.html; this script
 only (re)builds the generated indexes. There is no manifest file — the
@@ -345,6 +345,7 @@ def render_all(root: Path) -> None:
     items = scan_reports(root)
     render_reports_index(profile, items, root, branch)
     render_dashboard(profile, len(items), root, branch)
+    render_tasks.render(root)
 
 
 def main() -> int:

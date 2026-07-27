@@ -32,16 +32,29 @@ STATUS_TAG_CLASS = {
 }
 
 
+def split_blocks(text: str) -> list[str]:
+    """Split tasks.mtr into its raw event blocks, exactly the way parse_tasks
+    does (so block N here is event N there)."""
+    return [b for b in (blk.strip("\n") for blk in text.split("\n" + SEPARATOR + "\n")) if b]
+
+
+def block_task_id(block: str) -> str:
+    """The task_id a raw block *belongs to*, read from its own header line.
+    Empty for an unparseable block. Callers must use this rather than
+    substring-searching a block's text: `details` may legitimately mention
+    another task's id, and that must never make the block look like that
+    task's event."""
+    m = _HEADER.match(block.split("\n", 1)[0])
+    return m.group(4) if m else ""
+
+
 def parse_tasks(text: str) -> list[dict]:
     """Parse tasks.mtr into flat events, newest-first — one dict per
     task-start/task-update/task-close block. Tolerant the same way
     render_logs.parse_log is: an unparseable block is skipped with a stderr
     warning rather than corrupting the rest of the read."""
     entries: list[dict] = []
-    for block in text.split("\n" + SEPARATOR + "\n"):
-        block = block.strip("\n")
-        if not block:
-            continue
+    for block in split_blocks(text):
         lines = block.split("\n")
         m = _HEADER.match(lines[0])
         if not m:
@@ -94,15 +107,19 @@ def group_tasks(entries: list[dict]) -> list[dict]:
         if tid not in groups:
             groups[tid] = {"task_id": tid, "title": "", "status": e["status"],
                           "branch": e.get("branch", ""), "tokens": 0.0,
-                          "credits": 0.0, "cost": 0.0, "skills_used": [],
-                          "tools_called": [], "events": []}
+                          "has_tokens": False, "credits": 0.0, "cost": 0.0,
+                          "skills_used": [], "tools_called": [], "events": []}
             order.append(tid)
         g = groups[tid]
         g["events"].append(e)
         if e.get("title"):
             g["title"] = e["title"]
         if e.get("tokens") is not None:
+            # Tracked separately from the sum so a task that reported
+            # `--tokens 0` still shows a tokens chip, and one that never
+            # reported tokens at all shows none — same rule as credits/cost.
             g["tokens"] += e["tokens"]
+            g["has_tokens"] = True
         if e.get("credits") is not None:
             g["credits"] += e["credits"]
         if e.get("cost") is not None:
@@ -135,7 +152,8 @@ def _card(g: dict) -> str:
          f'      <span class="toolchip">id: {mlib.esc(g["task_id"])}</span>']
     if g.get("branch"):
         p.append("      " + mlib.branch_chip(g["branch"]))
-    p.append(f'      <span class="toolchip">tokens: {int(g["tokens"])}</span>')
+    if g.get("has_tokens"):
+        p.append(f'      <span class="toolchip">tokens: {int(g["tokens"])}</span>')
     if g["credits"]:
         p.append(f'      <span class="toolchip">credits: {g["credits"]:g}</span>')
     if g["cost"]:
@@ -149,6 +167,10 @@ def _card(g: dict) -> str:
     p += ['    <details>', '      <summary>Timeline</summary>']
     for e in g["events"]:
         p.append(f'      <p>{mlib.esc(e["timestamp"])} — <b>{mlib.esc(e["status"])}</b> — {mlib.esc(e["summary"])}</p>')
+        if e.get("details"):
+            # Same convention log entries use: literal \n between points,
+            # decoded into a real list by format_list_block.
+            p.append(f'      {mlib.format_list_block(e["details"])}')
     p += ['    </details>', '  </article>']
     return "\n".join(p)
 

@@ -135,6 +135,11 @@ def _write_entry(root: Path, entry: dict) -> None:
         render_tasks.render(root)
     except Exception as err:  # noqa: BLE001 — best-effort view refresh
         print(f"warning: could not refresh Tasks page: {err}", file=sys.stderr)
+    try:
+        import render_report
+        render_report.refresh_dashboard(root)
+    except Exception as err:  # noqa: BLE001 — best-effort view refresh
+        print(f"warning: could not refresh Dashboard: {err}", file=sys.stderr)
 
 
 def start_task(root: Path, *, title, status="open", summary=None, level="INFO",
@@ -179,7 +184,7 @@ def close_task(root: Path, *, task_id, status, summary, level="INFO",
 def _add_common_args(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--summary", required=True)
     sp.add_argument("--level", default="INFO", choices=LEVELS)
-    sp.add_argument("--tokens", type=float, default=None)
+    sp.add_argument("--tokens", type=int, default=None)
     sp.add_argument("--credits", type=float, default=None)
     sp.add_argument("--cost", type=float, default=None)
     sp.add_argument("--skills-used", nargs="*", default=None)
@@ -198,7 +203,7 @@ def main() -> int:
     sp_start.add_argument("--status", default="open", choices=NONTERMINAL)
     sp_start.add_argument("--summary", default=None)
     sp_start.add_argument("--level", default="INFO", choices=LEVELS)
-    sp_start.add_argument("--tokens", type=float, default=None)
+    sp_start.add_argument("--tokens", type=int, default=None)
     sp_start.add_argument("--credits", type=float, default=None)
     sp_start.add_argument("--cost", type=float, default=None)
     sp_start.add_argument("--skills-used", nargs="*", default=None)
