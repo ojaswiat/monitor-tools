@@ -295,37 +295,49 @@ def render_reports_index(profile: dict, items: list[dict], root: Path,
 SEARCH_INDEX_LIMIT = mlib.PAGE_SIZE * 5
 
 
-def _build_search_index(root: Path, limit: int = SEARCH_INDEX_LIMIT) -> list[dict]:
+def _build_search_index(root: Path, report_items: list[dict],
+                        limit: int = SEARCH_INDEX_LIMIT) -> list[dict]:
     """Small, title/summary-only index for the Dashboard's client-side grep
     box — deliberately excludes full --details/body text to keep the
     embedded payload small; this is a quick-find aid, not a replacement
     for /monitor:search's full-text matching. Capped at `limit` newest
     entries per source (logs/reports/tasks) so the embedded payload stays
     bounded the same way every other monitor page is bounded by
-    mlib.PAGE_SIZE pagination."""
+    mlib.PAGE_SIZE pagination; each source stops building at the cap rather
+    than materializing everything first. `report_items` is the already
+    scanned newest-first report list from the caller, so a Dashboard
+    refresh scans reports/ exactly once.
+
+    Log and task hits link to the paginated page that actually holds them —
+    an entry at index i of the newest-first list lives on page
+    i // mlib.PAGE_SIZE + 1. Report hits link to the report's own file."""
     mdir = mlib.monitor_dir(root)
     logs: list[dict] = []
     log_path = mdir / "logs" / "operations.mtr"
     if log_path.exists():
-        # parse_log() is newest-first, so [:limit] keeps the newest entries.
-        for e in render_logs.parse_log(log_path.read_text(encoding="utf-8")):
+        # parse_log() is newest-first; entry position (fragments included,
+        # since render_logs paginates the full list) gives the page number.
+        for i, e in enumerate(render_logs.parse_log(log_path.read_text(encoding="utf-8"))):
             if e.get("fragment") is not None:
                 continue
             logs.append({"kind": "log", "title": e["summary"],
-                         "href": "logs/index.html"})
+                         "href": "logs/" + mlib.page_filename(i // mlib.PAGE_SIZE + 1)})
+            if len(logs) >= limit:
+                break
     # scan_reports() is newest-first by (date, mtime).
     reports = [{"kind": "report", "title": item["title"],
                 "href": f"reports/{item['file']}"}
-               for item in scan_reports(root)]
+               for item in report_items[:limit]]
     tasks_index: list[dict] = []
     tasks_path = mdir / "tasks" / "tasks.mtr"
     if tasks_path.exists():
         # group_tasks() preserves the newest-first order of parse_tasks().
+        groups = render_tasks.group_tasks(render_tasks.parse_tasks(
+            tasks_path.read_text(encoding="utf-8")))
         tasks_index = [{"kind": "task", "title": g["title"] or g["task_id"],
-                        "href": "tasks/index.html"}
-                       for g in render_tasks.group_tasks(render_tasks.parse_tasks(
-                           tasks_path.read_text(encoding="utf-8")))]
-    return logs[:limit] + reports[:limit] + tasks_index[:limit]
+                        "href": "tasks/" + mlib.page_filename(i // mlib.PAGE_SIZE + 1)}
+                       for i, g in enumerate(groups[:limit])]
+    return logs + reports + tasks_index
 
 
 def _json_for_script(value) -> str:
@@ -341,14 +353,19 @@ def _json_for_script(value) -> str:
 
 
 def render_dashboard(profile: dict, n_reports: int, root: Path,
-                     branch: str = "") -> None:
+                     branch: str = "", report_items: list[dict] | None = None) -> None:
+    """`report_items` is the newest-first list from scan_reports(); callers
+    that already have it pass it in so reports/ is scanned once per refresh.
+    Omitted, it is scanned here."""
     brand = mlib.project_name(profile, root)
     mdir = mlib.monitor_dir(root)
     log_path = mdir / "logs" / "operations.mtr"
     n_logs = len([e for e in render_logs.parse_log(log_path.read_text(encoding="utf-8"))
                   if e.get("fragment") is None]) if log_path.exists() else 0
     n_open_tasks = render_tasks.count_open(root)
-    search_index = _build_search_index(root)
+    if report_items is None:
+        report_items = scan_reports(root)
+    search_index = _build_search_index(root, report_items)
     header = f"""  <header class="report">
     <h1>{mlib.esc(brand)} · Monitor</h1>
     <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
@@ -413,8 +430,8 @@ def refresh_dashboard(root: Path) -> None:
     which changes on a log-only entry."""
     profile = mlib.load_profile(root)
     branch = mlib.git_branch(root)
-    n_reports = len(scan_reports(root))
-    render_dashboard(profile, n_reports, root, branch)
+    items = scan_reports(root)
+    render_dashboard(profile, len(items), root, branch, report_items=items)
 
 
 def render_all(root: Path) -> None:
@@ -427,7 +444,7 @@ def render_all(root: Path) -> None:
     render_template(profile, root)
     items = scan_reports(root)
     render_reports_index(profile, items, root, branch)
-    render_dashboard(profile, len(items), root, branch)
+    render_dashboard(profile, len(items), root, branch, report_items=items)
     render_tasks.render(root)
 
 

@@ -169,6 +169,13 @@ def open_tasks(root: Path) -> list[dict]:
             for g in groups if g["status"] in render_tasks.NONTERMINAL]
 
 
+def _join(parts: list[str]) -> str:
+    """"a", "a and b", "a, b, and c" — plain English joining (Oxford comma)."""
+    if len(parts) <= 2:
+        return " and ".join(parts)
+    return ", ".join(parts[:-1]) + ", and " + parts[-1]
+
+
 def _pending_phrase(data: dict, n_open_tasks: int) -> str:
     """"logs", "report", "N open task(s)", or a joined combination — only
     what is really pending."""
@@ -179,7 +186,7 @@ def _pending_phrase(data: dict, n_open_tasks: int) -> str:
         parts.append("report")
     if n_open_tasks:
         parts.append(f"{n_open_tasks} open task{'s' if n_open_tasks != 1 else ''}")
-    return " and ".join(parts)
+    return _join(parts)
 
 
 TASKS_ONLY_INSTRUCTIONS = (
@@ -203,13 +210,16 @@ def check_text(root: Path) -> str:
     if not phrase:
         return ""
     needs_record = bool(data.get("pending_logs") or data.get("pending_report"))
+    if not needs_record:
+        # Only open tasks — nothing to log or report. Stated, not asked:
+        # there is no record action to accept or decline here, so the
+        # header stays a plain notice and the log/report instructions
+        # (which are what a Y answer would mean) are omitted.
+        noun = "task" if len(tasks) == 1 else "tasks"
+        return "\n".join([f"[Warn!] Monitor: {len(tasks)} open {noun}.", "",
+                          TASKS_ONLY_INSTRUCTIONS, _task_block(tasks)])
     header = (f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
               f"record now [Y/N]")
-    if not needs_record:
-        # Only open tasks — nothing to log or report, so the log/report
-        # instructions would tell the agent to do things that don't apply.
-        return "\n".join([header, "", TASKS_ONLY_INSTRUCTIONS,
-                          _task_block(tasks)])
     lines = [header, "", INSTRUCTIONS]
     if tasks:
         lines.append(_task_block(tasks))

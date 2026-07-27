@@ -112,13 +112,19 @@ def group_tasks(entries: list[dict]) -> list[dict]:
                           "branch": e.get("branch", ""), "tokens": 0.0,
                           "has_tokens": False, "credits": 0.0, "cost": 0.0,
                           "skills_used": [], "tools_called": [], "events": [],
-                          "created_at": e["timestamp"]}
+                          "created_at": e["timestamp"], "has_start": False}
             order.append(tid)
         g = groups[tid]
         g["events"].append(e)
         if e.get("title"):
             g["title"] = e["title"]
-        if e["event"] == "task-start" or e["timestamp"] < g["created_at"]:
+        # task-start's timestamp wins outright and is then locked; the
+        # earliest-event fallback only applies while no task-start has been
+        # seen for this id (its block can be outside the retained window).
+        if e["event"] == "task-start":
+            g["created_at"] = e["timestamp"]
+            g["has_start"] = True
+        elif not g["has_start"] and e["timestamp"] < g["created_at"]:
             g["created_at"] = e["timestamp"]
         if e.get("tokens") is not None:
             # Tracked separately from the sum so a task that reported
