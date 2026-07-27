@@ -146,7 +146,18 @@ session but run 3-at-once with varying companion-install levels.
       pending entry — run that log command immediately after the test commit,
       before making any further commits, since the pending entry is matched by
       the commit sha that was HEAD at log time.
-   8. Report back in plain language: what you changed, whether/how you
+   8. Somewhere in those same 5 rounds, exercise the project's log-search
+      command: pick a word that actually appears in one of your own log
+      entries (from a `--summary` or `--details` field you wrote earlier
+      in this run — not a guess), then search for it via
+      `monitor/scripts/search.py --project-root . --query "<that word>"`.
+      Verify the output is non-empty and contains a real matching entry
+      (not an error, not an empty "no matches" result) — if it comes back
+      empty, you either picked a word that isn't actually in the log or
+      something is broken; try a different real word from your own log
+      before concluding it's broken. Paste the exact query and one
+      matched result block verbatim into your final report.
+   9. Report back in plain language: what you changed, whether/how you
       used monitor (which commands, how many times), and anything that
       looked broken, confusing, inconsistent, or undocumented — including
       anything about the companion-install step if companion_level wasn't
@@ -157,9 +168,10 @@ session but run 3-at-once with varying companion-install levels.
       lifecycle event, so count distinct task_ids, not blocks or lines), one full
       task's self-reported metrics pasted verbatim, one full `--details`
       block copied verbatim from `operations.mtr` (not paraphrased) so it can be
-      checked for real content vs. placeholder text, and the pending-hook test
+      checked for real content vs. placeholder text, the pending-hook test
       outcome from step 7 — pass or fail, with the warning message text pasted
-      verbatim.
+      verbatim — and the search-test outcome from step 8: the exact query used
+      and one matched result block pasted verbatim.
    ```
 
 3. **Wait for all 3 to complete** (event-driven completion notifications —
@@ -175,8 +187,9 @@ session but run 3-at-once with varying companion-install levels.
    point (auto-pruned by the harness once the subagent stopped), so treat that
    as the expected case, not an error: fall back to checking the verbatim
    log-entry count, report count, distinct-task_id count, one task's metrics,
-   and the pending-hook pass/fail each subagent was told to paste into its own
-   report (template step 8) for internal consistency and real content, same
+   the pending-hook pass/fail, and the search-test query/result each subagent
+   was told to paste into its own report (template step 9) for internal
+   consistency and real content, same
    verify-before-trusting-a-subagent's-claims practice as any manual
    drill — just against pasted evidence instead of live files.
 
@@ -187,8 +200,9 @@ session but run 3-at-once with varying companion-install levels.
    exists (a second run same day), append `-round-N` rather than
    overwriting it. Cover, per project: repo name/language, companion level, number of
    commits/changes made, log entry count, report count, task count (distinct
-   task_ids, matching how the subagents were told to count), and
-   hook-test result (pass/fail, with the one-line reason on fail) — plus a
+   task_ids, matching how the subagents were told to count), hook-test result
+   (pass/fail, with the one-line reason on fail), and search-test result
+   (pass/fail, with the query used) — plus a
    short findings list (bugs, inconsistencies, compliance gaps) drawn from
    both the subagent's report and your own spot-check in flow step 4.
 
