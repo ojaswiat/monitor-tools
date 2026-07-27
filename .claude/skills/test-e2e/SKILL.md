@@ -146,17 +146,20 @@ session but run 3-at-once with varying companion-install levels.
       pending entry — run that log command immediately after the test commit,
       before making any further commits, since the pending entry is matched by
       the commit sha that was HEAD at log time.
-   8. Somewhere in those same 5 rounds, exercise the project's log-search
-      command: pick a word that actually appears in one of your own log
-      entries (from a `--summary` or `--details` field you wrote earlier
-      in this run — not a guess), then search for it via
-      `monitor/scripts/search.py --project-root . --query "<that word>"`.
-      Verify the output is non-empty and contains a real matching entry
-      (not an error, not an empty "no matches" result) — if it comes back
-      empty, you either picked a word that isn't actually in the log or
-      something is broken; try a different real word from your own log
-      before concluding it's broken. Paste the exact query and one
-      matched result block verbatim into your final report.
+   8. Somewhere in those same 5 rounds, use the project's log-search
+      command — discovered from the project's own docs, the same way as
+      logging/reporting/task commands above, not named here — to look up
+      a word that actually appears in one of your own log entries (from
+      a `--summary` or `--details` field you wrote earlier in this run —
+      not a guess). If the project's docs don't make the exact command
+      clear, fall back to running:
+      `python3 monitor/scripts/search.py --project-root . --query "<text>"`.
+      The output must contain at least one real matching entry block, not
+      a "no matches for '<query>'" line — if you get no matches, you
+      either picked a word that isn't actually in the log or something is
+      broken; try a different real word from your own log before
+      concluding it's broken. Paste the exact query and one matched
+      result block verbatim into your final report.
    9. Report back in plain language: what you changed, whether/how you
       used monitor (which commands, how many times), and anything that
       looked broken, confusing, inconsistent, or undocumented — including
@@ -179,32 +182,33 @@ session but run 3-at-once with varying companion-install levels.
 
 4. **Verify, don't just relay.** Try reading each worktree directly first —
    `{project_dir}/monitor/profile.json`, `logs/operations.mtr`,
-   `reports/*.html`, `tasks/tasks.mtr`, and `.pending.json` — and cross-check
-   counts and `--details` content against what the subagent claimed. When
-   counting tasks, count distinct task_ids in `tasks.mtr`, not blocks (it
-   holds one block per lifecycle event, so a single created→updated→closed
-   task is several blocks). The worktree is usually already gone by this
-   point (auto-pruned by the harness once the subagent stopped), so treat that
-   as the expected case, not an error: fall back to checking the verbatim
-   log-entry count, report count, distinct-task_id count, one task's metrics,
-   the pending-hook pass/fail, and the search-test query/result each subagent
-   was told to paste into its own report (template step 9) for internal
-   consistency and real content, same
-   verify-before-trusting-a-subagent's-claims practice as any manual
-   drill — just against pasted evidence instead of live files.
+   `reports/*.html`, `tasks/tasks.mtr`, and `.pending.json` — and
+   cross-check counts and `--details` content against what the subagent
+   claimed. When counting tasks, count distinct task_ids in `tasks.mtr`,
+   not blocks (it holds one block per lifecycle event, so a single
+   created→updated→closed task is several blocks). The worktree is
+   usually already gone by this point (auto-pruned by the harness once
+   the subagent stopped), so treat that as the expected case, not an
+   error: fall back to checking the verbatim log-entry count, report
+   count, distinct-task_id count, one task's metrics, the pending-hook
+   pass/fail, and the search-test query/result each subagent was told to
+   paste into its own report (template step 9) for internal consistency
+   and real content, same verify-before-trusting-a-subagent's-claims
+   practice as any manual drill — just against pasted evidence instead
+   of live files.
 
 5. **Synthesize one combined HTML report.** Invoke the `ui-ux-pro-max`
    skill, then write a single self-contained HTML file to
    `temp/test-e2e-runs/<YYYY-MM-DD>.html` (today's date, in the **main**
    working tree — not inside any worktree). If a file for today already
    exists (a second run same day), append `-round-N` rather than
-   overwriting it. Cover, per project: repo name/language, companion level, number of
-   commits/changes made, log entry count, report count, task count (distinct
-   task_ids, matching how the subagents were told to count), hook-test result
-   (pass/fail, with the one-line reason on fail), and search-test result
-   (pass/fail, with the query used) — plus a
-   short findings list (bugs, inconsistencies, compliance gaps) drawn from
-   both the subagent's report and your own spot-check in flow step 4.
+   overwriting it. Cover, per project: repo name/language, companion
+   level, number of commits/changes made, log entry count, report count,
+   task count (distinct task_ids, matching how the subagents were told
+   to count), hook-test result (pass/fail, with the one-line reason on
+   fail), and search-test result (pass/fail, with the query used) — plus
+   a short findings list (bugs, inconsistencies, compliance gaps) drawn
+   from both the subagent's report and your own spot-check in flow step 4.
 
 6. **Publish the report** with the `Artifact` tool (`file_path` pointing at
    the HTML file just written, a short `title`/`description`, and a
