@@ -69,9 +69,10 @@ def clean_tasks(root: Path, n: int, dry: bool) -> int:
         return 0
     text = tasks_path.read_text(encoding="utf-8")
     entries = render_tasks.parse_tasks(text)
-    groups = render_tasks.group_tasks(entries)  # newest-first by task
+    groups = render_tasks.group_tasks(entries)
+    groups.sort(key=lambda g: g["created_at"])  # ascending: real oldest first
     n = max(0, min(n, len(groups)))
-    removed = groups[len(groups) - n:]
+    removed = groups[:n]
     to_remove = {g["task_id"] for g in removed}
     print(f"removing {n} oldest of {len(groups)} tasks (all their events):")
     for g in removed:

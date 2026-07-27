@@ -98,8 +98,11 @@ def parse_tasks(text: str) -> list[dict]:
 def group_tasks(entries: list[dict]) -> list[dict]:
     """Group flat events (newest-first) by task_id. Each group's `status` is
     whichever event was encountered first per id (since the input is
-    newest-first, that's the most recent event); `events` is collected then
-    reversed to oldest-to-newest for timeline display."""
+    newest-first, that's the most recent event); `created_at` is the
+    timestamp of its task-start event specifically (falling back to the
+    earliest event seen for that id, if task-start isn't in the retained
+    window); `events` is collected then reversed to oldest-to-newest for
+    timeline display."""
     groups: dict[str, dict] = {}
     order: list[str] = []
     for e in entries:
@@ -108,12 +111,15 @@ def group_tasks(entries: list[dict]) -> list[dict]:
             groups[tid] = {"task_id": tid, "title": "", "status": e["status"],
                           "branch": e.get("branch", ""), "tokens": 0.0,
                           "has_tokens": False, "credits": 0.0, "cost": 0.0,
-                          "skills_used": [], "tools_called": [], "events": []}
+                          "skills_used": [], "tools_called": [], "events": [],
+                          "created_at": e["timestamp"]}
             order.append(tid)
         g = groups[tid]
         g["events"].append(e)
         if e.get("title"):
             g["title"] = e["title"]
+        if e["event"] == "task-start" or e["timestamp"] < g["created_at"]:
+            g["created_at"] = e["timestamp"]
         if e.get("tokens") is not None:
             # Tracked separately from the sum so a task that reported
             # `--tokens 0` still shows a tokens chip, and one that never
