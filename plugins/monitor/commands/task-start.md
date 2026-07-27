@@ -13,8 +13,8 @@ exactly —
 
 — and then STOP (end your turn immediately). Do not continue past this gate.
 
-Read the **monitor** skill (`SKILL.md`) first, specifically the "Tasks"
-section. Then start the task via the engine:
+Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first,
+specifically the "Tasks" section. Then start the task via the engine:
 
 ```
 python3 monitor/scripts/tasks.py --project-root . start --title "<short title>" \

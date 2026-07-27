@@ -15,14 +15,14 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    python3 "$ENGINE/scripts/profile.py" --project-root .
    mkdir -p monitor/scripts && cp "$ENGINE"/scripts/*.py monitor/scripts/
    ```
-   (`profile.py` only fills in the project's directory name — monitor's two
-   jobs are log and report, it never detects language/build/test commands or
-   otherwise inspects the project. For real project orientation, use a
-   companion skill like `graphify` instead.)
+   (`profile.py` only fills in the project's directory name — monitor's jobs
+   are log, report, and track tasks; it never detects language/build/test
+   commands or otherwise inspects the project. For real project orientation,
+   use a companion skill like `graphify` instead.)
 4. Generate project-specific assets from the profile:
    `python3 monitor/scripts/render_report.py` (writes `reports/template.html`,
-   `reports/index.html`, `index.html` — the Reports index is scanned fresh
-   from `reports/*.html`, no manifest file) and
+   `reports/index.html`, `index.html`, and `tasks/index.html` — the Reports
+   index is scanned fresh from `reports/*.html`, no manifest file) and
    `python3 monitor/scripts/render_logs.py` (creates an empty-state Logs
    page if there is no log yet).
 5. Probe companion skills (graphify, superpowers, openwiki, ui-ux-pro-max,
@@ -119,8 +119,10 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
 
    This project has **monitor** installed: a local logging/reporting workflow.
    It keeps a project-local `monitor/` folder — a Dashboard linking a **Reports**
-   page (one self-contained HTML report per task/change) and a **Logs** page
-   (rendered from `monitor/logs/operations.mtr`, a locked-schema text log). Rules for using it live in
+   page (one self-contained HTML report per task/change), a **Logs** page
+   (rendered from `monitor/logs/operations.mtr`, a locked-schema text log), and a
+   **Tasks** page (lifecycle-tracked units of work, rendered from
+   `monitor/tasks/tasks.mtr`). Rules for using it live in
    the skill at `SKILL.md` (or `$CLAUDE_PLUGIN_ROOT/skills/monitor/SKILL.md`
    when installed as a plugin) — read it before running any command below.
 
@@ -156,8 +158,12 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
    | `/monitor:record` | Log, and if code changed, report — in one step. |
    | `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
    | `/monitor:update` | Re-detect + additively reconcile the profile, refresh assets. |
+   | `/monitor:task-start "<title>"` | Start a lifecycle-tracked task; prints its `task_id`. |
+   | `/monitor:task-update <id>` | Append a status/metrics update to an open task. |
+   | `/monitor:task-close <id>` | Close a task with a terminal status (success/failed/cancelled). |
    | `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
    | `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
+   | `/monitor:clean-tasks <N>` | Delete the oldest N tasks (all their events); re-render Tasks + Dashboard. |
 
    **Rules:**
    - Every command except `/monitor:init` requires `monitor/profile.json` to
@@ -167,6 +173,10 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
      the log from the rendered Logs page.
    - Reports are immutable snapshots — never rewrite an old report when the
      template changes; only new reports pick up new sections.
+   - A task is a separate tracked entity, not a field on a log entry — track
+     it with `/monitor:task-start`/`task-update`/`task-close` (never hand-edit
+     `monitor/tasks/tasks.mtr`), and cross-reference it from log entries with
+     `logger.py --task-id <id>`.
    - `monitor/profile.json` evolves additively only — `/monitor:update` adds
      detected fields, never removes or renames existing ones.
    - After a commit, merge, or rebase, a `[Warn!] Monitor: Pending logs and

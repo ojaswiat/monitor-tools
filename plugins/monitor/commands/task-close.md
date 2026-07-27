@@ -13,8 +13,9 @@ exactly —
 
 — and then STOP (end your turn immediately). Do not continue past this gate.
 
-Read the **monitor** skill (`SKILL.md`) first, specifically the "Tasks"
-section. `$ARGUMENTS` should identify the task (by its id) and its outcome.
+Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first,
+specifically the "Tasks" section. `$ARGUMENTS` should identify the task (by
+its id) and its outcome.
 Then close it via the engine:
 
 ```

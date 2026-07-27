@@ -13,9 +13,9 @@ exactly —
 
 — and then STOP (end your turn immediately). Do not continue past this gate.
 
-Read the **monitor** skill (`SKILL.md`) first, specifically the "Tasks"
-section. `$ARGUMENTS` should identify the task (by its id, given when it was
-started) and what changed. Then update it via the engine:
+Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first,
+specifically the "Tasks" section. `$ARGUMENTS` should identify the task (by
+its id, given when it was started) and what changed. Then update it via the engine:
 
 ```
 python3 monitor/scripts/tasks.py --project-root . update --task-id <id> \

@@ -23,7 +23,7 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
   profile.json           SOURCE OF TRUTH (auto-detected, hand-refinable)
   usage.md               companion skills present + how monitor uses each
   .pending.json          pending-state tracker for the enforcement gate (committed, not gitignored)
-  index.html             Dashboard (links Reports + Logs)
+  index.html             Dashboard (links Reports, Logs, Tasks)
   scripts/               project copy of the engine (run these)
   reports/  template.html  index.html  <date>-<slug>.html  (no manifest — index is scanned)
   logs/     operations.mtr  index.html
@@ -39,8 +39,12 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
 | `/monitor:record` | Log **and** (when code changed) report, in one step. |
 | `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
+| `/monitor:task-start "<title>"` | Start a new lifecycle-tracked task; prints the generated `task_id`. |
+| `/monitor:task-update <id>` | Append a status/metrics update to an existing task. |
+| `/monitor:task-close <id>` | Close a task with a terminal status (success/failed/cancelled). |
 | `/monitor:clean-logs <N>` | Delete the oldest N log entries; re-render Logs. |
 | `/monitor:clean-reports <N>` | Delete the oldest N reports; re-render Reports + Dashboard. |
+| `/monitor:clean-tasks <N>` | Delete the oldest N tasks (all their events); re-render Tasks + Dashboard. |
 
 Commands are agent-only. Internally the agent runs the engine via
 `python3 monitor/scripts/<script>.py [args]` (each resolves its own project
@@ -52,7 +56,7 @@ missing, do not run any engine script — prompt for `/monitor:init` and stop. T
 engine scripts also fail fast (exit 2) when it is absent; only `profile.py`
 (which creates it) is exempt.
 
-## Monitor has exactly two jobs: log and report
+## Monitor's job: log, report, and track tasks
 Monitor never detects a project's language, guesses its build/test commands,
 or otherwise inspects what the project does. That's guessing, not recording
 or presenting — out of scope, whether the project is brand new or years old.
@@ -77,7 +81,7 @@ field show no chip.
 
 ## Logging
 - Log through the engine only — never hand-edit `operations.mtr`:
-  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task ...] [--branch <name>] [--last-commit-hash <sha>] [--set k=v]`.
+  `logger.py --operation <kebab> --tool <Tool> --summary "<one line>" --status success|partial|failure [--details ...] [--files a b] [--task-id <id>] [--branch <name>] [--last-commit-hash <sha>] [--set k=v]`.
 - The schema is **locked in code** (`REQUIRED`/`LEVELS`/`STATUSES` constants in
   `logger.py`), identical across every project. It
   validates required fields and the `level`/`status` enums before writing.
@@ -262,7 +266,7 @@ compress the reminder, not the record.
 | Rewriting an old report after a template change | Reports are immutable snapshots. Upgrade forward — only new reports get new sections/KPIs. |
 | Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
-| Putting task info in `--details` on a log entry | Tasks are a separate tracked entity now, not a log field. Use `/monitor:task-start`/`update`/`close`; cross-reference with `logger.py --task-id`. |
+| Putting task info in `--details` on a log entry | Tasks are a separate tracked entity, not a log field. Use `/monitor:task-start`/`update`/`close`; cross-reference with `logger.py --task-id`. |
 
 ## Pending-state enforcement
 
