@@ -154,23 +154,49 @@ WARNING = ("[Warn!] Monitor: Pending logs and report. Do you want Monitor to "
            "record now [Y/N]\n\n" + INSTRUCTIONS)
 
 
-def _pending_phrase(data: dict) -> str:
-    """"logs", "report", or "logs and report" — only what is really pending."""
+def open_tasks(root: Path) -> list[dict]:
+    """Every task whose most-recent status is non-terminal, i.e. still open."""
+    try:
+        import render_tasks
+    except Exception:  # noqa: BLE001 — render_tasks.py should always be a
+        return []       # sibling file, but never let this crash the hook
+    path = mlib.monitor_dir(root) / "tasks" / "tasks.mtr"
+    if not path.exists():
+        return []
+    entries = render_tasks.parse_tasks(path.read_text(encoding="utf-8"))
+    groups = render_tasks.group_tasks(entries)
+    return [{"task_id": g["task_id"], "title": g["title"], "status": g["status"]}
+            for g in groups if g["status"] in render_tasks.NONTERMINAL]
+
+
+def _pending_phrase(data: dict, n_open_tasks: int) -> str:
+    """"logs", "report", "N open task(s)", or a joined combination — only
+    what is really pending."""
     parts = []
     if data.get("pending_logs"):
         parts.append("logs")
     if data.get("pending_report"):
         parts.append("report")
+    if n_open_tasks:
+        parts.append(f"{n_open_tasks} open task{'s' if n_open_tasks != 1 else ''}")
     return " and ".join(parts)
 
 
 def check_text(root: Path) -> str:
     data = load_pending(root)
-    phrase = _pending_phrase(data)
+    tasks = open_tasks(root)
+    phrase = _pending_phrase(data, len(tasks))
     if not phrase:
         return ""
-    return (f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
-            f"record now [Y/N]\n\n" + INSTRUCTIONS)
+    lines = [f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
+             f"record now [Y/N]", "", INSTRUCTIONS]
+    if tasks:
+        task_lines = "\n".join(
+            f"  - {t['task_id']}  ({t['status']})  {t['title']}" for t in tasks)
+        lines.append("\nOpen tasks (close with /monitor:task-close when done, "
+                     "or leave open and continue — this is informational, "
+                     "not blocking):\n" + task_lines)
+    return "\n".join(lines)
 
 
 def clear_log(root: Path, sha: str) -> None:
