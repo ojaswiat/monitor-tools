@@ -2,5 +2,26 @@
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {"type": "command",
+           "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
+           "timeout": 10}
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {"type": "command",
+           "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit",
+           "timeout": 10}
+        ]
+      }
+    ]
   }
 }
