@@ -28,9 +28,18 @@ TARGET_GLOBS = [
     "AGENTS.md",
 ]
 
-# This scanner's own skill doc quotes the banned phrases verbatim to explain
-# what is being looked for, so it always matches itself. Skip it.
-EXCLUDED = {".claude/skills/test-thought-leaks/SKILL.md"}
+# Files that quote the banned phrases verbatim in order to STATE the rule
+# (the scanner's own skill doc, this repo's CLAUDE.md, and the init command
+# that propagates the rule into consumer projects) always match themselves,
+# so they are skipped. `.claude/skills/monitor/SKILL.md` is this repo's local
+# dogfood copy of `plugins/monitor/skills/monitor/SKILL.md` — scanning it
+# reports every hit twice, so only the source path is scanned.
+EXCLUDED = {
+    ".claude/skills/test-thought-leaks/SKILL.md",
+    ".claude/skills/monitor/SKILL.md",
+    "CLAUDE.md",
+    "plugins/monitor/commands/init.md",
+}
 
 PATTERNS = [
     re.compile(p, re.I) for p in [

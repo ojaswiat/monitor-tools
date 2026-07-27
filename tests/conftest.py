@@ -30,8 +30,12 @@ def project_root(tmp_path: Path) -> Path:
     sys.path.insert(0, str(scripts))
     yield tmp_path
     sys.path.remove(str(scripts))
-    # Drop the modules so the next test's project_root re-imports fresh
-    # copies pointed at its own tmp_path, not a stale cached module.
+    # Drop the engine modules from sys.modules so the next project_root
+    # invocation imports fresh module objects from its own tmp_path's
+    # sys.path entry rather than reusing the ones loaded from the previous
+    # tmp_path. Engine modules take their root as an argument and hold no
+    # module-level state tied to it, so this is enough here; it is not a
+    # general guarantee against every form of cross-test leakage.
     for mod in ("tasks", "pending", "clean", "logger", "search",
                "render_tasks", "render_logs", "render_report", "monitor_lib"):
         sys.modules.pop(mod, None)
