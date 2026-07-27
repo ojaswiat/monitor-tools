@@ -85,7 +85,13 @@ def search_reports(root: Path, query: str, *, limit: int = 20) -> list[dict]:
     matches = []
     for item in render_report.scan_reports(root):
         path = mlib.monitor_dir(root) / "reports" / item["file"]
-        text = render_report._plain(path.read_text(encoding="utf-8"))
+        raw = path.read_text(encoding="utf-8")
+        # Drop <style>/<script> *contents* before flattening to text —
+        # _plain() only strips tags, so an embedded stylesheet would
+        # otherwise put every CSS token in the search haystack.
+        raw = render_report.STYLE_RE.sub("", raw)
+        raw = render_report.SCRIPT_RE.sub("", raw)
+        text = render_report._plain(raw)
         if q not in text.lower():
             continue
         idx = text.lower().find(q)
@@ -160,7 +166,10 @@ def main() -> int:
     ap.add_argument("--branch", default=None)
     ap.add_argument("--status", default=None, choices=logger.STATUSES)
     ap.add_argument("--level", default=None, choices=logger.LEVELS)
-    ap.add_argument("--limit", type=int, default=20)
+    ap.add_argument("--limit", type=int, default=20,
+                    help="Maximum matches to return. Under --scope all it applies "
+                         "per source (logs, reports, tasks) rather than to the "
+                         "combined total, so up to 3x this many matches can print.")
     args = ap.parse_args()
     root = mlib.resolve_root(args)
     mlib.require_init(root)

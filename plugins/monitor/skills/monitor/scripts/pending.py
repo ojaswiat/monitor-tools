@@ -182,20 +182,37 @@ def _pending_phrase(data: dict, n_open_tasks: int) -> str:
     return " and ".join(parts)
 
 
+TASKS_ONLY_INSTRUCTIONS = (
+    "These tasks are informational — close them with /monitor:task-close when "
+    "done, or keep working; this does not block you."
+)
+
+
+def _task_block(tasks: list[dict]) -> str:
+    task_lines = "\n".join(
+        f"  - {t['task_id']}  ({t['status']})  {t['title']}" for t in tasks)
+    return ("\nOpen tasks (close with /monitor:task-close when done, "
+            "or leave open and continue — this is informational, "
+            "not blocking):\n" + task_lines)
+
+
 def check_text(root: Path) -> str:
     data = load_pending(root)
     tasks = open_tasks(root)
     phrase = _pending_phrase(data, len(tasks))
     if not phrase:
         return ""
-    lines = [f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
-             f"record now [Y/N]", "", INSTRUCTIONS]
+    needs_record = bool(data.get("pending_logs") or data.get("pending_report"))
+    header = (f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
+              f"record now [Y/N]")
+    if not needs_record:
+        # Only open tasks — nothing to log or report, so the log/report
+        # instructions would tell the agent to do things that don't apply.
+        return "\n".join([header, "", TASKS_ONLY_INSTRUCTIONS,
+                          _task_block(tasks)])
+    lines = [header, "", INSTRUCTIONS]
     if tasks:
-        task_lines = "\n".join(
-            f"  - {t['task_id']}  ({t['status']})  {t['title']}" for t in tasks)
-        lines.append("\nOpen tasks (close with /monitor:task-close when done, "
-                     "or leave open and continue — this is informational, "
-                     "not blocking):\n" + task_lines)
+        lines.append(_task_block(tasks))
     return "\n".join(lines)
 
 

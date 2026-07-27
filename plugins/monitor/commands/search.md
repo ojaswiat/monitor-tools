@@ -30,4 +30,6 @@ both extra work and immediately stale. Relay the matches (or "no matches
 found") to the user in your own words rather than dumping the raw output
 verbatim. `--scope` defaults to `all` (every source); narrow to
 `logs`/`reports`/`tasks` to search just one. `--branch`/`--status`/`--level`
-only apply when the effective scope includes logs.
+only apply when the effective scope includes logs. Under `--scope all`,
+`--limit` applies per source (logs, reports, tasks) rather than to the
+combined total, so up to three times that many matches can come back.

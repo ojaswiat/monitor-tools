@@ -18,6 +18,23 @@ def test_check_text_mentions_open_task(project_root):
     assert "open task" in text
 
 
+def test_check_text_omits_log_report_instructions_when_only_tasks_open(project_root):
+    tasks.start_task(project_root, title="Only a task")
+    text = pending.check_text(project_root)
+    assert "Only a task" in text
+    assert "run /monitor:log for it" not in text
+    assert "/monitor:report" not in text
+    assert "/monitor:task-close" in text
+
+
+def test_check_text_includes_instructions_when_logs_pending(project_root):
+    data = pending.load_pending(project_root)
+    data["pending_logs"] = [{"sha": "deadbeef", "message": "x", "committed_at": "now"}]
+    pending.save_pending(project_root, data)
+    text = pending.check_text(project_root)
+    assert "run /monitor:log for it" in text
+
+
 def test_check_text_empty_when_nothing_pending(project_root):
     assert pending.check_text(project_root) == ""
 

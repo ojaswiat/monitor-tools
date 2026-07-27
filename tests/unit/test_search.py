@@ -20,6 +20,17 @@ def test_search_reports_matches_body_text(project_root):
     assert matches[0]["title"] == "Demo Report"
 
 
+def test_search_reports_ignores_style_block_css(project_root):
+    reports_dir = project_root / "monitor" / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    (reports_dir / "2026-07-27-css.html").write_text(
+        "<html><head><style>h1 { letter-spacing: 0.02em; }</style></head>"
+        "<body><h1>CSS Report</h1><p>Nothing typographic here.</p></body></html>")
+    assert search.search_reports(project_root, "letter-spacing") == []
+    # Visible body text still matches.
+    assert len(search.search_reports(project_root, "typographic")) == 1
+
+
 def test_search_scope_all_covers_every_source(project_root):
     tasks.start_task(project_root, title="uniqueword task")
     import logger
