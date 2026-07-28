@@ -1,3 +1,7 @@
+2026-07-28 14:58:31,951 INFO [verify-no-comment-dependency] (Grep) Confirmed no monitor command/skill reads .py source comments for behavioral context; all scripts are invoked as CLI black boxes. The only intentional exception is HTML placeholder comments inside reports/template.html, which report.md explicitly documents. -- success
+branch:  dev
+last_commit_hash: 0681108
+================================================================================
 2026-07-28 14:51:12,517 INFO [fix-next-steps-guidance] (Edit) Fixed Next Steps report section to forbid chat-turn/meta content after user flagged a leaked 'present options for approval' line -- success
 branch:  dev
 last_commit_hash: 0e3ceb0

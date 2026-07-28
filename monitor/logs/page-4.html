@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:51</span>
+      <span class="mono">2026-07-28 14:58</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">43</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">43</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">44</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">44</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:51:12,517</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:58:31,951</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,23 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 01:21:09,678</time>
+      <span class="op">fix-final-review-findings</span>
+      <span class="toolchip">Edit,Bash,Write</span>
+      <span class="branchchip" title="Branch: feat/monitor-tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/monitor-tasks</span></span>
+      <span class="toolchip">commit: 9b9f277</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed all 10 findings from the final whole-branch review of feat/monitor-tasks</p>
+    <div class="files"><span class="file">plugins/monitor/skills/monitor/scripts/clean.py</span><span class="file">plugins/monitor/skills/monitor/scripts/render_tasks.py</span><span class="file">plugins/monitor/commands/clean-tasks.md</span><span class="file">plugins/monitor/commands/init.md</span><span class="file">README.md</span><span class="file">CLAUDE.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <ul><li>DECISION: derive clean --tasks block membership from each block&#x27;s own parsed task_id (new render_tasks.split_blocks/block_task_id helpers) rather than a line-anchored regex.</li><li>WHY: a regex over raw text still couples the cleaner to the file format; sharing the splitter with parse_tasks makes reader and cleaner incapable of drifting, and preserves unparseable blocks the way parse_tasks already tolerates them.</li><li>ARCHITECTURE: render_tasks gained two public helpers; parse_tasks now uses split_blocks; group_tasks tracks has_tokens so the tokens chip is conditional like credits/cost; tasks.py --tokens is int; init.md&#x27;s monitor:start block now carries the Tasks policy shipped into every consumer project.</li><li>NEXT: branch is ready to merge; a report was authored for it.</li><li>GAPS: .claude/worktrees/ is still untracked and deliberately unignored, out of scope for this wave.</li><li>ASSUMPTIONS: 1.12.1 is the right release version for this fix wave — no further bump was made.</li></ul>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-26 02:16:46,994</time>
@@ -312,32 +329,14 @@
       <ul><li>DECISION: first..last range, not a single sha or a full comma-separated list</li><li>WHY: shows the whole span a report covers in one glance, mirroring git&#x27;s own range notation; a single sha loses multi-commit reports, a full list gets unreadable past a few commits</li></ul>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-25 23:02:00,537</time>
-      <span class="op">add-monitor-search-command</span>
-      <span class="toolchip">Write</span>
-      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
-      <span class="toolchip">commit: 92d678b</span>
-      <span class="xchip">task: add-monitor-search</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Registered /monitor:search across the command tables and plugin manifest</p>
-    <div class="files"><span class="file">plugins/monitor/commands/search.md</span><span class="file">plugins/monitor/skills/monitor/SKILL.md</span><span class="file">plugins/monitor/commands/init.md</span><span class="file">plugins/monitor/.claude-plugin/plugin.json</span></div>
-    <details>
-      <summary>Details</summary>
-      <ul><li>ARCHITECTURE: new commands/search.md follows the same PRECONDITION-gate pattern as every other monitor command</li><li>NEXT: bump plugin version once all tasks land (done in same branch)</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="page-3.html">← Prev</a>
-    <span class="pageinfo">Page 4 of 5 · 43 total</span>
+    <span class="pageinfo">Page 4 of 5 · 44 total</span>
     <a href="page-5.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 43 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 44 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
