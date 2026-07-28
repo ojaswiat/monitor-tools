@@ -37,6 +37,7 @@ def clean_logs(root: Path, n: int, dry: bool) -> int:
     new_text = "".join(b + SEPARATOR + "\n" for b in kept)
     log_path.write_text(new_text, encoding="utf-8")
     render_logs.render(root)
+    render_report.refresh_dashboard(root)
     return 0
 
 
@@ -69,9 +70,17 @@ def clean_tasks(root: Path, n: int, dry: bool) -> int:
         return 0
     text = tasks_path.read_text(encoding="utf-8")
     entries = render_tasks.parse_tasks(text)
-    groups = render_tasks.group_tasks(entries)  # newest-first by task
+    groups = render_tasks.group_tasks(entries)
+    # Ascending by created_at: real oldest first. group_tasks() preserves the
+    # newest-first order of its input, so a later position in that list means
+    # an older task — use -position as the tie-break so two tasks sharing an
+    # identical created_at still resolve to a single, deterministic "oldest"
+    # instead of depending on which one the sort happened to leave first.
+    order = sorted(range(len(groups)),
+                   key=lambda i: (groups[i]["created_at"], -i))
+    groups = [groups[i] for i in order]
     n = max(0, min(n, len(groups)))
-    removed = groups[len(groups) - n:]
+    removed = groups[:n]
     to_remove = {g["task_id"] for g in removed}
     print(f"removing {n} oldest of {len(groups)} tasks (all their events):")
     for g in removed:

@@ -164,7 +164,14 @@ label.
   single pre-merge report. Don't ask whether to report; do it, then proceed
   with the merge.
 - Author from `reports/template.html` into `reports/<date>-<slug>.html`: fill the
-  `{{ branch }}` placeholders with the branch the work was done on, then run
+  `{{ branch }}` placeholders with the branch the work was done on. Fill
+  `{{ date }}` yourself with today's date (`YYYY-MM-DD`) — the "Generated"
+  chip, which no script ever substitutes; an unfilled `{{ date }}` ships
+  verbatim into the published report. Fill `{{ date_created }}` yourself as
+  well, with the date the underlying work began (often earlier than
+  `{{ date }}`). Leave `{{ last_modified }}` alone — it is the one date
+  placeholder stamped automatically, by `render_report.py --lock-report` at
+  the end of authoring. Then run
   `render_report.py` to rebuild the Reports index + Dashboard. No manifest to
   update — the index is scanned fresh from `reports/*.html` every time, reading
   each report's own `<h1>`/Branch chip/Summary directly out of the file.
@@ -181,7 +188,9 @@ label.
   published file can't ship off-theme. This is a one-time correction on the
   new file only — never run it against old reports, that would violate the
   immutable-snapshot rule below.
-- HTML/CSS only, self-contained, no `<script>`; sharp corners
+- HTML/CSS only, self-contained, no `<script>` — except the Dashboard
+  (`monitor/index.html`), which carries one small self-contained script for its
+  search box, the single deliberate exception; sharp corners
   (`border-radius:0`), dual theme via `prefers-color-scheme`, status via `.tag`
   (`pass`/`warn`/`fail`/`info`) with the label text carrying meaning.
 - Sections: Summary · What Was Asked · What Was Done · **Decisions & Rationale**
@@ -267,6 +276,7 @@ compress the reminder, not the record.
 | Running any command before `/monitor:init` | Everything needs `profile.json`. Init first; the scripts exit 2 otherwise. |
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
 | Putting task info in `--details` on a log entry | Tasks are a separate tracked entity, not a log field. Use `/monitor:task-start`/`update`/`close`; cross-reference with `logger.py --task-id`. |
+| Assuming `/monitor:search` only covers logs | It covers logs, reports, and tasks by default (`--scope all`); narrow with `--scope logs|reports|tasks` if you only want one source. |
 
 ## Pending-state enforcement
 

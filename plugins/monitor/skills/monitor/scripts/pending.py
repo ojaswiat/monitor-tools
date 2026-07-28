@@ -154,23 +154,85 @@ WARNING = ("[Warn!] Monitor: Pending logs and report. Do you want Monitor to "
            "record now [Y/N]\n\n" + INSTRUCTIONS)
 
 
-def _pending_phrase(data: dict) -> str:
-    """"logs", "report", or "logs and report" — only what is really pending."""
+def open_tasks(root: Path) -> list[dict]:
+    """Every task whose most-recent status is non-terminal, i.e. still open."""
+    try:
+        import render_tasks
+    except Exception:  # noqa: BLE001 — render_tasks.py should always be a
+        return []       # sibling file, but never let this crash the hook
+    path = mlib.monitor_dir(root) / "tasks" / "tasks.mtr"
+    if not path.exists():
+        return []
+    entries = render_tasks.parse_tasks(path.read_text(encoding="utf-8"))
+    groups = render_tasks.group_tasks(entries)
+    return [{"task_id": g["task_id"], "title": g["title"], "status": g["status"]}
+            for g in groups if g["status"] in render_tasks.NONTERMINAL]
+
+
+def _join(parts: list[str]) -> str:
+    """"a", "a and b", "a, b, and c" — plain English joining (Oxford comma)."""
+    if len(parts) <= 2:
+        return " and ".join(parts)
+    return ", ".join(parts[:-1]) + ", and " + parts[-1]
+
+
+def _pending_phrase(data: dict, n_open_tasks: int) -> str:
+    """"logs", "report", "N open task(s)", or a joined combination — only
+    what is really pending. Used to decide *whether* anything is pending;
+    check_text() builds the Y/N header from the log/report parts alone,
+    since answering Y never closes a task."""
     parts = []
     if data.get("pending_logs"):
         parts.append("logs")
     if data.get("pending_report"):
         parts.append("report")
-    return " and ".join(parts)
+    if n_open_tasks:
+        parts.append(f"{n_open_tasks} open task{'s' if n_open_tasks != 1 else ''}")
+    return _join(parts)
+
+
+TASKS_ONLY_INSTRUCTIONS = (
+    "These tasks are informational — close them with /monitor:task-close when "
+    "done, or keep working; this does not block you."
+)
+
+
+def _task_block(tasks: list[dict]) -> str:
+    task_lines = "\n".join(
+        f"  - {t['task_id']}  ({t['status']})  {t['title']}" for t in tasks)
+    return ("\nOpen tasks (close with /monitor:task-close when done, "
+            "or leave open and continue — this is informational, "
+            "not blocking):\n" + task_lines)
 
 
 def check_text(root: Path) -> str:
     data = load_pending(root)
-    phrase = _pending_phrase(data)
+    tasks = open_tasks(root)
+    phrase = _pending_phrase(data, len(tasks))
     if not phrase:
         return ""
-    return (f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
-            f"record now [Y/N]\n\n" + INSTRUCTIONS)
+    needs_record = bool(data.get("pending_logs") or data.get("pending_report"))
+    if not needs_record:
+        # Only open tasks — nothing to log or report. Stated, not asked:
+        # there is no record action to accept or decline here, so the
+        # header stays a plain notice and the log/report instructions
+        # (which are what a Y answer would mean) are omitted.
+        noun = "task" if len(tasks) == 1 else "tasks"
+        return "\n".join([f"[Warn!] Monitor: {len(tasks)} open {noun}.", "",
+                          TASKS_ONLY_INSTRUCTIONS, _task_block(tasks)])
+    # The Y/N question covers the log/report work only — Y records those and
+    # nothing else, so open tasks are kept out of the question's subject and
+    # stated separately below it.
+    record_phrase = _pending_phrase(data, 0)
+    header = (f"[Warn!] Monitor: Pending {record_phrase}. Do you want Monitor to "
+              f"record now [Y/N]")
+    lines = [header, "", INSTRUCTIONS]
+    if tasks:
+        noun = "task" if len(tasks) == 1 else "tasks"
+        lines.append(f"\nSeparately, {len(tasks)} open {noun} — not part of "
+                     f"the Y/N above.")
+        lines.append(_task_block(tasks))
+    return "\n".join(lines)
 
 
 def clear_log(root: Path, sha: str) -> None:

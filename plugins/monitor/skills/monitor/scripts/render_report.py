@@ -37,7 +37,9 @@ SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S | re.I)
 
 
 def lock_report_style(root: Path, report_rel_path: str) -> bool:
-    """Force a freshly authored report back onto the canonical palette/theme.
+    """Force a freshly authored report back onto the canonical palette/theme,
+    and stamp {{ last_modified }} with the lock moment — the point a report
+    is considered finalized.
 
     Content-tone requests (audience, reading level, language, humor) must only
     ever change the prose inside a report's sections — never its `<style>`
@@ -54,6 +56,7 @@ def lock_report_style(root: Path, report_rel_path: str) -> bool:
     text = path.read_text(encoding="utf-8")
     fixed = STYLE_RE.sub(lambda _m: f"<style>{mlib.PALETTE_CSS}</style>", text, count=1)
     fixed = SCRIPT_RE.sub("", fixed)
+    fixed = fixed.replace("{{ last_modified }}", datetime.now().strftime("%Y-%m-%d %H:%M"))
     if fixed != text:
         path.write_text(fixed, encoding="utf-8")
         return True
@@ -86,14 +89,20 @@ def _plain(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
-def scan_reports(root: Path) -> list[dict]:
+def scan_reports(root: Path, *, with_text: bool = False) -> list[dict]:
     """Build the report list by reading reports/*.html directly — no manifest
     file. Each report's own title (<h1>), branch (its Branch meta-chip), and
     a short description (first line of its Summary section) come straight out
     of the file; date comes from the filename prefix (YYYY-MM-DD-slug.html),
     falling back to the file's mtime for anything non-conforming. Ordered
     newest-first by (date, mtime) so same-day reports still sort correctly
-    without any hand-maintained index."""
+    without any hand-maintained index.
+
+    `with_text=True` additionally carries each report's raw file contents
+    through on a `"text"` key, so a caller that needs the full body (full-text
+    search) reuses this scan's read instead of re-opening every file. It is
+    off by default because the index/Dashboard callers only need the metadata
+    and would otherwise hold every report's HTML in memory."""
     reports_dir = mlib.monitor_dir(root) / "reports"
     items: list[dict] = []
     for f in reports_dir.glob("*.html"):
@@ -111,9 +120,12 @@ def scan_reports(root: Path) -> list[dict]:
             branch = ""
         summary_m = _SUMMARY_RE.search(text)
         description = _truncate(_plain(summary_m.group(1)), 160) if summary_m else ""
-        items.append({"date": date, "file": f.name, "title": title,
-                      "description": description, "branch": branch,
-                      "_mtime": mtime})
+        item = {"date": date, "file": f.name, "title": title,
+                "description": description, "branch": branch,
+                "_mtime": mtime}
+        if with_text:
+            item["text"] = text
+        items.append(item)
     items.sort(key=lambda i: (i["date"], i["_mtime"]), reverse=True)
     for it in items:
         del it["_mtime"]
@@ -133,6 +145,8 @@ def render_template(profile: dict, root: Path) -> None:
     <p class="subtitle">{{{{ subtitle }}}}</p>
     <div class="meta-chips">
       <span class="chip"><b>Generated</b><span class="mono">{{{{ date }}}}</span></span>
+      <span class="chip"><b>Created</b><span class="mono">{{{{ date_created }}}}</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">{{{{ last_modified }}}}</span></span>
       <span class="chip"><b>Branch</b><span class="mono">{{{{ branch }}}}</span></span>
       <span class="chip"><b>Commit</b><span class="mono">{{{{ commit }}}}</span></span>
       <span class="chip"><b>Status</b><span class="tag {{{{ status_class }}}}">{{{{ status }}}}</span></span>
@@ -287,14 +301,80 @@ def render_reports_index(profile: dict, items: list[dict], root: Path,
     _prune_stale_report_pages(reports_dir, total_pages)
 
 
+SEARCH_INDEX_LIMIT = mlib.PAGE_SIZE * 5
+
+
+def _build_search_index(root: Path, report_items: list[dict],
+                        limit: int = SEARCH_INDEX_LIMIT) -> list[dict]:
+    """Small, title/summary-only index for the Dashboard's client-side grep
+    box — deliberately excludes full --details/body text to keep the
+    embedded payload small; this is a quick-find aid, not a replacement
+    for /monitor:search's full-text matching. Capped at `limit` newest
+    entries per source (logs/reports/tasks) so the embedded payload stays
+    bounded the same way every other monitor page is bounded by
+    mlib.PAGE_SIZE pagination; each source stops building at the cap rather
+    than materializing everything first. `report_items` is the already
+    scanned newest-first report list from the caller, so a Dashboard
+    refresh scans reports/ exactly once.
+
+    Log and task hits link to the paginated page that actually holds them —
+    an entry at index i of the newest-first list lives on page
+    i // mlib.PAGE_SIZE + 1. Report hits link to the report's own file."""
+    mdir = mlib.monitor_dir(root)
+    logs: list[dict] = []
+    log_path = mdir / "logs" / "operations.mtr"
+    if log_path.exists():
+        # parse_log() is newest-first; entry position (fragments included,
+        # since render_logs paginates the full list) gives the page number.
+        for i, e in enumerate(render_logs.parse_log(log_path.read_text(encoding="utf-8"))):
+            if e.get("fragment") is not None:
+                continue
+            logs.append({"kind": "log", "title": e["summary"],
+                         "href": "logs/" + mlib.page_filename(i // mlib.PAGE_SIZE + 1)})
+            if len(logs) >= limit:
+                break
+    # scan_reports() is newest-first by (date, mtime).
+    reports = [{"kind": "report", "title": item["title"],
+                "href": f"reports/{item['file']}"}
+               for item in report_items[:limit]]
+    tasks_index: list[dict] = []
+    tasks_path = mdir / "tasks" / "tasks.mtr"
+    if tasks_path.exists():
+        # group_tasks() preserves the newest-first order of parse_tasks().
+        groups = render_tasks.group_tasks(render_tasks.parse_tasks(
+            tasks_path.read_text(encoding="utf-8")))
+        tasks_index = [{"kind": "task", "title": g["title"] or g["task_id"],
+                        "href": "tasks/" + mlib.page_filename(i // mlib.PAGE_SIZE + 1)}
+                       for i, g in enumerate(groups[:limit])]
+    return logs + reports + tasks_index
+
+
+def _json_for_script(value) -> str:
+    """JSON, escaped so it can never break out of the <script> element it is
+    embedded in. JSON escaping alone does not touch `<`, `>` or `&`, so a
+    title containing `</script>` would otherwise terminate the element and
+    inject raw HTML into the page."""
+    import json as _json
+    return (_json.dumps(value)
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("&", "\\u0026"))
+
+
 def render_dashboard(profile: dict, n_reports: int, root: Path,
-                     branch: str = "") -> None:
+                     branch: str = "", report_items: list[dict] | None = None) -> None:
+    """`report_items` is the newest-first list from scan_reports(); callers
+    that already have it pass it in so reports/ is scanned once per refresh.
+    Omitted, it is scanned here."""
     brand = mlib.project_name(profile, root)
     mdir = mlib.monitor_dir(root)
     log_path = mdir / "logs" / "operations.mtr"
     n_logs = len([e for e in render_logs.parse_log(log_path.read_text(encoding="utf-8"))
                   if e.get("fragment") is None]) if log_path.exists() else 0
     n_open_tasks = render_tasks.count_open(root)
+    if report_items is None:
+        report_items = scan_reports(root)
+    search_index = _build_search_index(root, report_items)
     header = f"""  <header class="report">
     <h1>{mlib.esc(brand)} · Monitor</h1>
     <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
@@ -307,6 +387,14 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
     <div class="kpi"><div class="label">Log entries</div><div class="value">{n_logs}</div></div>
     <div class="kpi warn"><div class="label">Open tasks</div><div class="value">{n_open_tasks}</div></div>
     <div class="kpi"><div class="label">Profile</div><div class="value small mono">v{profile.get("profileVersion", 1)}</div></div>
+  </div>
+
+  <div class="dsearch">
+    <label class="sr-only" for="monitor-search">Search titles across logs, reports, and tasks</label>
+    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..."
+           autocomplete="off" aria-describedby="monitor-search-status">
+    <ul id="monitor-search-results"></ul>
+    <p class="status" id="monitor-search-status" role="status" aria-live="polite"></p>
   </div>"""
     body = """  <div class="card-grid">
     <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
@@ -315,8 +403,38 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
   </div>"""
     footer = ('  <footer><span>monitor · project dashboard</span>'
               '<span><a href="#top">↑ Back to Top</a></span></footer>')
+    script = f"""<script>
+const MONITOR_SEARCH_INDEX = {_json_for_script(search_index)};
+(function() {{
+  const input = document.getElementById('monitor-search');
+  const results = document.getElementById('monitor-search-results');
+  const status = document.getElementById('monitor-search-status');
+  input.addEventListener('input', function() {{
+    const q = input.value.trim().toLowerCase();
+    results.innerHTML = '';
+    if (!q) {{ status.textContent = ''; return; }}
+    const matches = MONITOR_SEARCH_INDEX
+      .filter(item => item.title.toLowerCase().includes(q))
+      .slice(0, 20);
+    if (matches.length === 0) {{
+      status.textContent = 'No matches for "' + input.value.trim() + '".';
+      return;
+    }}
+    matches.forEach(item => {{
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = item.href;
+      a.textContent = '[' + item.kind + '] ' + item.title;
+      li.appendChild(a);
+      results.appendChild(li);
+    }});
+    status.textContent = matches.length + (matches.length === 1 ? ' match.' : ' matches.');
+  }});
+}})();
+</script>"""
     out = mlib.page(f"{brand} · Monitor", brand, "info", "Monitor", header, body,
                     footer, branch=branch)
+    out = out.replace('</body>', script + '\n</body>')
     (mdir / "index.html").write_text(out, encoding="utf-8")
 
 
@@ -330,8 +448,8 @@ def refresh_dashboard(root: Path) -> None:
     which changes on a log-only entry."""
     profile = mlib.load_profile(root)
     branch = mlib.git_branch(root)
-    n_reports = len(scan_reports(root))
-    render_dashboard(profile, n_reports, root, branch)
+    items = scan_reports(root)
+    render_dashboard(profile, len(items), root, branch, report_items=items)
 
 
 def render_all(root: Path) -> None:
@@ -344,7 +462,7 @@ def render_all(root: Path) -> None:
     render_template(profile, root)
     items = scan_reports(root)
     render_reports_index(profile, items, root, branch)
-    render_dashboard(profile, len(items), root, branch)
+    render_dashboard(profile, len(items), root, branch, report_items=items)
     render_tasks.render(root)
 
 
