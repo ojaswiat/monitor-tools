@@ -1,3 +1,12 @@
+2026-07-28 14:22:14,623 INFO [test-automated] (pytest) 70 unit + 12 integration pass; thought-leak scan clean -- success
+branch:  dev
+last_commit_hash: 66a8191
+================================================================================
+2026-07-28 14:21:13,105 INFO [plugin-registration-fix] (Skill) Registered monitor via /plugin marketplace add + /plugin install (not settings.json hand-edit); removed .claude/skills/monitor + .claude/commands/monitor fallback; confirmed real plugin-path skill invocation with zero fallback present -- success
+branch:  dev
+last_commit_hash: 66a8191
+details: DECISION: use documented /plugin marketplace add ojaswiat/monitor-tools + /plugin install monitor@monitor-tools flow instead of hand-editing extraKnownMarketplaces/enabledPlugins JSON. WHY: hand-edited settings.json entries alone did not make monitor:* skills resolve even after cache refresh + restart; the actual /plugin commands perform registration steps settings.json edits alone skip. ARCHITECTURE: Host project now consumes monitor purely via the plugin path, same as a Guest project would -- no .claude/skills/monitor or .claude/commands/monitor installed copy remains. NEXT: run full test suite + thought-leak scan, commit, merge to dev. GAPS: none known; monitor/scripts/ (project-runtime copy) intentionally retained, required in both install modes.
+================================================================================
 2026-07-28 13:10:29,779 INFO [merge] (Bash) Merged dev into main (fast-forward) to fix stale plugin marketplace resolution -- success
 branch:  main
 last_commit_hash: a8dc405

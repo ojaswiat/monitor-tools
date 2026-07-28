@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 13:10</span>
+      <span class="mono">2026-07-28 14:22</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">38</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">38</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">40</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">40</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 13:10:29,779</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:22:14,623</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,34 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 14:22:14,623</time>
+      <span class="op">test-automated</span>
+      <span class="toolchip">pytest</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: 66a8191</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">70 unit + 12 integration pass; thought-leak scan clean</p>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 14:21:13,105</time>
+      <span class="op">plugin-registration-fix</span>
+      <span class="toolchip">Skill</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: 66a8191</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Registered monitor via /plugin marketplace add + /plugin install (not settings.json hand-edit); removed .claude/skills/monitor + .claude/commands/monitor fallback; confirmed real plugin-path skill invocation with zero fallback present</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: use documented /plugin marketplace add ojaswiat/monitor-tools + /plugin install monitor@monitor-tools flow instead of hand-editing extraKnownMarketplaces/enabledPlugins JSON. WHY: hand-edited settings.json entries alone did not make monitor:* skills resolve even after cache refresh + restart; the actual /plugin commands perform registration steps settings.json edits alone skip. ARCHITECTURE: Host project now consumes monitor purely via the plugin path, same as a Guest project would -- no .claude/skills/monitor or .claude/commands/monitor installed copy remains. NEXT: run full test suite + thought-leak scan, commit, merge to dev. GAPS: none known; monitor/scripts/ (project-runtime copy) intentionally retained, required in both install modes.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 13:10:29,779</time>
@@ -281,46 +309,13 @@
       <p>DECISION: task-tracking has no mechanically detectable start event like git commit does for logs, so instead of full automation the PostToolUse hook now also matches Write and treats a *.md file written under any plans/ or specs/ directory (generic pattern, not tied to superpowers&#x27; own path convention) as a heuristic signal — recorded only when no task is currently open, cleared automatically when tasks.py&#x27;s start_task() runs. WHY: user explicitly wanted the plugin independent of other plugins (no hard dependency on superpowers&#x27; docs/superpowers/plans/ convention) while still working seamlessly with it when present. User also wanted logging and task-tracking treated as hard rules while reporting stays judgment-based, since reports cost more tokens to generate than a log entry. ARCHITECTURE: pending.py gained pending_task_signal state, track_task_signal()/clear_task_signal(), and a check_text() branch that surfaces the nudge as plain informational text, never a Y/N question. The injected CLAUDE.md/AGENTS.md block (commands/init.md, mirrored in this repo&#x27;s own CLAUDE.md) restructured from a flat section into six headed subsections (Logging/Task Tracking/Reporting/Search/Cleanup/Commands/Rules), each with a Use case and How to use pair. NEXT: merge to dev via finishing-a-development-branch. GAPS: the nudge is a heuristic — it only fires on a Write to a path matching plans/specs, so multi-step work that never touches such a file gets no nudge at all; documented as a known limitation in both the block and SKILL.md rather than treated as a guarantee.</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 11:54:48,978</time>
-      <span class="op">merge</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="toolchip">commit: b7cb48c</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Merged feat/hard-rule-logging-block into dev and pushed</p>
-    <details>
-      <summary>Details</summary>
-      <p>NEXT: implement a task-tracking nudge hook, then update the injected CLAUDE.md block with clear headings and per-feature use-case/how-to-use sections.</p>
-    </details>
-  </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 11:43:41,689</time>
-      <span class="op">edit-file</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: feat/hard-rule-logging-block"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/hard-rule-logging-block</span></span>
-      <span class="toolchip">commit: 89fd0ef</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Split injected CLAUDE.md/AGENTS.md block: logging+tasks hard rules, reports stay judgment-based</p>
-    <div class="files"><span class="file">plugins/monitor/commands/init.md</span><span class="file">CLAUDE.md</span><span class="file">plugins/monitor/.claude-plugin/plugin.json</span></div>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: logging and task lifecycle tracking framed as non-negotiable hard rules in the injected CLAUDE.md/AGENTS.md block; report generation keeps its current judgment-based defaults. WHY: reports render a full HTML page and cost more tokens than a log entry, so forcing one per operation would be wasteful; logging/tasks are cheap and are the actual context-recovery mechanism, so they get the strict treatment. User explicitly requested this split after a discussion about whether Claude Code invokes skills automatically and whether user silence counts as an opt-out. NEXT: none — small, contained doc change, already merged into the feature branch. GAPS: only init.md&#x27;s source text and this repo&#x27;s own CLAUDE.md dogfood copy were edited; update.md needs no edit since it references init.md&#x27;s block by pointer rather than duplicating it.</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 4 · 38 total</span>
+    <span class="pageinfo">Page 1 of 4 · 40 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 38 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 40 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

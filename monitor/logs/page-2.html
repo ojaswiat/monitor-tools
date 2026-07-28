@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 13:10</span>
+      <span class="mono">2026-07-28 14:22</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">38</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">38</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">40</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">40</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 13:10:29,779</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:22:14,623</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,39 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 11:54:48,978</time>
+      <span class="op">merge</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: b7cb48c</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Merged feat/hard-rule-logging-block into dev and pushed</p>
+    <details>
+      <summary>Details</summary>
+      <p>NEXT: implement a task-tracking nudge hook, then update the injected CLAUDE.md block with clear headings and per-feature use-case/how-to-use sections.</p>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 11:43:41,689</time>
+      <span class="op">edit-file</span>
+      <span class="toolchip">Edit</span>
+      <span class="branchchip" title="Branch: feat/hard-rule-logging-block"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/hard-rule-logging-block</span></span>
+      <span class="toolchip">commit: 89fd0ef</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Split injected CLAUDE.md/AGENTS.md block: logging+tasks hard rules, reports stay judgment-based</p>
+    <div class="files"><span class="file">plugins/monitor/commands/init.md</span><span class="file">CLAUDE.md</span><span class="file">plugins/monitor/.claude-plugin/plugin.json</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: logging and task lifecycle tracking framed as non-negotiable hard rules in the injected CLAUDE.md/AGENTS.md block; report generation keeps its current judgment-based defaults. WHY: reports render a full HTML page and cost more tokens than a log entry, so forcing one per operation would be wasteful; logging/tasks are cheap and are the actual context-recovery mechanism, so they get the strict treatment. User explicitly requested this split after a discussion about whether Claude Code invokes skills automatically and whether user silence counts as an opt-out. NEXT: none — small, contained doc change, already merged into the feature branch. GAPS: only init.md&#x27;s source text and this repo&#x27;s own CLAUDE.md dogfood copy were edited; update.md needs no edit since it references init.md&#x27;s block by pointer rather than duplicating it.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 05:41:14,271</time>
@@ -290,46 +323,14 @@
       <p>DECISION: both stamped once — date_created by the authoring agent&#x27;s judgment, last_modified automatically by render_report.py --lock-report — reports stay immutable snapshots.</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-27 18:14:24,324</time>
-      <span class="op">dashboard-search-box</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
-      <span class="toolchip">commit: 3a24593</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Added a client-side grep search box to the Dashboard page</p>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: one narrow, deliberate exception to monitor&#x27;s no-JS rule, scoped to index.html only — every other generated page stays script-free.</li><li>GAPS: initial version had a script-tag-breakout injection risk, fixed in a later commit (eec21a5) this same branch.</li></ul>
-    </details>
-  </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-27 18:14:24,127</time>
-      <span class="op">test-unit-integration-skills</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
-      <span class="toolchip">commit: 9453020</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Added test-unit and test-integration skills wrapping the pytest suite</p>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: thin skill wrappers, flat kebab-case names (test-unit, test-integration) since colon namespacing requires real plugin packaging.</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="index.html">← Prev</a>
-    <span class="pageinfo">Page 2 of 4 · 38 total</span>
+    <span class="pageinfo">Page 2 of 4 · 40 total</span>
     <a href="page-3.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 38 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 40 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

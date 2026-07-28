@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 13:10</span>
+      <span class="mono">2026-07-28 14:22</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">38</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">38</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">40</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">40</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 13:10:29,779</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:22:14,623</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,38 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 18:14:24,324</time>
+      <span class="op">dashboard-search-box</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
+      <span class="toolchip">commit: 3a24593</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added a client-side grep search box to the Dashboard page</p>
+    <details>
+      <summary>Details</summary>
+      <ul><li>DECISION: one narrow, deliberate exception to monitor&#x27;s no-JS rule, scoped to index.html only — every other generated page stays script-free.</li><li>GAPS: initial version had a script-tag-breakout injection risk, fixed in a later commit (eec21a5) this same branch.</li></ul>
+    </details>
+  </article>
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 18:14:24,127</time>
+      <span class="op">test-unit-integration-skills</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
+      <span class="toolchip">commit: 9453020</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added test-unit and test-integration skills wrapping the pytest suite</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: thin skill wrappers, flat kebab-case names (test-unit, test-integration) since colon namespacing requires real plugin packaging.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 18:14:23,911</time>
@@ -291,50 +323,14 @@
       <ul><li>GAPS: render_logs.py had the same class of bug as render_report.py&#x27;s already-fixed &#x27;N reports.&#x27; footer, missed in the first pass because only render_report.py was checked at the time</li><li>DECISION: logger.py now prints &#x27;logged: &lt;operation&gt; (&lt;status&gt;)&#x27; on success, matching render_report.py/render_logs.py&#x27;s existing confirmation-print convention</li><li>WHY: flagged independently by 3 separate test-e2e subagents across 2 drills</li><li>NEXT: version bump, second combined test-e2e report, merge add-monitor-search</li></ul>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-25 23:50:04,616</time>
-      <span class="op">revert-gitignore-check</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
-      <span class="toolchip">commit: 96bfb8f</span>
-      <span class="xchip">task: add-monitor-search</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Reverted the gitignore detect/remove logic added to init.md and update.md</p>
-    <div class="files"><span class="file">plugins/monitor/commands/init.md</span><span class="file">plugins/monitor/commands/update.md</span></div>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: no gitignore repair logic at all, revert to the plain monitor/scripts/__pycache__/ line only</li><li>WHY: researched standard convention (project .gitignore = shared build artifacts only; .git/info/exclude = personal/local; core.excludesFile = machine-wide) — monitor/ belongs in none of the three since it&#x27;s real content, not an artifact, so there&#x27;s nothing for install/update to detect or repair</li></ul>
-    </details>
-  </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-25 23:47:38,539</time>
-      <span class="op">strip-dev-history-narration</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
-      <span class="toolchip">commit: 9f1ecbd</span>
-      <span class="xchip">task: add-monitor-search</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Removed dev-history narration from init.md/update.md&#x27;s gitignore-repair instructions</p>
-    <div class="files"><span class="file">plugins/monitor/commands/init.md</span><span class="file">plugins/monitor/commands/update.md</span></div>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: rewrote as plain mechanical instructions, no reference to monitor-tools&#x27; own repo or monitor&#x27;s early-version history</li><li>WHY: commands/*.md ship verbatim into every consumer project — a fresh agent reading it has no context for monitor-tools&#x27; internal history, and it doesn&#x27;t need any to follow the instruction</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="page-2.html">← Prev</a>
-    <span class="pageinfo">Page 3 of 4 · 38 total</span>
+    <span class="pageinfo">Page 3 of 4 · 40 total</span>
     <a href="page-4.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 38 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 40 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

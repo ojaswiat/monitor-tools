@@ -1,31 +1,40 @@
 {
-  "extraKnownMarketplaces": {
-    "monitor-tools": {"source": {"source": "github", "repo": "ojaswiat/monitor-tools"}}
-  },
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "monitor@monitor-tools": true
-  },
   "hooks": {
     "PostToolUse": [
       {
         "matcher": "Bash|Write",
         "hooks": [
-          {"type": "command",
-           "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
-           "timeout": 10}
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
+            "timeout": 10
+          }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          {"type": "command",
-           "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit",
-           "timeout": 10}
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit",
+            "timeout": 10
+          }
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "monitor@monitor-tools": true
+  },
+  "extraKnownMarketplaces": {
+    "monitor-tools": {
+      "source": {
+        "source": "github",
+        "repo": "ojaswiat/monitor-tools"
+      }
+    }
   }
 }
