@@ -53,7 +53,7 @@ def _sha_reachable(root: Path, sha: str) -> bool:
         out = subprocess.run(
             ["git", "-C", str(root), "merge-base", "--is-ancestor", sha, "HEAD"],
             capture_output=True, timeout=5)
-    except Exception:  # noqa: BLE001 — git missing/unusable means "not reachable"
+    except Exception:                                                             
         return False
     return out.returncode == 0
 
@@ -83,7 +83,7 @@ def _commit_subject(root: Path, sha: str) -> str:
     try:
         out = subprocess.run(["git", "-C", str(root), "log", "-1", "--pretty=%s", sha],
                               capture_output=True, text=True, timeout=5)
-    except Exception:  # noqa: BLE001
+    except Exception:                
         return ""
     return out.stdout.strip() if out.returncode == 0 else ""
 
@@ -96,7 +96,7 @@ def _commit_touches_only_monitor(root: Path, sha: str) -> bool:
         out = subprocess.run(
             ["git", "-C", str(root), "show", "--name-only", "--pretty=format:", sha],
             capture_output=True, text=True, timeout=5)
-    except Exception:  # noqa: BLE001
+    except Exception:                
         return False
     files = [f for f in out.stdout.splitlines() if f.strip()]
     return bool(files) and all(f.startswith("monitor/") for f in files)
@@ -115,11 +115,11 @@ def track(root: Path, event: str, sha: str | None, message: str) -> None:
                 "sha": head, "message": _commit_subject(root, head) or message,
                 "committed_at": now,
             })
-    else:  # "merge" or "rebase"
-        # Rebase rewrites shas — drop any pending_logs entry whose sha no
-        # longer resolves; its content is folded into the report range via
-        # since_sha instead of tracked individually. A no-op filter on a
-        # plain merge (no rewrite happened).
+    else:                       
+                                                                         
+                                                                          
+                                                                        
+                                            
         data["pending_logs"] = [e for e in data["pending_logs"]
                                  if _sha_reachable(root, e["sha"])]
         data["pending_report"] = {
@@ -148,8 +148,8 @@ INSTRUCTIONS = (
     "again next turn."
 )
 
-# Kept as a module-level name for callers/tests that import it; check_text()
-# builds the real first line from what is actually pending.
+                                                                            
+                                                           
 WARNING = ("[Warn!] Monitor: Pending logs and report. Do you want Monitor to "
            "record now [Y/N]\n\n" + INSTRUCTIONS)
 
@@ -188,8 +188,8 @@ def open_tasks(root: Path) -> list[dict]:
     """Every task whose most-recent status is non-terminal, i.e. still open."""
     try:
         import render_tasks
-    except Exception:  # noqa: BLE001 — render_tasks.py should always be a
-        return []       # sibling file, but never let this crash the hook
+    except Exception:                                                     
+        return []                                                        
     path = mlib.monitor_dir(root) / "tasks" / "tasks.mtr"
     if not path.exists():
         return []
@@ -244,9 +244,9 @@ def _task_signal_line(signal: dict) -> str:
 def check_text(root: Path) -> str:
     data = load_pending(root)
     tasks = open_tasks(root)
-    # A signal only means anything while no task is open — once one starts,
-    # start_task() clears it; this guard also covers the (theoretical) case
-    # where a task opened through some other path without clearing it.
+                                                                           
+                                                                           
+                                                                      
     task_signal = data.get("pending_task_signal") if not tasks else None
     phrase = _pending_phrase(data, len(tasks))
     if not phrase and not task_signal:
@@ -254,19 +254,19 @@ def check_text(root: Path) -> str:
     needs_record = bool(data.get("pending_logs") or data.get("pending_report"))
     if not needs_record:
         if tasks:
-            # Open tasks — nothing to log or report. Stated, not asked:
-            # there is no record action to accept or decline here, so the
-            # header stays a plain notice and the log/report instructions
-            # (which are what a Y answer would mean) are omitted.
+                                                                       
+                                                                         
+                                                                         
+                                                                 
             noun = "task" if len(tasks) == 1 else "tasks"
             return "\n".join([f"[Warn!] Monitor: {len(tasks)} open {noun}.", "",
                               TASKS_ONLY_INSTRUCTIONS, _task_block(tasks)])
-        # Only a task-start nudge — same plain-notice treatment.
+                                                                
         return "\n".join(["[Warn!] Monitor: no task tracked for recent "
                           "plan/spec work.", "", _task_signal_line(task_signal)])
-    # The Y/N question covers the log/report work only — Y records those and
-    # nothing else, so open tasks are kept out of the question's subject and
-    # stated separately below it.
+                                                                            
+                                                                            
+                                 
     record_phrase = _pending_phrase(data, 0)
     header = (f"[Warn!] Monitor: Pending {record_phrase}. Do you want Monitor to "
               f"record now [Y/N]")
@@ -324,7 +324,7 @@ def hook_post_tool_use(root: Path) -> None:
         return
     try:
         payload = json.load(sys.stdin)
-    except Exception:  # noqa: BLE001 — malformed/empty stdin, nothing to do
+    except Exception:                                                       
         return
     tool_name = payload.get("tool_name") or ""
     tool_input = payload.get("tool_input") or {}

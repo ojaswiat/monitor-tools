@@ -20,7 +20,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-# ---------------------------------------------------------------- paths
+                                                                        
 
 def add_root_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
@@ -32,7 +32,7 @@ def resolve_root(args) -> Path:
     """Return the project root that contains monitor/."""
     if getattr(args, "project_root", None):
         return Path(args.project_root).resolve()
-    # monitor/scripts/<this>.py -> parents[2] is the repo root.
+                                                               
     p = Path(__file__).resolve()
     if p.parent.name == "scripts" and p.parent.parent.name == "monitor":
         return p.parents[2]
@@ -43,7 +43,7 @@ def monitor_dir(root: Path) -> Path:
     return root / "monitor"
 
 
-# ---------------------------------------------------------------- IO
+                                                                     
 
 def load_json(path: Path, default):
     try:
@@ -72,7 +72,7 @@ def require_init(root: Path) -> None:
         sys.exit(2)
 
 
-# ---------------------------------------------------------------- html
+                                                                       
 
 def esc(s) -> str:
     return html.escape(str(s), quote=True)
@@ -103,7 +103,7 @@ def format_list_block(text: str) -> str:
     bullet_items = [m.group(1) for m in (_BULLET_ITEM.match(ln) for ln in lines) if m]
     if len(bullet_items) == len(lines):
         return "<ul>" + "".join(f"<li>{esc(i)}</li>" for i in bullet_items) + "</ul>"
-    # Multiple lines with no consistent markers: still one point per line.
+                                                                          
     return "<ul>" + "".join(f"<li>{esc(ln)}</li>" for ln in lines) + "</ul>"
 
 
@@ -111,10 +111,10 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
-# Strips ASCII control bytes (NUL..BS, VT, FF, SO..US, DEL) — e.g. the raw
-# ANSI escape codes a backtick-quoted example command can splice into a field
-# via accidental shell command substitution. Tab is left alone; real newlines
-# are handled separately since they'd break the block format.
+                                                                          
+                                                                             
+                                                                             
+                                                             
 _CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 
@@ -128,7 +128,7 @@ def sanitize(value):
     return _CONTROL_CHARS.sub("", value).strip()
 
 
-# ---------------------------------------------------------------- vcs
+                                                                      
 
 def git_branch(root: Path) -> str:
     """Current git branch name, or "" when unavailable.
@@ -141,12 +141,12 @@ def git_branch(root: Path) -> str:
         out = subprocess.run(
             ["git", "-C", str(root), "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True, text=True, timeout=5)
-    except Exception:  # noqa: BLE001 — git missing/unusable is not an error here
+    except Exception:                                                            
         return ""
     name = out.stdout.strip()
     if out.returncode != 0 or not name:
         return ""
-    if name == "HEAD":  # detached — report the short sha instead
+    if name == "HEAD":                                           
         sha = subprocess.run(
             ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
             capture_output=True, text=True, timeout=5)
@@ -162,15 +162,15 @@ def git_last_commit(root: Path) -> str:
         out = subprocess.run(
             ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
             capture_output=True, text=True, timeout=5)
-    except Exception:  # noqa: BLE001 — git missing/unusable is not an error here
+    except Exception:                                                            
         return ""
     sha = out.stdout.strip()
     return sha if out.returncode == 0 and sha else ""
 
 
-# The single source of truth for the report/log palette. Sharp corners, dual
-# theme (light: near-black on off-white; dark: yellow on near-black), tabular
-# numerals. Kept verbatim in generated pages so each file is self-contained.
+                                                                            
+                                                                             
+                                                                            
 PALETTE_CSS = """
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -294,8 +294,8 @@ BACK_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
             'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" '
             'aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>')
 
-# git-branch glyph. An inline SVG (never an emoji) so it inherits currentColor
-# and stays identical across platforms.
+                                                                              
+                                       
 BRANCH_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
               'aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/>'

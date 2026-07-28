@@ -62,8 +62,8 @@ def render_entry(entry: dict) -> str:
 def log_operation(root: Path, *, operation, tool, summary, status,
                   level="INFO", details="", files=None, task_id=None, extra=None,
                   branch=None, last_commit_hash=None) -> None:
-    # The branch the change was made on. Detected at log time so every entry
-    # records where it happened; --branch overrides, "" when not in a repo.
+                                                                            
+                                                                           
     if branch is None:
         branch = mlib.git_branch(root)
     if last_commit_hash is None:
@@ -88,18 +88,18 @@ def log_operation(root: Path, *, operation, tool, summary, status,
     try:
         import render_logs
         render_logs.render(root)
-    except Exception as err:  # noqa: BLE001 — best-effort view refresh
+    except Exception as err:                                           
         print(f"warning: could not refresh Logs page: {err}", file=sys.stderr)
     try:
         import render_report
         render_report.refresh_dashboard(root)
-    except Exception as err:  # noqa: BLE001 — best-effort view refresh
+    except Exception as err:                                           
         print(f"warning: could not refresh Dashboard: {err}", file=sys.stderr)
     try:
         import pending
         if entry.get("last_commit_hash"):
             pending.clear_log(root, entry["last_commit_hash"])
-    except Exception as err:  # noqa: BLE001 — best-effort pending-state update
+    except Exception as err:                                                   
         print(f"warning: could not update pending state: {err}", file=sys.stderr)
 
 

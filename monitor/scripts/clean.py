@@ -28,7 +28,7 @@ def clean_logs(root: Path, n: int, dry: bool) -> int:
         print("no operations.mtr")
         return 0
     text = log_path.read_text(encoding="utf-8")
-    blocks = [b for b in text.split(SEPARATOR + "\n") if b.strip("\n")]  # newest-first
+    blocks = [b for b in text.split(SEPARATOR + "\n") if b.strip("\n")]                
     n = max(0, min(n, len(blocks)))
     kept = blocks[:len(blocks) - n]
     print(f"removing {n} oldest of {len(blocks)} log entries")
@@ -43,7 +43,7 @@ def clean_logs(root: Path, n: int, dry: bool) -> int:
 
 def clean_reports(root: Path, n: int, dry: bool) -> int:
     mdir = mlib.monitor_dir(root)
-    items = render_report.scan_reports(root)  # already newest-first
+    items = render_report.scan_reports(root)                        
     n = max(0, min(n, len(items)))
     kept = items[:len(items) - n]
     removed = items[len(items) - n:]
@@ -71,11 +71,11 @@ def clean_tasks(root: Path, n: int, dry: bool) -> int:
     text = tasks_path.read_text(encoding="utf-8")
     entries = render_tasks.parse_tasks(text)
     groups = render_tasks.group_tasks(entries)
-    # Ascending by created_at: real oldest first. group_tasks() preserves the
-    # newest-first order of its input, so a later position in that list means
-    # an older task — use -position as the tie-break so two tasks sharing an
-    # identical created_at still resolve to a single, deterministic "oldest"
-    # instead of depending on which one the sort happened to leave first.
+                                                                             
+                                                                             
+                                                                            
+                                                                            
+                                                                         
     order = sorted(range(len(groups)),
                    key=lambda i: (groups[i]["created_at"], -i))
     groups = [groups[i] for i in order]
@@ -87,10 +87,10 @@ def clean_tasks(root: Path, n: int, dry: bool) -> int:
         print(f"  - {g['task_id']}  ({g['title'] or 'untitled'})")
     if dry:
         return 0
-    # Membership is decided by each block's OWN parsed task_id (the header
-    # line's `(<task_id>)` field), never by substring-searching the block
-    # text — a block whose details merely mention another task's id must not
-    # be deleted with it.
+                                                                          
+                                                                         
+                                                                            
+                         
     kept_blocks = [b for b in render_tasks.split_blocks(text)
                    if render_tasks.block_task_id(b) not in to_remove]
     new_text = "".join(b + "\n" + SEPARATOR + "\n" for b in kept_blocks)

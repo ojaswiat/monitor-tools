@@ -118,18 +118,18 @@ def group_tasks(entries: list[dict]) -> list[dict]:
         g["events"].append(e)
         if e.get("title"):
             g["title"] = e["title"]
-        # task-start's timestamp wins outright and is then locked; the
-        # earliest-event fallback only applies while no task-start has been
-        # seen for this id (its block can be outside the retained window).
+                                                                      
+                                                                           
+                                                                          
         if e["event"] == "task-start":
             g["created_at"] = e["timestamp"]
             g["has_start"] = True
         elif not g["has_start"] and e["timestamp"] < g["created_at"]:
             g["created_at"] = e["timestamp"]
         if e.get("tokens") is not None:
-            # Tracked separately from the sum so a task that reported
-            # `--tokens 0` still shows a tokens chip, and one that never
-            # reported tokens at all shows none — same rule as credits/cost.
+                                                                     
+                                                                        
+                                                                            
             g["tokens"] += e["tokens"]
             g["has_tokens"] = True
         if e.get("credits") is not None:
@@ -144,7 +144,7 @@ def group_tasks(entries: list[dict]) -> list[dict]:
                 g["tools_called"].append(t)
     result = [groups[tid] for tid in order]
     for g in result:
-        g["events"].reverse()  # oldest-to-newest for the timeline
+        g["events"].reverse()                                     
     return result
 
 
@@ -180,8 +180,8 @@ def _card(g: dict) -> str:
     for e in g["events"]:
         p.append(f'      <p>{mlib.esc(e["timestamp"])} — <b>{mlib.esc(e["status"])}</b> — {mlib.esc(e["summary"])}</p>')
         if e.get("details"):
-            # Same convention log entries use: literal \n between points,
-            # decoded into a real list by format_list_block.
+                                                                         
+                                                            
             p.append(f'      {mlib.format_list_block(e["details"])}')
     p += ['    </details>', '  </article>']
     return "\n".join(p)

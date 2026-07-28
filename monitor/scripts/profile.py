@@ -23,9 +23,9 @@ from pathlib import Path
 
 import monitor_lib as mlib
 
-# The "since" on each entry below is documentation only — _merge_list() always
-# stamps the actual reconcile-time version on write, so these literals never
-# reach a profile.json as-is.
+                                                                              
+                                                                            
+                             
 DEFAULT_KPIS = [
     {"key": "tests",  "label": "Tests",  "since": 1},
     {"key": "commit", "label": "Commit", "since": 1},
@@ -58,7 +58,7 @@ def reconcile(existing: dict, det: dict) -> tuple[dict, list]:
     prof = dict(existing)
     prof["profileVersion"] = version
 
-    # project: fill only missing keys (hand edits win).
+                                                       
     proj = dict(existing.get("project", {}))
     for k, v in det.get("project", {}).items():
         if k not in proj:

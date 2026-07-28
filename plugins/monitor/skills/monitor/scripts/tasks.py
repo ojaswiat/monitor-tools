@@ -133,12 +133,12 @@ def _write_entry(root: Path, entry: dict) -> None:
     try:
         import render_tasks
         render_tasks.render(root)
-    except Exception as err:  # noqa: BLE001 — best-effort view refresh
+    except Exception as err:                                           
         print(f"warning: could not refresh Tasks page: {err}", file=sys.stderr)
     try:
         import render_report
         render_report.refresh_dashboard(root)
-    except Exception as err:  # noqa: BLE001 — best-effort view refresh
+    except Exception as err:                                           
         print(f"warning: could not refresh Dashboard: {err}", file=sys.stderr)
 
 
@@ -155,7 +155,7 @@ def start_task(root: Path, *, title, status="open", summary=None, level="INFO",
     try:
         import pending
         pending.clear_task_signal(root)
-    except Exception as err:  # noqa: BLE001 — best-effort pending-state update
+    except Exception as err:                                                   
         print(f"warning: could not update pending state: {err}", file=sys.stderr)
     return task_id
 

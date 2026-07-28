@@ -57,19 +57,19 @@ def parse_log(text: str) -> list[dict]:
         if not block:
             continue
         lines = block.split("\n")
-        # Locate the first valid header line within the block.
+                                                              
         idx = 0
         while idx < len(lines) and not _HEADER.match(lines[idx]):
             idx += 1
         if idx > 0:
-            # Lines before the first header are an unparseable fragment.
+                                                                        
             frag = "\n".join(lines[:idx])
             sys.stderr.write(
                 "render_logs: WARNING skipped unparseable log fragment "
                 f"({idx} line(s)): {frag!r}\n")
             entries.append({"fragment": frag})
         if idx >= len(lines):
-            continue  # whole block was garbage (already recorded as a fragment)
+            continue                                                            
         m = _HEADER.match(lines[idx])
         lines = lines[idx:]
         timestamp, level, operation, rest = m.groups()
@@ -129,8 +129,8 @@ def _card(e: dict) -> str:
          f'      <span class="op">{mlib.esc(e["operation"])}</span>']
     if e["tool"]:
         p.append(f'      <span class="toolchip">{mlib.esc(e["tool"])}</span>')
-    # The branch this operation was made on. Omitted (not "no branch") when the
-    # entry predates the field, so old entries stay clean rather than look wrong.
+                                                                               
+                                                                                 
     if e.get("branch"):
         p.append("      " + mlib.branch_chip(e["branch"]))
     if e.get("last_commit_hash"):
@@ -223,7 +223,7 @@ def render(root: Path) -> Path:
         if e["status"] in counts:
             counts[e["status"]] += 1
     last = real[0]["timestamp"] if real else "—"
-    total_pages = max(1, -(-len(all_entries) // mlib.PAGE_SIZE))  # ceil div
+    total_pages = max(1, -(-len(all_entries) // mlib.PAGE_SIZE))            
 
     for page_num in range(1, total_pages + 1):
         start = (page_num - 1) * mlib.PAGE_SIZE

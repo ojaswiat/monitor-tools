@@ -89,13 +89,13 @@ def search_reports(root: Path, query: str, *, limit: int = 20) -> list[dict]:
         return []
     q = query.lower()
     matches = []
-    # with_text=True hands back the HTML scan_reports() already read, so
-    # each report file is opened exactly once per search.
+                                                                        
+                                                         
     for item in render_report.scan_reports(root, with_text=True):
         raw = item.pop("text")
-        # Drop <style>/<script> *contents* before flattening to text —
-        # _plain() only strips tags, so an embedded stylesheet would
-        # otherwise put every CSS token in the search haystack.
+                                                                      
+                                                                    
+                                                               
         raw = render_report.STYLE_RE.sub("", raw)
         raw = render_report.SCRIPT_RE.sub("", raw)
         text = render_report._plain(raw)
