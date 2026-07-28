@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Logs (page 1/4) — monitor-tools Monitor</title>
+<title>Logs (page 1/5) — monitor-tools Monitor</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:22</span>
+      <span class="mono">2026-07-28 14:26</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">40</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">40</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">41</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">41</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:22:14,623</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:26:04,205</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 14:26:04,205</time>
+      <span class="op">create-test-installation-skill</span>
+      <span class="toolchip">Write</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: 47f69fe</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added .claude/skills/test-installation/ documenting the real /plugin marketplace add + /plugin install registration flow, verified via subagent baseline/check</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: project skill (not shipped in plugins/monitor), same pattern as test-automated/test-unit/etc. WHY: this session hit a real silent-failure trap -- hand-editing settings.json enabledPlugins/extraKnownMarketplaces looked correct but never registered monitor:* skills; only the actual /plugin marketplace add + /plugin install commands work. NEXT: none -- skill deployed and verified. GAPS: light verification only (technique/reference skill, not discipline-under-pressure) -- no adversarial pressure testing performed, matches skill type per writing-skills guidance.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 14:22:14,623</time>
@@ -292,30 +308,13 @@
     </div>
     <p class="summary">Merged feat/tasks-hook-and-block-docs into dev and pushed</p>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 12:13:08,032</time>
-      <span class="op">edit-file</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: feat/tasks-hook-and-block-docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/tasks-hook-and-block-docs</span></span>
-      <span class="toolchip">commit: e082177</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Added task-tracking nudge hook and reformatted the injected CLAUDE.md/AGENTS.md block with per-feature headings</p>
-    <div class="files"><span class="file">plugins/monitor/skills/monitor/scripts/pending.py</span><span class="file">plugins/monitor/skills/monitor/scripts/tasks.py</span><span class="file">plugins/monitor/commands/init.md</span><span class="file">CLAUDE.md</span><span class="file">plugins/monitor/skills/monitor/SKILL.md</span><span class="file">.claude/settings.json</span></div>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: task-tracking has no mechanically detectable start event like git commit does for logs, so instead of full automation the PostToolUse hook now also matches Write and treats a *.md file written under any plans/ or specs/ directory (generic pattern, not tied to superpowers&#x27; own path convention) as a heuristic signal — recorded only when no task is currently open, cleared automatically when tasks.py&#x27;s start_task() runs. WHY: user explicitly wanted the plugin independent of other plugins (no hard dependency on superpowers&#x27; docs/superpowers/plans/ convention) while still working seamlessly with it when present. User also wanted logging and task-tracking treated as hard rules while reporting stays judgment-based, since reports cost more tokens to generate than a log entry. ARCHITECTURE: pending.py gained pending_task_signal state, track_task_signal()/clear_task_signal(), and a check_text() branch that surfaces the nudge as plain informational text, never a Y/N question. The injected CLAUDE.md/AGENTS.md block (commands/init.md, mirrored in this repo&#x27;s own CLAUDE.md) restructured from a flat section into six headed subsections (Logging/Task Tracking/Reporting/Search/Cleanup/Commands/Rules), each with a Use case and How to use pair. NEXT: merge to dev via finishing-a-development-branch. GAPS: the nudge is a heuristic — it only fires on a Write to a path matching plans/specs, so multi-step work that never touches such a file gets no nudge at all; documented as a known limitation in both the block and SKILL.md rather than treated as a guarantee.</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 4 · 40 total</span>
+    <span class="pageinfo">Page 1 of 5 · 41 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 40 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 41 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

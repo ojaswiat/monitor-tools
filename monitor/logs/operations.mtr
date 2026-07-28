@@ -1,3 +1,8 @@
+2026-07-28 14:26:04,205 INFO [create-test-installation-skill] (Write) Added .claude/skills/test-installation/ documenting the real /plugin marketplace add + /plugin install registration flow, verified via subagent baseline/check -- success
+branch:  dev
+last_commit_hash: 47f69fe
+details: DECISION: project skill (not shipped in plugins/monitor), same pattern as test-automated/test-unit/etc. WHY: this session hit a real silent-failure trap -- hand-editing settings.json enabledPlugins/extraKnownMarketplaces looked correct but never registered monitor:* skills; only the actual /plugin marketplace add + /plugin install commands work. NEXT: none -- skill deployed and verified. GAPS: light verification only (technique/reference skill, not discipline-under-pressure) -- no adversarial pressure testing performed, matches skill type per writing-skills guidance.
+================================================================================
 2026-07-28 14:22:14,623 INFO [test-automated] (pytest) 70 unit + 12 integration pass; thought-leak scan clean -- success
 branch:  dev
 last_commit_hash: 66a8191

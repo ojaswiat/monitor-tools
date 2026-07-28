@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Logs (page 3/4) — monitor-tools Monitor</title>
+<title>Logs (page 3/5) — monitor-tools Monitor</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:22</span>
+      <span class="mono">2026-07-28 14:26</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">40</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">40</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">41</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">41</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:22:14,623</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:26:04,205</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 18:14:24,508</time>
+      <span class="op">report-timestamp-placeholders</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
+      <span class="toolchip">commit: 502edf5</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added date_created/last_modified placeholders to the report template</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: both stamped once — date_created by the authoring agent&#x27;s judgment, last_modified automatically by render_report.py --lock-report — reports stay immutable snapshots.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 18:14:24,324</time>
@@ -305,32 +321,14 @@
     <p class="summary">Authored the test-e2e round 2 + fixes report</p>
     <div class="files"><span class="file">monitor/reports/2026-07-26-test-e2e-round-2-fixes.html</span></div>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-26 00:20:41,251</time>
-      <span class="op">fix-second-test-e2e-round</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
-      <span class="toolchip">commit: eb6a03f</span>
-      <span class="xchip">task: add-monitor-search</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Fixed render_logs.py&#x27;s identical singular/plural footer bug and logger.py&#x27;s silent-success gap, both found by the second /test-e2e run</p>
-    <div class="files"><span class="file">plugins/monitor/skills/monitor/scripts/render_logs.py</span><span class="file">plugins/monitor/skills/monitor/scripts/logger.py</span></div>
-    <details>
-      <summary>Details</summary>
-      <ul><li>GAPS: render_logs.py had the same class of bug as render_report.py&#x27;s already-fixed &#x27;N reports.&#x27; footer, missed in the first pass because only render_report.py was checked at the time</li><li>DECISION: logger.py now prints &#x27;logged: &lt;operation&gt; (&lt;status&gt;)&#x27; on success, matching render_report.py/render_logs.py&#x27;s existing confirmation-print convention</li><li>WHY: flagged independently by 3 separate test-e2e subagents across 2 drills</li><li>NEXT: version bump, second combined test-e2e report, merge add-monitor-search</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="page-2.html">← Prev</a>
-    <span class="pageinfo">Page 3 of 4 · 40 total</span>
+    <span class="pageinfo">Page 3 of 5 · 41 total</span>
     <a href="page-4.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 40 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 41 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
