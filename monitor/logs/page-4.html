@@ -130,8 +130,8 @@
     <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 12:30</span>
+      <span class="branchchip" title="Branch: chore/enable-monitor-plugin-self-host"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/enable-monitor-plugin-self-host</span></span>
+      <span class="mono">2026-07-28 12:37</span>
     </span>
   </div>
 
@@ -142,12 +142,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">36</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">chore/enable-monitor-plugin-self-host</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">37</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">37</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:30:00,135</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:37:55,304</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,24 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-25 23:22:17,050</time>
+      <span class="op">verify-fixes</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
+      <span class="toolchip">commit: 92d678b</span>
+      <span class="xchip">task: add-monitor-search</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed render_report.py singular/plural footer bug, Dashboard log-count staleness, log.md/record.md redundant-render doc gap, and the consumer-project gitignore ambiguity in CLAUDE.md</p>
+    <div class="files"><span class="file">plugins/monitor/skills/monitor/scripts/render_report.py</span><span class="file">plugins/monitor/skills/monitor/scripts/logger.py</span><span class="file">plugins/monitor/commands/log.md</span><span class="file">plugins/monitor/commands/record.md</span><span class="file">plugins/monitor/commands/init.md</span><span class="file">CLAUDE.md</span></div>
+    <details>
+      <summary>Details</summary>
+      <ul><li>DECISION: dashboard refresh runs as a lightweight render_report.refresh_dashboard() call from inside logger.py, not a full render_all()</li><li>WHY: template.html and the Reports index don&#x27;t change on a log-only entry, only the two KPI numbers do</li><li>GAPS: none open</li><li>NEXT: bump version (done), commit, merge branch</li></ul>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-25 23:02:00,898</time>
@@ -269,10 +287,10 @@
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="page-3.html">← Prev</a>
-    <span class="pageinfo">Page 4 of 4 · 36 total</span>
+    <span class="pageinfo">Page 4 of 4 · 37 total</span>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 37 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
