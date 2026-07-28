@@ -130,8 +130,8 @@
     <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: chore/commit-monitor-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/commit-monitor-data</span></span>
-      <span class="mono">2026-07-28 12:28</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="mono">2026-07-28 12:30</span>
     </span>
   </div>
 
@@ -142,12 +142,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">chore/commit-monitor-data</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">35</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">35</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">36</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:28:22,977</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:30:00,135</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,18 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 12:30:00,135</time>
+      <span class="op">merge</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: c4fa7d0</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Merged chore/commit-monitor-data into dev and pushed</p>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 12:28:22,977</time>
@@ -302,29 +314,13 @@
       <p>DECISION: split thought-leak scanner redesign (Track A) from six independently-specified mechanical fixes (Track B) into one spec/plan, executed via subagent-driven-development with per-task review plus a final whole-branch review. WHY: scanner redesign needed real design decisions (context-capture depth, agentic verification, no-auto-edit policy); the 6 mechanical fixes were already fully specified one-liners from a prior verification round, so bundling them under SDD as a fix wave avoided a redundant design doc. ARCHITECTURE: check_thought_leaks.py gained --level {minimum,standard,high,max} with level-gated context capture (sentence extraction, full file text, git log history); test-thought-leaks/SKILL.md rewritten to require a per-hit verdict and produce a chat/HTML/markdown report instead of auto-editing scanned docs. Track B: dropped redundant aria-label, freed report text from memory in search_reports(), corrected stderr warning scope logic, added profile to test module-purge list, trimmed duplicate pending.py wording, reworded a stale comment. NEXT: /monitor:report before merging to dev; then merge. GAPS: _strip_markdown() has a known latent edge case with multiple underscore-delimited identifiers on one line (non-blocking, parked in final review); no pytest coverage for check_thought_leaks.py by design (matches its pre-existing untested status).</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-27 18:14:50,188</time>
-      <span class="op">version-bump-and-cleanup</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
-      <span class="toolchip">commit: 2ee48ab</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Bumped plugin to 1.13.0, globbed skill docs in leak scanner, fixed pip invocation</p>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: plugin.json version bump required by this repo&#x27;s own CLAUDE.md rule whenever plugins/monitor/skills/monitor/ changes.</li><li>GAPS: this repo&#x27;s own local .claude/skills/monitor/ install copy is now one version behind until re-installed.</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 4 · 35 total</span>
+    <span class="pageinfo">Page 1 of 4 · 36 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 35 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
