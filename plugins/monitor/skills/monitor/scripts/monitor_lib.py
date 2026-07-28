@@ -271,6 +271,8 @@ PALETTE_CSS = """
   .dsearch ul { list-style: none; margin-top: 8px; }
   .dsearch li { border-bottom: 1px solid var(--hairline); padding: 6px 2px; font-size: 0.88rem; }
   .dsearch li:last-child { border-bottom: none; }
+  .dsearch .status { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+  .dsearch .status:empty { display: none; }
   .rsection { border: 1px solid var(--border); background: var(--surface); padding: 20px 22px; margin-top: 16px; }
   .rsection h2 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px; }
   .rsection p { font-size: 0.95rem; line-height: 1.6; }

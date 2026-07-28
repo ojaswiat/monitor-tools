@@ -164,7 +164,14 @@ label.
   single pre-merge report. Don't ask whether to report; do it, then proceed
   with the merge.
 - Author from `reports/template.html` into `reports/<date>-<slug>.html`: fill the
-  `{{ branch }}` placeholders with the branch the work was done on, then run
+  `{{ branch }}` placeholders with the branch the work was done on. Fill
+  `{{ date }}` yourself with today's date (`YYYY-MM-DD`) — the "Generated"
+  chip, which no script ever substitutes; an unfilled `{{ date }}` ships
+  verbatim into the published report. Fill `{{ date_created }}` yourself as
+  well, with the date the underlying work began (often earlier than
+  `{{ date }}`). Leave `{{ last_modified }}` alone — it is the one date
+  placeholder stamped automatically, by `render_report.py --lock-report` at
+  the end of authoring. Then run
   `render_report.py` to rebuild the Reports index + Dashboard. No manifest to
   update — the index is scanned fresh from `reports/*.html` every time, reading
   each report's own `<h1>`/Branch chip/Summary directly out of the file.

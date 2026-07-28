@@ -1,3 +1,5 @@
+import sys
+
 import search
 import tasks
 
@@ -41,3 +43,45 @@ def test_search_scope_all_covers_every_source(project_root):
     assert len(matches["logs"]) == 1
     assert len(matches["tasks"]) == 1
     assert len(matches["reports"]) == 0
+
+
+def test_main_warns_when_log_filter_used_with_non_logs_scope(project_root, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", [
+        "search.py", "--project-root", str(project_root), "--query", "x",
+        "--scope", "reports", "--branch", "main",
+    ])
+    search.main()
+    captured = capsys.readouterr()
+    assert "branch" in captured.err.lower()
+    assert "reports" in captured.err.lower()
+
+
+def test_main_no_warning_for_logs_scope_with_filters(project_root, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", [
+        "search.py", "--project-root", str(project_root), "--query", "x",
+        "--scope", "logs", "--branch", "main",
+    ])
+    search.main()
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
+def test_main_no_warning_for_all_scope_with_filters(project_root, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", [
+        "search.py", "--project-root", str(project_root), "--query", "x",
+        "--scope", "all", "--branch", "main",
+    ])
+    search.main()
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
+def test_main_warns_when_log_filter_used_with_tasks_scope(project_root, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", [
+        "search.py", "--project-root", str(project_root), "--query", "x",
+        "--scope", "tasks", "--branch", "main",
+    ])
+    search.main()
+    captured = capsys.readouterr()
+    assert "branch" in captured.err.lower()
+    assert "tasks" in captured.err.lower()

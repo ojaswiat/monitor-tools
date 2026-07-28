@@ -10,18 +10,50 @@ doc files for phrases like "used to", "previously", "removed because",
 "version N", "deprecated" — candidates for the kind of narration
 `CLAUDE.md` explicitly bans from user-facing documentation.
 
+This skill never edits the files it scans — no auto-fix, no line removal,
+no wording change to any flagged doc. Its only write is the report itself,
+when the user picks Markdown or HTML format. It judges each candidate and,
+if any are real leaks, produces a report — the fix itself is a separate,
+deliberate step the user or a follow-up task takes.
+
 ## Flow
 
-1. Run: `python3 scripts/check_thought_leaks.py`
-2. Exit 0 means clean — relay that and stop.
-3. Exit 1 means candidates were found — **read each one yourself**, don't
-   treat a hit as an automatic failure. The script flags phrases, not
-   confirmed leaks: "previously" inside a legitimate, unrelated sentence
-   is a false positive. For each real leak, fix the wording to state
-   current behavior only, then re-run the script to confirm it's now
-   clean. For each false positive, note it and move on — nothing to fix.
-4. Relay a final summary: how many hits were real leaks (fixed), how many
-   were false positives (left as-is), and confirm the script now exits 0.
+1. Ask the user which level to run, presenting all four:
+   - **minimum** — matched line only. Fastest, lowest token cost.
+   - **standard** (Recommended) — matched line plus the full sentence it
+     appears in, markdown-stripped for a clean read. Enough context for
+     most judgment calls.
+   - **high** — standard, plus the agent reads the full source file
+     around each hit for whole-document context.
+   - **max** — high, plus the agent checks `git log -p` history for the
+     file to see whether the phrase traces to a real historical rewrite.
+2. Run: `python3 scripts/check_thought_leaks.py --level <chosen>`
+3. Exit 0 means clean — relay that and stop.
+4. Exit 1 means candidates were found. For **every** hit printed, output:
+   the sentence (or line, at `minimum`) → a verdict, `LEAK` or `OK` → one
+   short reason. No hit is skipped or left unverdicted. At `high`/`max`,
+   read the file (and git history, at `max`) yourself before verdicting —
+   the script only prints the sentence at the CLI level.
+5. If every hit verdicted `OK`, relay that (false positives only, nothing
+   to report) and stop.
+6. If any hit verdicted `LEAK`, ask the user which report format: **Chat**,
+   **HTML**, or **Markdown**.
+7. Generate the report — `LEAK` hits only, one entry per hit, four fields:
+   **File**, **Line**, **Issue** (your one-line finding: what phrase, why
+   flagged), **Description** (brief — why it reads as a leak),
+   **Recommendation** (one line, concrete, human-executable — a fix a
+   person could act on directly). Minimal and direct, no other sections,
+   no fluff.
+   - **Chat**: print the four-field list directly in the conversation.
+   - **Markdown**: write the same list to a file, one heading/row per
+     issue.
+   - **HTML**: same content; consult the `ui-ux-pro-max` skill for
+     minimal-report styling guidance first (a clean, scannable list, not
+     a dashboard). Self-contained HTML, no external assets, no JS needed
+     for a static list.
+
+No template is hardcoded anywhere in this skill or the script — the
+report is composed fresh from the verdicted hits each run.
 
 ## Notes
 

@@ -33,9 +33,18 @@ def project_root(tmp_path: Path) -> Path:
     # Drop the engine modules from sys.modules so the next project_root
     # invocation imports fresh module objects from its own tmp_path's
     # sys.path entry rather than reusing the ones loaded from the previous
-    # tmp_path. Engine modules take their root as an argument and hold no
-    # module-level state tied to it, so this is enough here; it is not a
-    # general guarantee against every form of cross-test leakage.
-    for mod in ("tasks", "pending", "clean", "logger", "search",
+    # tmp_path.
+    #
+    # What this does and does not buy: tests share one process, so this is
+    # sys.path/sys.modules bookkeeping, not process isolation. It guarantees
+    # only that engine modules are re-imported from the current test's copy of
+    # the scripts. It does NOT undo anything an already-imported module did on
+    # first import, unregister anything registered globally (atexit, warning
+    # filters, signal handlers), reset third-party or stdlib modules, restore
+    # os.environ or the cwd, or drop any module not named in the list below.
+    # It is safe here because engine modules take their project root as an
+    # argument and keep no module-level state tied to it — a module that
+    # cached a root at import time would still leak across tests.
+    for mod in ("tasks", "pending", "clean", "logger", "search", "profile",
                "render_tasks", "render_logs", "render_report", "monitor_lib"):
         sys.modules.pop(mod, None)

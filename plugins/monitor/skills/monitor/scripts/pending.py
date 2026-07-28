@@ -178,7 +178,9 @@ def _join(parts: list[str]) -> str:
 
 def _pending_phrase(data: dict, n_open_tasks: int) -> str:
     """"logs", "report", "N open task(s)", or a joined combination — only
-    what is really pending."""
+    what is really pending. Used to decide *whether* anything is pending;
+    check_text() builds the Y/N header from the log/report parts alone,
+    since answering Y never closes a task."""
     parts = []
     if data.get("pending_logs"):
         parts.append("logs")
@@ -218,10 +220,17 @@ def check_text(root: Path) -> str:
         noun = "task" if len(tasks) == 1 else "tasks"
         return "\n".join([f"[Warn!] Monitor: {len(tasks)} open {noun}.", "",
                           TASKS_ONLY_INSTRUCTIONS, _task_block(tasks)])
-    header = (f"[Warn!] Monitor: Pending {phrase}. Do you want Monitor to "
+    # The Y/N question covers the log/report work only — Y records those and
+    # nothing else, so open tasks are kept out of the question's subject and
+    # stated separately below it.
+    record_phrase = _pending_phrase(data, 0)
+    header = (f"[Warn!] Monitor: Pending {record_phrase}. Do you want Monitor to "
               f"record now [Y/N]")
     lines = [header, "", INSTRUCTIONS]
     if tasks:
+        noun = "task" if len(tasks) == 1 else "tasks"
+        lines.append(f"\nSeparately, {len(tasks)} open {noun} — not part of "
+                     f"the Y/N above.")
         lines.append(_task_block(tasks))
     return "\n".join(lines)
 

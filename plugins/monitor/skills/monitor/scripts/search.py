@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Search monitor/logs/operations.mtr for entries matching a query.
+"""Search monitor's logs, reports, and tasks for matches to a query.
 
 Stdlib-only, plain-text output (no HTML page) — built for an agent to call
-and read directly, like grep over the log. Reuses render_logs.parse_log() so
+and read directly, like grep over the monitor folder. `--scope` picks the
+source: `logs` searches operations.mtr, `reports` searches the visible text
+of reports/*.html, `tasks` searches tasks.mtr, and `all` (the default)
+searches every source and groups the output by source. `--branch`,
+`--status`, and `--level` filter log matches only. Reuses
+render_logs.parse_log() / render_tasks.parse_tasks() / the report scan so
 matching stays in sync with how entries are actually parsed.
 
 Usage:
   python3 search.py --project-root <repo> --query "auth bug" \\
+      [--scope logs|reports|tasks|all] \\
       [--branch <name>] [--status success|partial|failure] [--level LEVEL] \\
       [--limit N]
 """
@@ -83,9 +89,10 @@ def search_reports(root: Path, query: str, *, limit: int = 20) -> list[dict]:
         return []
     q = query.lower()
     matches = []
-    for item in render_report.scan_reports(root):
-        path = mlib.monitor_dir(root) / "reports" / item["file"]
-        raw = path.read_text(encoding="utf-8")
+    # with_text=True hands back the HTML scan_reports() already read, so
+    # each report file is opened exactly once per search.
+    for item in render_report.scan_reports(root, with_text=True):
+        raw = item.pop("text")
         # Drop <style>/<script> *contents* before flattening to text —
         # _plain() only strips tags, so an embedded stylesheet would
         # otherwise put every CSS token in the search haystack.
@@ -160,12 +167,18 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     mlib.add_root_arg(ap)
     ap.add_argument("--query", required=True,
-                    help="Case-insensitive substring, matched across operation, "
-                         "tool, summary, task_id, details, branch, commit, and extra fields.")
-    ap.add_argument("--scope", default="all", choices=("logs", "reports", "tasks", "all"))
-    ap.add_argument("--branch", default=None)
-    ap.add_argument("--status", default=None, choices=logger.STATUSES)
-    ap.add_argument("--level", default=None, choices=logger.LEVELS)
+                    help="Case-insensitive substring. In logs it is matched across "
+                         "operation, tool, summary, task_id, details, branch, commit, "
+                         "and extra fields; in reports across the rendered text of each "
+                         "report; in tasks across title, summary, and details.")
+    ap.add_argument("--scope", default="all", choices=("logs", "reports", "tasks", "all"),
+                    help="Which source to search: logs, reports, tasks, or all "
+                         "(default: all, grouped by source in the output).")
+    ap.add_argument("--branch", default=None, help="Filter log matches by branch.")
+    ap.add_argument("--status", default=None, choices=logger.STATUSES,
+                    help="Filter log matches by status.")
+    ap.add_argument("--level", default=None, choices=logger.LEVELS,
+                    help="Filter log matches by level.")
     ap.add_argument("--limit", type=int, default=20,
                     help="Maximum matches to return. Under --scope all it applies "
                          "per source (logs, reports, tasks) rather than to the "
@@ -173,6 +186,9 @@ def main() -> int:
     args = ap.parse_args()
     root = mlib.resolve_root(args)
     mlib.require_init(root)
+    if args.scope in ("reports", "tasks") and (args.branch or args.status or args.level):
+        print("warning: --branch/--status/--level only filter log matches; "
+              f"they have no effect under --scope {args.scope}", file=sys.stderr)
     matches = search(root, args.query, scope=args.scope, branch=args.branch,
                      status=args.status, level=args.level, limit=args.limit)
     if args.scope != "all":

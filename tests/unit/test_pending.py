@@ -64,6 +64,25 @@ def test_check_text_includes_instructions_when_logs_pending(project_root):
     assert "run /monitor:log for it" in text
 
 
+def test_check_text_keeps_open_tasks_out_of_the_yes_no_question(project_root):
+    # Both pending logs/report AND open tasks: answering Y records the
+    # log/report only, so the [Y/N] header must not fold the tasks in.
+    tasks.start_task(project_root, title="Still running")
+    data = pending.load_pending(project_root)
+    data["pending_logs"] = [{"sha": "deadbeef", "message": "x", "committed_at": "now"}]
+    data["pending_report"] = {"event": "merge", "since_sha": "", "detected_at": "now"}
+    pending.save_pending(project_root, data)
+    text = pending.check_text(project_root)
+    header = text.splitlines()[0]
+    assert header == ("[Warn!] Monitor: Pending logs and report. Do you want "
+                      "Monitor to record now [Y/N]")
+    assert "open task" not in header
+    # The tasks are still surfaced, just outside the question.
+    assert "Still running" in text
+    assert "not part of the Y/N above" in text
+    assert "/monitor:task-close" in text
+
+
 def test_check_text_empty_when_nothing_pending(project_root):
     assert pending.check_text(project_root) == ""
 

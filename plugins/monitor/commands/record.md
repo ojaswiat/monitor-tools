@@ -37,7 +37,15 @@ Read the **monitor** skill (`SKILL.md`) and `monitor/usage.md` first. Then:
    Fill every `{{ branch }}` placeholder with the
    branch the work was done on, and `{{ commit }}` with the range of commits
    this report covers as `<first-short-sha>..<last-short-sha>` (or a single
-   short sha if the report covers exactly one commit). **Only the text content changes** — a request
+   short sha if the report covers exactly one commit).
+   Fill `{{ date }}` yourself with today's date (`YYYY-MM-DD`) — this is the
+   "Generated" chip and no script ever substitutes it; an unfilled
+   `{{ date }}` ships verbatim into the published report.
+   Fill `{{ date_created }}` yourself as well, with the date the underlying
+   work began (your own judgment — often earlier than `{{ date }}`).
+   Leave `{{ last_modified }}` alone — that is the only date placeholder that
+   is stamped automatically: `render_report.py --lock-report` fills it in at
+   the end of authoring. **Only the text content changes** — a request
    about tone, audience, reading level, or language changes the words in each
    section, never the `<style>` block, palette, layout, or class names. Then
    lock the design: `python3 monitor/scripts/render_report.py --lock-report

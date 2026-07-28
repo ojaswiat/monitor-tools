@@ -17,6 +17,23 @@ def test_clean_tasks_removes_by_creation_order(project_root):
     assert "Task B" in text
 
 
+def test_clean_tasks_tie_breaks_identical_created_at_deterministically(project_root):
+    older_id = tasks.start_task(project_root, title="Same-second A")
+    newer_id = tasks.start_task(project_root, title="Same-second B")
+    # Force the two task-start events to share an identical created_at, which
+    # can happen for real when two tasks are started inside the same
+    # millisecond. The file stays newest-first, so B is still the newer task.
+    path = project_root / "monitor" / "tasks" / "tasks.mtr"
+    text = path.read_text()
+    frozen = re.match(r"^(\S+ \S+)", text).group(1)
+    path.write_text(re.sub(r"^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d{3}", frozen,
+                           text, flags=re.M))
+    clean.clean_tasks(project_root, 1, dry=False)
+    remaining = path.read_text()
+    assert not re.search(rf"^task_id: {older_id}$", remaining, re.M)
+    assert re.search(rf"^task_id: {newer_id}$", remaining, re.M)
+
+
 def test_clean_tasks_never_deletes_by_substring_mention(project_root):
     victim_id = tasks.start_task(project_root, title="Victim")
     survivor_id = tasks.start_task(project_root, title="Survivor")

@@ -89,14 +89,20 @@ def _plain(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
-def scan_reports(root: Path) -> list[dict]:
+def scan_reports(root: Path, *, with_text: bool = False) -> list[dict]:
     """Build the report list by reading reports/*.html directly — no manifest
     file. Each report's own title (<h1>), branch (its Branch meta-chip), and
     a short description (first line of its Summary section) come straight out
     of the file; date comes from the filename prefix (YYYY-MM-DD-slug.html),
     falling back to the file's mtime for anything non-conforming. Ordered
     newest-first by (date, mtime) so same-day reports still sort correctly
-    without any hand-maintained index."""
+    without any hand-maintained index.
+
+    `with_text=True` additionally carries each report's raw file contents
+    through on a `"text"` key, so a caller that needs the full body (full-text
+    search) reuses this scan's read instead of re-opening every file. It is
+    off by default because the index/Dashboard callers only need the metadata
+    and would otherwise hold every report's HTML in memory."""
     reports_dir = mlib.monitor_dir(root) / "reports"
     items: list[dict] = []
     for f in reports_dir.glob("*.html"):
@@ -114,9 +120,12 @@ def scan_reports(root: Path) -> list[dict]:
             branch = ""
         summary_m = _SUMMARY_RE.search(text)
         description = _truncate(_plain(summary_m.group(1)), 160) if summary_m else ""
-        items.append({"date": date, "file": f.name, "title": title,
-                      "description": description, "branch": branch,
-                      "_mtime": mtime})
+        item = {"date": date, "file": f.name, "title": title,
+                "description": description, "branch": branch,
+                "_mtime": mtime}
+        if with_text:
+            item["text"] = text
+        items.append(item)
     items.sort(key=lambda i: (i["date"], i["_mtime"]), reverse=True)
     for it in items:
         del it["_mtime"]
@@ -381,8 +390,11 @@ def render_dashboard(profile: dict, n_reports: int, root: Path,
   </div>
 
   <div class="dsearch">
-    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..." autocomplete="off">
+    <label class="sr-only" for="monitor-search">Search titles across logs, reports, and tasks</label>
+    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..."
+           autocomplete="off" aria-describedby="monitor-search-status">
     <ul id="monitor-search-results"></ul>
+    <p class="status" id="monitor-search-status" role="status" aria-live="polite"></p>
   </div>"""
     body = """  <div class="card-grid">
     <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
@@ -396,21 +408,27 @@ const MONITOR_SEARCH_INDEX = {_json_for_script(search_index)};
 (function() {{
   const input = document.getElementById('monitor-search');
   const results = document.getElementById('monitor-search-results');
+  const status = document.getElementById('monitor-search-status');
   input.addEventListener('input', function() {{
     const q = input.value.trim().toLowerCase();
     results.innerHTML = '';
-    if (!q) return;
-    MONITOR_SEARCH_INDEX
+    if (!q) {{ status.textContent = ''; return; }}
+    const matches = MONITOR_SEARCH_INDEX
       .filter(item => item.title.toLowerCase().includes(q))
-      .slice(0, 20)
-      .forEach(item => {{
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = item.href;
-        a.textContent = '[' + item.kind + '] ' + item.title;
-        li.appendChild(a);
-        results.appendChild(li);
-      }});
+      .slice(0, 20);
+    if (matches.length === 0) {{
+      status.textContent = 'No matches for "' + input.value.trim() + '".';
+      return;
+    }}
+    matches.forEach(item => {{
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = item.href;
+      a.textContent = '[' + item.kind + '] ' + item.title;
+      li.appendChild(a);
+      results.appendChild(li);
+    }});
+    status.textContent = matches.length + (matches.length === 1 ? ' match.' : ' matches.');
   }});
 }})();
 </script>"""
