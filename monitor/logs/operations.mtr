@@ -1,3 +1,8 @@
+2026-07-28 14:51:12,517 INFO [fix-next-steps-guidance] (Edit) Fixed Next Steps report section to forbid chat-turn/meta content after user flagged a leaked 'present options for approval' line -- success
+branch:  dev
+last_commit_hash: 0e3ceb0
+details: DECISION: Next Steps must describe project/code next steps only, never the authoring agent's own chat-turn actions (asking user, awaiting approval). WHY: user found a report whose Next Steps read 'Present cleanup options to the user for explicit approval before any branch deletion' -- that's a description of my own turn, not something a reader can act on later. ARCHITECTURE: fixed at the source -- render_report.py's inline template comment (regenerates monitor/reports/template.html on every render) plus a new SKILL.md rule. NEXT: bump plugin version, sync engine copy, commit. GAPS: the already-published branch-audit report still has the bad line -- per user decision, left untouched as an immutable historical snapshot; only future reports are fixed.
+================================================================================
 2026-07-28 14:39:28,604 INFO [branch-cleanup] (git) Fast-forwarded main to dev (09d7b9c), pushed both; deleted 4 fully-merged local branches and 3 merged remote branches after audit confirmed zero unmerged commits anywhere -- success
 branch:  dev
 last_commit_hash: 09d7b9c

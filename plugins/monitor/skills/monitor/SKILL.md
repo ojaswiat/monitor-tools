@@ -205,6 +205,15 @@ label.
 - **Gaps & Assumptions** carries forward each entry's `GAPS:`/`ASSUMPTIONS:`
   fields plus anything still open. A new agent reading only the report (not
   the raw log) should be able to resume work without asking what's unfinished.
+- **Next Steps is about the project, not the authoring turn.** Every entry
+  must be a concrete next step for the code or the branch (e.g. "add retry
+  handling to X", "rebuild main"). It must never describe what the authoring
+  agent itself is about to do in chat — asking the user something, awaiting
+  approval, presenting options. Those are mid-conversation actions, not
+  outcomes a reader can act on days later, and a report is read after the
+  turn that wrote it has already ended. If there's genuinely no next step,
+  omit the section rather than filling it with a meta-statement about the
+  conversation.
 - **Formatting — one point per `<li>`, never a numbered sentence inside a
   `<p>`.** `template.html` already gives What Was Done, Decisions & Rationale,
   Risks & Regressions, Gaps & Assumptions, Follow-ups, and Actionable Next

@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:39</span>
+      <span class="mono">2026-07-28 14:51</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">42</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">42</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">43</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">43</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:39:28,604</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:51:12,517</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,23 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 12:20:19,687</time>
+      <span class="op">edit-file</span>
+      <span class="toolchip">Edit</span>
+      <span class="branchchip" title="Branch: fix/dashboard-back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">fix/dashboard-back-link</span></span>
+      <span class="toolchip">commit: b5b6d10</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added top masthead Back-to-Dashboard link to Reports/Logs/Tasks index pages</p>
+    <div class="files"><span class="file">plugins/monitor/skills/monitor/scripts/monitor_lib.py</span><span class="file">plugins/monitor/skills/monitor/scripts/render_logs.py</span><span class="file">plugins/monitor/skills/monitor/scripts/render_report.py</span><span class="file">plugins/monitor/skills/monitor/scripts/render_tasks.py</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: added masthead_extra param + back_link() helper to mlib.page(), refactoring the report template&#x27;s existing ad-hoc string-replace onto the same mechanism rather than duplicating it three more times. NEXT: merge to dev.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 12:14:38,895</time>
@@ -304,30 +321,14 @@
       <ul><li>DECISION: escape &lt;, &gt;, &amp; in the JSON dump before embedding in &lt;script&gt;, since JSON escaping alone doesn&#x27;t prevent a title containing &lt;/script&gt; from breaking out.</li><li>WHY: found live-verified by the final whole-branch review — a real, exploitable bug, not theoretical.</li></ul>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-27 18:14:24,859</time>
-      <span class="op">test-automated-skill</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
-      <span class="toolchip">commit: 6123929</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Added test-automated skill orchestrating unit + integration + thought-leaks</p>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: thin orchestration skill, does not invoke test-e2e (stays manual/on-demand).</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="index.html">← Prev</a>
-    <span class="pageinfo">Page 2 of 5 · 42 total</span>
+    <span class="pageinfo">Page 2 of 5 · 43 total</span>
     <a href="page-3.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 42 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 43 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
