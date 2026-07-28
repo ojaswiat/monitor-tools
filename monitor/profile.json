@@ -1,0 +1,19 @@
+{
+  "profileVersion": 5,
+  "project": {
+    "name": "monitor-tools"
+  },
+  "kpis": [
+    {
+      "key": "tests",
+      "label": "Tests",
+      "since": 1
+    },
+    {
+      "key": "commit",
+      "label": "Commit",
+      "since": 1
+    }
+  ],
+  "notes": {}
+}

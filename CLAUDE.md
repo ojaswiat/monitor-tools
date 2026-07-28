@@ -53,7 +53,7 @@ Commands (`plugins/monitor/commands/*.md`) are thin prompts for the agent; the a
 - Changes to `PALETTE_CSS` / `page()` in `monitor_lib.py` affect every generated page (Dashboard, Reports, Logs, and the report template) — check all three render scripts after editing shared chrome.
 - After changing `plugins/monitor/skills/monitor/`, bump `version` in `plugins/monitor/.claude-plugin/plugin.json` so installed marketplaces pick up the update via `/plugin marketplace update monitor-tools`.
 - `install-monitor.sh` and the plugin path must stay in sync: both ultimately expose `/monitor:init|log|report|record|search|update|clean-logs|clean-reports` — the plugin path via `$CLAUDE_PLUGIN_ROOT` + plugin namespace, the manual-copy path via commands nested under `.claude/commands/monitor/`.
-- Never commit a generated per-project `monitor/` data folder (profile.json, logs, reports) from **this repo** — it's project-local generated content, not portable engine code, and this repo already ships the plugin source under `plugins/monitor/`. This is a repo-specific carve-out for `monitor-tools` dogfooding itself; it does **not** apply to a consumer project. In every other installed project, `monitor/` is committed by default — logs and reports are how a future agent (or teammate) recovers context, which only works if they're actually in the repo.
+- This repo's own `monitor/` data folder (profile.json, logs, reports, tasks) is committed like any consumer project's — logs and reports are how a future agent (or teammate) recovers context, which only works if they're actually in the repo. The installed engine copy under `.claude/skills/monitor/` and `.claude/commands/monitor/` stays gitignored — it's a project-local install of the portable source already shipped under `plugins/monitor/`, re-synced via `install-monitor.sh` rather than tracked as a second copy.
 - **Never record development history, version changelogs, reasoning leakage, or design history inside skill definitions, READMEs, or any other user-facing documentation shipped to consumer projects** (`SKILL.md`, `commands/*.md`, `README.md`, `monitor/usage.md` templates, generated `CLAUDE.md`/`AGENTS.md` blocks). No "version 1 did X, this was later removed because...", no narration of what changed between plugin versions, no meta-commentary about why an approach was tried and abandoned. These files must read as clean, state-only documentation of *current* behavior — a first-time reader should never be able to tell the plugin has ever had a prior version. Version history belongs in git commits and `plugin.json`'s version field only. This rule itself must be propagated into every consumer project's `CLAUDE.md`/`AGENTS.md` by `/monitor:init` and `/monitor:update` (see the `monitor:start`/`monitor:end` block below and in `commands/init.md`/`update.md`).
 
 ## Testing changes locally
@@ -73,10 +73,10 @@ Engine scripts can also be invoked directly for quick checks: `python3 monitor/s
 This repo has **monitor** installed on itself via `./install-monitor.sh .`
 (engine + commands under `.claude/`, generated data under the top-level
 `monitor/`) — the same workflow this repo ships to consumers, used here to
-develop the plugin itself. `monitor/` is generated local state, gitignored
-(see `.gitignore`), never committed from this repo — same rule as any
-consumer project's data folder, stated above under "Editing the engine."
-Rules for using it live in `.claude/skills/monitor/SKILL.md` — read it
+develop the plugin itself. `monitor/` is committed like any consumer
+project's — the installed engine copy under `.claude/` stays gitignored,
+stated above under "Editing the engine." Rules for using it live in
+`.claude/skills/monitor/SKILL.md` — read it
 before running any command below.
 
 The three tracked entities have a clear split: **logs** are the continuous
