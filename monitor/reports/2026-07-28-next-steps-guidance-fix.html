@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tasks — monitor-tools Monitor</title>
+<title>Fix Next Steps Section: Project Actions Only, Never Chat-Turn Content — monitor-tools Report</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -127,30 +127,106 @@
 <div class="wrap">
 
   <div class="masthead" id="top">
-    <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
-    <span><span class="brand">monitor-tools</span> · Monitor · Tasks</span>
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:57</span>
     </span>
   </div>
 
   <header class="report">
-    <h1>Tasks</h1>
-    <p class="subtitle">Lifecycle-tracked units of work, newest first. Rendered from <code>monitor/tasks/tasks.mtr</code>.</p>
-    <nav class="tabnav" aria-label="Dashboard pages"><a href="../reports/index.html">Reports</a><a href="../logs/index.html">Logs</a><a href="../tasks/index.html" class="active" aria-current="page">Tasks</a></nav>
+    <h1>Fix Next Steps Section: Project Actions Only, Never Chat-Turn Content</h1>
+    <p class="subtitle">A published report's Next Steps section described the authoring agent's own conversational turn instead of a real project action. Fixed at the source template and codified as a SKILL.md rule, so every future report's Next Steps stays a list a reader can act on after the conversation has ended.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Created</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">2026-07-28 14:57</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">dev</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">09d7b9c..0b6f62c</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">success</span></span>
+    </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total tasks</div><div class="value">0</div></div>
-    <div class="kpi warn"><div class="label">Open</div><div class="value">0</div></div>
+    <div class="kpi pass"><div class="label">Tests</div><div class="value small">82 unit + integration pass</div></div>
+    <div class="kpi"><div class="label">Plugin version</div><div class="value small mono">1.15.1 → 1.15.2</div></div>
   </div>
 
-  <div class="empty">No tasks yet.</div>
+  <section class="rsection">
+    <h2>Summary</h2>
+    <p>A user reviewing the branch-audit report caught a defect: its Next Steps section read "Present cleanup options to the user for explicit approval before any branch deletion or push" — a description of what the authoring agent was about to do in that chat turn, not a project or code action a reader could act on later. Fixed at the source: <code>render_report.py</code>'s inline template comment (which regenerates <code>monitor/reports/template.html</code> on every render) and a new explicit rule in <code>SKILL.md</code> both now require Next Steps entries to be concrete project/code actions, and explicitly forbid describing the conversation that produced the report.</p>
+  </section>
 
+  <section class="rsection">
+    <h2>What Was Asked</h2>
+    <p>The user flagged the leaked line as "internal thought, not something a human can take," clarified that Next Steps should describe project development next steps rather than the agent's own chat/thoughts, and asked for the relevant skill to be improved.</p>
+  </section>
 
-  <footer><span>Rendered from monitor/tasks/tasks.mtr · 0 tasks.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <section class="rsection">
+    <h2>What Was Done</h2>
+    <ul>
+      <li>Updated the Next Steps inline comment in <code>plugins/monitor/skills/monitor/scripts/render_report.py</code> (the source that regenerates <code>reports/template.html</code>) to explicitly require project/code actions and forbid describing the authoring session's own turn.</li>
+      <li>Added a new bullet to <code>plugins/monitor/skills/monitor/SKILL.md</code>'s reporting section stating the same rule, with the reasoning: a report is read after the turn that wrote it has ended, so mid-conversation actions (asking the user something, awaiting approval) are meaningless to a later reader.</li>
+      <li>Synced the fix into this repo's project-runtime engine copy (<code>monitor/scripts/render_report.py</code>) and regenerated <code>monitor/reports/template.html</code> so the fixed comment is live immediately, not just on the next full render.</li>
+      <li>Bumped the plugin version 1.15.1 → 1.15.2, ran the full test suite (82 unit + integration, all passing) and the thought-leak scanner (clean), then committed and fast-forwarded both <code>dev</code> and <code>main</code>.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Decisions &amp; Rationale</h2>
+    <ul>
+      <li><b>DECISION:</b> fix at the template-comment and SKILL.md level, not by adding a post-hoc validation script. <b>WHY:</b> this is an authoring-judgment problem (recognizing "this is my own chat action, not a project action"), not a mechanical pattern a regex could reliably catch without false positives against legitimate project next steps that happen to mention users or approval workflows.</li>
+      <li><b>DECISION:</b> the already-published branch-audit report keeps its bad line, uncorrected. <b>WHY:</b> this repo's own rule states reports are immutable snapshots, never rewritten — the user confirmed this explicitly when asked, choosing to treat the old report as a historical artifact rather than make a retroactive exception.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Evidence</h2>
+    <pre>$ grep -n "Next Steps is about" plugins/monitor/skills/monitor/SKILL.md
+208:- **Next Steps is about the project, not the authoring turn.** ...
+
+$ grep -n "Never a description of" plugins/monitor/skills/monitor/scripts/render_report.py
+222:           this authoring session's own turn (asking the user something,
+
+$ PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ tests/integration/ -q
+82 passed in 26.82s
+
+$ python3 scripts/check_thought_leaks.py
+clean: no development-history/reasoning-leakage phrases found</pre>
+  </section>
+
+  <section class="rsection">
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
+      <tr><td>plugins/monitor/skills/monitor/scripts/render_report.py</td><td>Next Steps template comment rewritten to require project actions, forbid chat-turn content</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/SKILL.md</td><td>New rule bullet stating the same requirement explicitly</td></tr>
+      <tr><td>monitor/scripts/render_report.py</td><td>Synced engine copy</td></tr>
+      <tr><td>monitor/reports/template.html</td><td>Regenerated to carry the fixed comment</td></tr>
+      <tr><td>plugins/monitor/.claude-plugin/plugin.json</td><td>Version 1.15.1 → 1.15.2</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="rsection">
+    <h2>Risks</h2>
+    <ul>
+      <li>None — the fix only changes an authoring-time instruction comment and a documentation rule; no runtime script behavior changed.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Gaps &amp; Assumptions</h2>
+    <ul>
+      <li><b>GAPS:</b> the fix is instructional, not enforced by any script — a future authoring pass could still write chat-turn content into Next Steps if the guidance is skimmed. No automated check like <code>check_thought_leaks.py</code> covers this specific defect class in report content (that scanner only covers shipped documentation, not authored reports).</li>
+      <li><b>ASSUMPTIONS:</b> the one existing bad report (branch-audit) is the only instance of this defect in the repo's report history — not independently re-verified across every prior report.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Follow-ups</h2>
+    <ul>
+      <li>Consider whether a lightweight content check for report authoring (distinct from the existing shipped-documentation thought-leak scanner) is worth adding if this defect class recurs.</li>
+    </ul>
+  </section>
 
 </div>
 </body>
