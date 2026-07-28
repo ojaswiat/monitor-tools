@@ -8,6 +8,11 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/post_push_hook.py\"",
+            "timeout": 20
           }
         ]
       }
