@@ -130,8 +130,8 @@
     <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 12:23</span>
+      <span class="branchchip" title="Branch: chore/commit-monitor-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/commit-monitor-data</span></span>
+      <span class="mono">2026-07-28 12:28</span>
     </span>
   </div>
 
@@ -142,12 +142,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">34</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">34</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">chore/commit-monitor-data</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">35</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">35</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:21:24,526</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:28:22,977</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 18:14:49,910</time>
+      <span class="op">fix-search-css-and-pending-message</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
+      <span class="toolchip">commit: 7139c2f</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Fixed report search matching CSS text and misleading tasks-only pending message</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: search_reports() strips &lt;style&gt;/&lt;script&gt; blocks before plaintext extraction; pending.py&#x27;s check_text() only shows log/report instructions when logs/report are actually pending, task-only case gets its own short note.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 18:14:49,684</time>
@@ -305,30 +321,14 @@
       <ul><li>DECISION: pending.py&#x27;s check_text() now folds currently-open (non-terminal-status) tasks into the same [Warn!] message, read fresh from tasks.mtr on every call rather than stored in .pending.json.</li><li>WHY: symmetric with how pending_logs/pending_report already work unconditionally, no invented time threshold.</li></ul>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-27 10:45:33,742</time>
-      <span class="op">reinstall-monitor</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="toolchip">commit: ef64423</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Reinstalled monitor with tasks/hooks/search feature set</p>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: ran install-monitor.sh . --force then re-ran profile.py/render_report.py/render_logs.py/render_tasks.py to pick up the new engine.</li><li>ARCHITECTURE: monitor/tasks/ now exists; PostToolUse/UserPromptSubmit pending-state hooks merged into .claude/settings.json; CLAUDE.md and AGENTS.md monitor:start blocks refreshed to the current canonical content (tasks commands, pending-hook rule).</li><li>NEXT: run /test-e2e against one medium project.</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="index.html">← Prev</a>
-    <span class="pageinfo">Page 2 of 4 · 34 total</span>
+    <span class="pageinfo">Page 2 of 4 · 35 total</span>
     <a href="page-3.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 34 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 35 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

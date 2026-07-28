@@ -1,3 +1,9 @@
+2026-07-28 12:28:22,977 INFO [edit-file] (Edit) Committed monitor/ data folder to git; removed the Host-repo carve-out from .gitignore/CLAUDE.md -- success
+branch:  chore/commit-monitor-data
+last_commit_hash: ed3b246
+files:   .gitignore, CLAUDE.md, AGENTS.md, monitor/
+details: DECISION: this repo now commits monitor/ (profile.json, logs, reports, tasks, scripts) exactly like a Guest project would, dropping the previous repo-specific gitignore carve-out. .claude/skills/monitor/ and .claude/commands/monitor/ remain gitignored — that duplication (installed engine copy vs plugins/monitor/ source) is unique to this repo having its own source, distinct from monitor/scripts/'s duplication which the user explicitly chose to accept for exact Guest-project parity. WHY: explicit user instruction to use monitor in this repo exactly as a Guest project is supposed to. ARCHITECTURE: performed a hard re-install first (removed and re-copied .claude/skills/monitor + .claude/commands/monitor from plugins/monitor/ source), re-synced monitor/scripts/, discovered and fixed AGENTS.md having drifted out of sync with CLAUDE.md's monitor block (never regenerated via /monitor:update after direct hand-edits earlier today). GAPS: monitor/scripts/*.py now duplicates plugins/monitor/skills/monitor/scripts/*.py within the same repo; keeping them in sync requires manually re-running install-monitor.sh + copying into monitor/scripts/ after any engine change, same discipline already required for .claude/skills/monitor/.
+================================================================================
 2026-07-28 12:21:24,526 INFO [merge] (Bash) Merged fix/dashboard-back-link into dev and pushed -- success
 branch:  dev
 last_commit_hash: a94beff
