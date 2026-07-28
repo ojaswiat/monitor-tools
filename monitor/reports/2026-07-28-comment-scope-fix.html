@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ title }} — monitor-tools Report</title>
+<title>Keep Process Instructions in SKILL.md, Not in Code Comments — monitor-tools Report</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -130,98 +130,104 @@
     <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: {{ branch }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">{{ branch }}</span></span>
-      <span class="mono">2026-07-28 15:12</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
     </span>
   </div>
 
   <header class="report">
-    <h1>{{ title }}</h1>
-    <p class="subtitle">{{ subtitle }}</p>
+    <h1>Keep Process Instructions in SKILL.md, Not in Code Comments</h1>
+    <p class="subtitle">The previous Next Steps fix embedded a full prose rule inside render_report.py's template comment, duplicating what SKILL.md already stated. User flagged this as a real separation-of-concerns issue and asked whether any monitor skill reads .py comments for behavioral context — confirmed no skill does, but the duplication itself was still wrong. Trimmed the comment back to a short mechanical pointer; SKILL.md is now the single source of truth for report-authoring process.</p>
     <div class="meta-chips">
-      <span class="chip"><b>Generated</b><span class="mono">{{ date }}</span></span>
-      <span class="chip"><b>Created</b><span class="mono">{{ date_created }}</span></span>
-      <span class="chip"><b>Last modified</b><span class="mono">{{ last_modified }}</span></span>
-      <span class="chip"><b>Branch</b><span class="mono">{{ branch }}</span></span>
-      <span class="chip"><b>Commit</b><span class="mono">{{ commit }}</span></span>
-      <span class="chip"><b>Status</b><span class="tag {{ status_class }}">{{ status }}</span></span>
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Created</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">2026-07-28 15:12</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">dev</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">0b6f62c..012b16f</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">success</span></span>
     </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Tests</div><div class="value">{{ tests }}</div></div>
-    <div class="kpi"><div class="label">Commit</div><div class="value">{{ commit }}</div></div>
+    <div class="kpi pass"><div class="label">Tests</div><div class="value small">82 unit + integration pass</div></div>
+    <div class="kpi"><div class="label">Plugin version</div><div class="value small mono">1.15.2 → 1.15.3</div></div>
   </div>
 
   <section class="rsection">
     <h2>Summary</h2>
-    <p><!-- One coherent paragraph. Project notes: — --></p>
+    <p>User asked whether any monitor skill reads <code>.py</code> source comments for behavioral context, flagging that as a serious issue if true. Verification confirmed no command or skill does — every script is invoked as a CLI black box (<code>python3 monitor/scripts/x.py --args</code>), never read for guidance. But the same audit surfaced a related, real defect: the Next Steps fix from the previous change had embedded a full prose restatement of its SKILL.md rule directly into <code>render_report.py</code>'s template comment, breaking the pattern every other section comment follows (a short mechanical pointer, not a process explanation). User confirmed this was the actual problem to fix — code and instructions must stay in separate layers, with SKILL.md as the only place process guidance lives.</p>
   </section>
 
   <section class="rsection">
     <h2>What Was Asked</h2>
-    <p><!-- One coherent paragraph. --></p>
+    <p>Fix the duplication: keep code (scripts and templates) and instructions (skill files) separate, with the process for how jobs get done around scripts/templates living only in the skill file.</p>
   </section>
 
   <section class="rsection">
     <h2>What Was Done</h2>
     <ul>
-      <!-- One <li> per point. -->
+      <li>Trimmed the Next Steps template comment in <code>render_report.py</code> from a multi-line prose rule back to a one-line mechanical pointer ("One &lt;li&gt; per actionable next step for the project/code. See SKILL.md's reporting section for what belongs here."), matching the style of every sibling section comment (Risks, Follow-ups, What Was Done, etc.).</li>
+      <li>Left the actual rule and its full rationale in <code>SKILL.md</code> only — it was already there from the prior fix and needed no change.</li>
+      <li>Synced the trimmed comment into the project-runtime engine copy (<code>monitor/scripts/render_report.py</code>) and regenerated <code>monitor/reports/template.html</code>.</li>
+      <li>Bumped the plugin version 1.15.2 → 1.15.3, ran the full test suite (82 unit + integration, all passing) and the thought-leak scanner (clean), then committed and fast-forwarded both <code>dev</code> and <code>main</code>.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Decisions &amp; Rationale</h2>
     <ul>
-      <!-- One <li> per real decision: what was chosen, why, alternatives
-           rejected. Pull straight from this branch's DECISION:/WHY:/
-           ARCHITECTURE: log fields — don't re-derive from scratch. -->
+      <li><b>DECISION:</b> code comments (in scripts and generated templates) stay short and mechanical; the actual process rule and its reasoning live only in SKILL.md. <b>WHY:</b> duplicating process guidance into code invites drift — two copies of the same rule can silently diverge as one gets edited and the other doesn't, and it blurs a boundary this repo otherwise keeps clean (commands/SKILL.md as the process layer, scripts as the mechanism layer).</li>
+      <li><b>DECISION:</b> answer the original question (does any skill read .py comments) precisely rather than folding it into the fix. <b>WHY:</b> the two concerns are related but distinct — "does a skill consume this at runtime" (no) versus "should this content exist in code at all" (also no, for a different reason) — conflating them would have produced a less useful fix.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Evidence</h2>
-    <pre><!-- Command + output, verbatim. --></pre>
+    <pre>$ grep -rn "Read.*\.py\|read the.*script" plugins/monitor/commands/*.md plugins/monitor/skills/monitor/SKILL.md
+(no matches -- no command/skill instructs reading script source)
+
+$ grep -n -A2 "Next Steps" plugins/monitor/skills/monitor/scripts/render_report.py
+    <h2>Next Steps</h2>
+    <ol class="steps">
+      <!-- One <li> per actionable next step for the project/code. See
+           SKILL.md's reporting section for what belongs here. -->
+
+$ PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ tests/integration/ -q
+82 passed in 30.35s
+
+$ python3 scripts/check_thought_leaks.py
+clean: no development-history/reasoning-leakage phrases found</pre>
   </section>
 
   <section class="rsection">
     <h2>Files Touched</h2>
     <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
-      <!-- One row per file. -->
+      <tr><td>plugins/monitor/skills/monitor/scripts/render_report.py</td><td>Next Steps template comment trimmed to a mechanical one-liner</td></tr>
+      <tr><td>monitor/scripts/render_report.py</td><td>Synced engine copy</td></tr>
+      <tr><td>monitor/reports/template.html</td><td>Regenerated to carry the trimmed comment</td></tr>
+      <tr><td>plugins/monitor/.claude-plugin/plugin.json</td><td>Version 1.15.2 → 1.15.3</td></tr>
     </tbody></table></div>
   </section>
 
   <section class="rsection">
     <h2>Risks</h2>
     <ul>
-      <!-- One <li> per risk. -->
+      <li>None — comment-only change to the template string; no script logic or CLI behavior changed.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Gaps &amp; Assumptions</h2>
     <ul>
-      <!-- One <li> per gap/assumption. Pull from this branch's GAPS:/
-           ASSUMPTIONS: log fields. -->
+      <li><b>GAPS:</b> no automated check enforces "code comments stay mechanical, process stays in SKILL.md" — this is currently a convention caught by review, not a lint rule. Other section comments (e.g. Decisions &amp; Rationale's "Pull straight from ... log fields") already carry slightly more than pure mechanics; not revisited here since they don't duplicate a full standalone rule.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Follow-ups</h2>
     <ul>
-      <!-- One <li> per follow-up. -->
+      <li>None at this time.</li>
     </ul>
   </section>
-
-  <section class="rsection">
-    <h2>Next Steps</h2>
-    <ol class="steps">
-      <!-- One <li> per actionable next step for the project/code. See
-           SKILL.md's reporting section for what belongs here. -->
-    </ol>
-  </section>
-
-  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
