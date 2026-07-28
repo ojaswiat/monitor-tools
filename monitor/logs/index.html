@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:58</span>
+      <span class="mono">2026-07-28 15:10</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">44</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">44</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">45</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">45</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:58:31,951</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 15:10:45,764</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 15:10:45,764</time>
+      <span class="op">trim-template-comment-scope-fix</span>
+      <span class="toolchip">Edit</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: d004460</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Trimmed the Next Steps template comment in render_report.py back to a short mechanical pointer; the full rule/rationale lives only in SKILL.md now, not duplicated into the code</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: process instructions belong only in SKILL.md/commands, never authored as prose inside script/template comments. WHY: user flagged that comments embedded in .py/template code duplicating skill-file guidance is a real separation-of-concerns issue -- code and instructions must stay in their own layer, matching every other section&#x27;s terse pointer style (e.g. Risks: &#x27;One &lt;li&gt; per risk.&#x27;). NEXT: none.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 14:58:31,951</time>
@@ -294,30 +310,13 @@
     </div>
     <p class="summary">Merged chore/commit-monitor-data into dev and pushed</p>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 12:28:22,977</time>
-      <span class="op">edit-file</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: chore/commit-monitor-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/commit-monitor-data</span></span>
-      <span class="toolchip">commit: ed3b246</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Committed monitor/ data folder to git; removed the Host-repo carve-out from .gitignore/CLAUDE.md</p>
-    <div class="files"><span class="file">.gitignore</span><span class="file">CLAUDE.md</span><span class="file">AGENTS.md</span><span class="file">monitor/</span></div>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: this repo now commits monitor/ (profile.json, logs, reports, tasks, scripts) exactly like a Guest project would, dropping the previous repo-specific gitignore carve-out. .claude/skills/monitor/ and .claude/commands/monitor/ remain gitignored — that duplication (installed engine copy vs plugins/monitor/ source) is unique to this repo having its own source, distinct from monitor/scripts/&#x27;s duplication which the user explicitly chose to accept for exact Guest-project parity. WHY: explicit user instruction to use monitor in this repo exactly as a Guest project is supposed to. ARCHITECTURE: performed a hard re-install first (removed and re-copied .claude/skills/monitor + .claude/commands/monitor from plugins/monitor/ source), re-synced monitor/scripts/, discovered and fixed AGENTS.md having drifted out of sync with CLAUDE.md&#x27;s monitor block (never regenerated via /monitor:update after direct hand-edits earlier today). GAPS: monitor/scripts/*.py now duplicates plugins/monitor/skills/monitor/scripts/*.py within the same repo; keeping them in sync requires manually re-running install-monitor.sh + copying into monitor/scripts/ after any engine change, same discipline already required for .claude/skills/monitor/.</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 5 · 44 total</span>
+    <span class="pageinfo">Page 1 of 5 · 45 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 44 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 45 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

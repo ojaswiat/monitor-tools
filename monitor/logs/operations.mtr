@@ -1,3 +1,8 @@
+2026-07-28 15:10:45,764 INFO [trim-template-comment-scope-fix] (Edit) Trimmed the Next Steps template comment in render_report.py back to a short mechanical pointer; the full rule/rationale lives only in SKILL.md now, not duplicated into the code -- success
+branch:  dev
+last_commit_hash: d004460
+details: DECISION: process instructions belong only in SKILL.md/commands, never authored as prose inside script/template comments. WHY: user flagged that comments embedded in .py/template code duplicating skill-file guidance is a real separation-of-concerns issue -- code and instructions must stay in their own layer, matching every other section's terse pointer style (e.g. Risks: 'One <li> per risk.'). NEXT: none.
+================================================================================
 2026-07-28 14:58:31,951 INFO [verify-no-comment-dependency] (Grep) Confirmed no monitor command/skill reads .py source comments for behavioral context; all scripts are invoked as CLI black boxes. The only intentional exception is HTML placeholder comments inside reports/template.html, which report.md explicitly documents. -- success
 branch:  dev
 last_commit_hash: 0681108

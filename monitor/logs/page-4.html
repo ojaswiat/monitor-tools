@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:58</span>
+      <span class="mono">2026-07-28 15:10</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">44</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">44</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">45</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">45</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:58:31,951</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 15:10:45,764</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-27 10:45:33,742</time>
+      <span class="op">reinstall-monitor</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: ef64423</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Reinstalled monitor with tasks/hooks/search feature set</p>
+    <details>
+      <summary>Details</summary>
+      <ul><li>DECISION: ran install-monitor.sh . --force then re-ran profile.py/render_report.py/render_logs.py/render_tasks.py to pick up the new engine.</li><li>ARCHITECTURE: monitor/tasks/ now exists; PostToolUse/UserPromptSubmit pending-state hooks merged into .claude/settings.json; CLAUDE.md and AGENTS.md monitor:start blocks refreshed to the current canonical content (tasks commands, pending-hook rule).</li><li>NEXT: run /test-e2e against one medium project.</li></ul>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-27 01:21:09,678</time>
@@ -311,32 +327,14 @@
       <ul><li>GAPS: README entry, misleading commit-range claim, limit=0 bug, stale command lists, missing range command example, hardcoded status/level choices — all fixed</li><li>NEXT: dogfood via /test-e2e and a real /monitor:report, then merge add-monitor-search into main</li></ul>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-25 23:02:00,718</time>
-      <span class="op">report-commit-range</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
-      <span class="toolchip">commit: 92d678b</span>
-      <span class="xchip">task: add-monitor-search</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Reports now fill the template&#x27;s {{ commit }} placeholder with a first..last short-sha range</p>
-    <div class="files"><span class="file">plugins/monitor/commands/report.md</span><span class="file">plugins/monitor/commands/record.md</span><span class="file">plugins/monitor/skills/monitor/SKILL.md</span></div>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: first..last range, not a single sha or a full comma-separated list</li><li>WHY: shows the whole span a report covers in one glance, mirroring git&#x27;s own range notation; a single sha loses multi-commit reports, a full list gets unreadable past a few commits</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="page-3.html">← Prev</a>
-    <span class="pageinfo">Page 4 of 5 · 44 total</span>
+    <span class="pageinfo">Page 4 of 5 · 45 total</span>
     <a href="page-5.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 44 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 45 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
