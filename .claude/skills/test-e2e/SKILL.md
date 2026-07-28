@@ -12,6 +12,46 @@ session but run 3-at-once with varying companion-install levels.
 
 ## Flow
 
+0. **Virgin plugin state — ask the user first, every time.** A drill run
+   against a stale local marketplace cache proves nothing about whether a
+   real user pulling `monitor` fresh from GitHub gets working code — a
+   `github` marketplace source with no branch pin resolves to whatever the
+   local cache already has until explicitly refreshed, which silently
+   diverges from the actual default-branch content over time. Before
+   finding repos, ask the user:
+
+   > Reset monitor's plugin marketplace registration and cache first, so
+   > this drill installs from a genuinely fresh GitHub pull instead of
+   > whatever's currently cached? This is machine-global state — check
+   > `~/.claude/plugins/config/installed_plugins.json` for other
+   > `monitor@monitor-tools` entries first and name them in the question.
+   > This deletes the whole cache directory, including the exact version
+   > folder each of those other projects' `installPath` points at — their
+   > plugin will actually fail to resolve, not just stay outdated, until
+   > `claude plugin install monitor@monitor-tools --scope project` is
+   > re-run in each one's own directory afterward.
+
+   Record the currently-cached plugin version now, regardless of the
+   answer — step 7 needs it for the before/after delta. The cache
+   directory can hold multiple version folders at once (leftovers from
+   past installs for other projects), so don't glob it blindly: read
+   `~/.claude/plugins/config/installed_plugins.json`, find the
+   `monitor@monitor-tools` entry whose `projectPath` is this repo's root,
+   and read `.claude-plugin/plugin.json`'s `version` at that entry's own
+   `installPath` — that's the one actually in use here.
+
+   If yes:
+   ```bash
+   claude plugin marketplace remove monitor-tools
+   rm -rf ~/.claude/plugins/cache/monitor-tools/
+   claude plugin marketplace add ojaswiat/monitor-tools
+   ```
+   Confirm the marketplace re-added cleanly before proceeding.
+
+   If no: proceed with whatever's currently cached, and say so plainly in
+   the final synthesis report (step 5) — this run did not verify a fresh
+   pull, only current cached behavior.
+
 1. **Find 3 fresh test repos.** Use `WebSearch` (never a hardcoded list) to
    find one small, real, currently-existing repo for each:
    - a small Python CLI project
@@ -26,7 +66,30 @@ session but run 3-at-once with varying companion-install levels.
    fails fast as a clear report instead of the subagent improvising a
    replacement repo mid-task.
 
-2. **Spawn 3 subagents in parallel — one message, three `Agent` calls,**
+2. **Before dispatching, install the plugin for real into each of the 3
+   cloned project dirs** — this is a plain CLI command, not the
+   interactive `/plugin` slash command, so you (the orchestrator) can run
+   it directly:
+   ```bash
+   claude plugin install monitor@monitor-tools --scope project
+   ```
+   run once per `{project_dir}`, from inside that directory. This is what
+   makes each guest project's own `.claude/settings.json` genuinely say
+   `monitor@monitor-tools: true`, scoped to that project — matching what a
+   real user's `/plugin install` would produce, not a manual copy script.
+   Be honest about what this does and doesn't prove: the subagents you
+   dispatch next inherit *this* session's already-registered skill list
+   (same as always — nested subagents don't independently re-resolve
+   plugin registration mid-run), so this step does not re-verify "can a
+   brand-new top-level session discover the skill from scratch" — that
+   narrower question is a one-off sanity check on the install mechanism
+   itself, not something this drill needs to re-prove every run. What it
+   *does* verify: `/monitor:init` (run inside each subagent next) resolves
+   `$CLAUDE_PLUGIN_ROOT` against a real, freshly-installed plugin cache —
+   proving the actual shipped code the subagent will exercise came from a
+   genuine install, not a stale copy or a manual mirror hack.
+
+   **Spawn 3 subagents in parallel — one message, three `Agent` calls,**
    each with `subagent_type: "general-purpose"`, `isolation: "worktree"`,
    `run_in_background: true`. Each subagent gets the prompt template below
    with its own `{repo_url}`, `{project_dir}` (always `examples/<slug>`,
@@ -76,8 +139,13 @@ session but run 3-at-once with varying companion-install levels.
       files — if it fails, or the repo is empty/archived/unrelated to what
       the name implies, stop and report that back instead of substituting
       a different repo yourself.
-   2. From the repo root (one level up from {project_dir}), run:
-      ./install-monitor.sh {project_dir}
+   2. Don't run `install-monitor.sh` — the orchestrator already installed
+      `monitor` for real into this project directory before dispatching
+      you (`claude plugin install monitor@monitor-tools --scope project`).
+      From inside {project_dir}, discover and run whatever gets a new
+      project set up with monitor for the first time, the way any real
+      user would — its own skill description is enough to surface it;
+      don't quote a command name from these setup instructions.
    3. Companion skill level for this run: {companion_level}.
       - If "none": don't install any companion — but still let monitor's own
         `/monitor:init` probing step run normally and write `monitor/usage.md`
@@ -234,6 +302,28 @@ session but run 3-at-once with varying companion-install levels.
    the HTML file just written, a short `title`/`description`, and a
    `favicon`). `SendUserFile` does not exist in this harness — don't use it.
 
+7. **Report the plugin-version delta and the other-projects reinstall
+   reminder to the user, in chat — regardless of whether step 0's reset
+   happened.** Read the cached version the same way as step 0 (via
+   `installed_plugins.json`'s `monitor@monitor-tools` entry for this
+   repo's own `projectPath`, not a bare glob of the cache directory) and
+   compare it against what you recorded in step 0. If it changed, say
+   so plainly: "monitor was upgraded from X to Y during this run." Then,
+   whether or not it changed, remind the user: any other project on this
+   machine with `monitor@monitor-tools` installed (the ones named when you
+   asked the step 0 question) is still on its own pinned version and needs
+   `claude plugin install monitor@monitor-tools --scope project` re-run in
+   its own directory to pick up the current one — it does not happen
+   automatically.
+
+8. **Re-install monitor in this Host project (monitor-tools) itself, if
+   step 0's reset happened.** The marketplace-remove + cache-delete in
+   step 0 wipes the version this repo was using too, same as any other
+   project. Run `claude plugin install monitor@monitor-tools --scope
+   project` from this repo's root so monitor-tools keeps dogfooding
+   itself the same way it did before the reset. Skip this step entirely
+   if step 0's user answer was no.
+
 ## Notes
 
 - This skill tests the `monitor` plugin; it is not part of it and is never
@@ -243,7 +333,12 @@ session but run 3-at-once with varying companion-install levels.
 - **The orchestrator (you) is bound by the same containment rule as the
   subagents.** Don't run `find`/`ls`/`grep` rooted outside this repo (`/`,
   `~`, or any home-directory folder) while investigating drill state —
-  scope every lookup to this repo's own path.
+  scope every lookup to this repo's own path. **The one exception is step
+  0's/7's/8's plugin-state commands** (`~/.claude/plugins/cache/monitor-tools/`,
+  `~/.claude/plugins/config/installed_plugins.json`, `claude plugin ...`) —
+  these are known, specific paths for a real machine-global operation the
+  user explicitly asked for, not an exploratory scan, so they're fine to
+  touch directly.
 - **After publishing the report, run `git worktree list`.** Each
   subagent's worktree is disposable, and the harness usually auto-prunes
   it once the subagent stops — but not always: stray worktrees from a past
