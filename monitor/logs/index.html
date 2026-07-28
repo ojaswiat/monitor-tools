@@ -130,8 +130,8 @@
     <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: chore/enable-monitor-plugin-self-host"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/enable-monitor-plugin-self-host</span></span>
-      <span class="mono">2026-07-28 12:37</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="mono">2026-07-28 13:10</span>
     </span>
   </div>
 
@@ -142,12 +142,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">chore/enable-monitor-plugin-self-host</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">37</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">37</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">38</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">38</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:37:55,304</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 13:10:29,779</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 13:10:29,779</time>
+      <span class="op">merge</span>
+      <span class="toolchip">Bash</span>
+      <span class="branchchip" title="Branch: main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">main</span></span>
+      <span class="toolchip">commit: a8dc405</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Merged dev into main (fast-forward) to fix stale plugin marketplace resolution</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: fast-forwarded main to dev (67 commits) since main was the repo&#x27;s default branch and the marketplace source (github ojaswiat/monitor-tools, no branch specified) resolves to the default branch, not dev. WHY: verifying the self-hosted plugin registration surfaced that the cached plugin content in ~/.claude/plugins/cache/monitor-tools/monitor was stuck at old versions (1.2.0/1.3.0) despite dev being at 1.15.1 — root cause was main never having been updated all session, not a bug in the marketplace mechanism. NEXT: run /plugin marketplace update monitor-tools (or restart again) so this machine&#x27;s cached plugin content re-fetches from the now-current main; then verify $CLAUDE_PLUGIN_ROOT resolves for monitor commands before removing .claude/skills/monitor/ and .claude/commands/monitor/.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 12:37:55,304</time>
@@ -298,30 +314,13 @@
       <p>DECISION: logging and task lifecycle tracking framed as non-negotiable hard rules in the injected CLAUDE.md/AGENTS.md block; report generation keeps its current judgment-based defaults. WHY: reports render a full HTML page and cost more tokens than a log entry, so forcing one per operation would be wasteful; logging/tasks are cheap and are the actual context-recovery mechanism, so they get the strict treatment. User explicitly requested this split after a discussion about whether Claude Code invokes skills automatically and whether user silence counts as an opt-out. NEXT: none — small, contained doc change, already merged into the feature branch. GAPS: only init.md&#x27;s source text and this repo&#x27;s own CLAUDE.md dogfood copy were edited; update.md needs no edit since it references init.md&#x27;s block by pointer rather than duplicating it.</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 05:41:14,271</time>
-      <span class="op">report</span>
-      <span class="toolchip">render_report.py</span>
-      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
-      <span class="toolchip">commit: a3005f9</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Authored branch report covering the full follow-up-fixes work (95442cf..a3005f9)</p>
-    <div class="files"><span class="file">monitor/reports/2026-07-28-thought-leak-scanner-v2-and-mechanical-fixes.html</span></div>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: single report covering the whole branch&#x27;s unreported work (7-item feature, two verification rounds, scanner v2 redesign) rather than splitting by session, since no report had covered any of this branch&#x27;s commits yet. NEXT: merge feat/followup-fixes into dev.</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 4 · 37 total</span>
+    <span class="pageinfo">Page 1 of 4 · 38 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 37 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 38 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>

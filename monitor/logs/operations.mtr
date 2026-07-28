@@ -1,3 +1,8 @@
+2026-07-28 13:10:29,779 INFO [merge] (Bash) Merged dev into main (fast-forward) to fix stale plugin marketplace resolution -- success
+branch:  main
+last_commit_hash: a8dc405
+details: DECISION: fast-forwarded main to dev (67 commits) since main was the repo's default branch and the marketplace source (github ojaswiat/monitor-tools, no branch specified) resolves to the default branch, not dev. WHY: verifying the self-hosted plugin registration surfaced that the cached plugin content in ~/.claude/plugins/cache/monitor-tools/monitor was stuck at old versions (1.2.0/1.3.0) despite dev being at 1.15.1 — root cause was main never having been updated all session, not a bug in the marketplace mechanism. NEXT: run /plugin marketplace update monitor-tools (or restart again) so this machine's cached plugin content re-fetches from the now-current main; then verify $CLAUDE_PLUGIN_ROOT resolves for monitor commands before removing .claude/skills/monitor/ and .claude/commands/monitor/.
+================================================================================
 2026-07-28 12:37:55,304 INFO [edit-file] (Edit) Registered this repo's own marketplace and enabled monitor as a plugin on itself -- success
 branch:  chore/enable-monitor-plugin-self-host
 last_commit_hash: 8987fe8
