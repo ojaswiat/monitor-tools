@@ -1,3 +1,9 @@
+2026-07-28 12:37:55,304 INFO [edit-file] (Edit) Registered this repo's own marketplace and enabled monitor as a plugin on itself -- success
+branch:  chore/enable-monitor-plugin-self-host
+last_commit_hash: 8987fe8
+files:   .claude/settings.json
+details: DECISION: added extraKnownMarketplaces (monitor-tools -> github ojaswiat/monitor-tools) and enabledPlugins (monitor@monitor-tools) to .claude/settings.json, mirroring exactly how the three companion plugins (superpowers, ui-ux-pro-max) are already registered. WHY: user wants this Host repo to use monitor exactly as a Guest project would, resolving commands via $CLAUDE_PLUGIN_ROOT instead of the manual install-monitor.sh copy under .claude/skills/monitor. GAPS: plugin activation is loaded at Claude Code startup, not mid-session, so this session cannot yet confirm $CLAUDE_PLUGIN_ROOT resolves for monitor. .claude/skills/monitor/ and .claude/commands/monitor/ deliberately left in place as a working fallback until the user restarts and confirms. NEXT: after user restarts and confirms monitor commands still work via the plugin path, remove .claude/skills/monitor/ and .claude/commands/monitor/ (monitor/scripts/ stays regardless — it's the permanent per-project runtime location in both install modes, per commands/init.md's ENGINE resolution).
+================================================================================
 2026-07-28 12:30:00,135 INFO [merge] (Bash) Merged chore/commit-monitor-data into dev and pushed -- success
 branch:  dev
 last_commit_hash: c4fa7d0

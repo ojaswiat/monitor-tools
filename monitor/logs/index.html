@@ -130,8 +130,8 @@
     <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 12:30</span>
+      <span class="branchchip" title="Branch: chore/enable-monitor-plugin-self-host"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/enable-monitor-plugin-self-host</span></span>
+      <span class="mono">2026-07-28 12:37</span>
     </span>
   </div>
 
@@ -142,12 +142,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">36</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">36</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">chore/enable-monitor-plugin-self-host</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">37</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">37</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:30:00,135</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 12:37:55,304</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,23 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 12:37:55,304</time>
+      <span class="op">edit-file</span>
+      <span class="toolchip">Edit</span>
+      <span class="branchchip" title="Branch: chore/enable-monitor-plugin-self-host"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/enable-monitor-plugin-self-host</span></span>
+      <span class="toolchip">commit: 8987fe8</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Registered this repo&#x27;s own marketplace and enabled monitor as a plugin on itself</p>
+    <div class="files"><span class="file">.claude/settings.json</span></div>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: added extraKnownMarketplaces (monitor-tools -&gt; github ojaswiat/monitor-tools) and enabledPlugins (monitor@monitor-tools) to .claude/settings.json, mirroring exactly how the three companion plugins (superpowers, ui-ux-pro-max) are already registered. WHY: user wants this Host repo to use monitor exactly as a Guest project would, resolving commands via $CLAUDE_PLUGIN_ROOT instead of the manual install-monitor.sh copy under .claude/skills/monitor. GAPS: plugin activation is loaded at Claude Code startup, not mid-session, so this session cannot yet confirm $CLAUDE_PLUGIN_ROOT resolves for monitor. .claude/skills/monitor/ and .claude/commands/monitor/ deliberately left in place as a working fallback until the user restarts and confirms. NEXT: after user restarts and confirms monitor commands still work via the plugin path, remove .claude/skills/monitor/ and .claude/commands/monitor/ (monitor/scripts/ stays regardless — it&#x27;s the permanent per-project runtime location in both install modes, per commands/init.md&#x27;s ENGINE resolution).</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 12:30:00,135</time>
@@ -298,29 +315,13 @@
       <p>DECISION: single report covering the whole branch&#x27;s unreported work (7-item feature, two verification rounds, scanner v2 redesign) rather than splitting by session, since no report had covered any of this branch&#x27;s commits yet. NEXT: merge feat/followup-fixes into dev.</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 05:37:19,384</time>
-      <span class="op">commit</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: feat/followup-fixes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">feat/followup-fixes</span></span>
-      <span class="toolchip">commit: a3005f9</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Level-gated thought-leak scanner (v2) + 6 mechanical fixes committed</p>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: split thought-leak scanner redesign (Track A) from six independently-specified mechanical fixes (Track B) into one spec/plan, executed via subagent-driven-development with per-task review plus a final whole-branch review. WHY: scanner redesign needed real design decisions (context-capture depth, agentic verification, no-auto-edit policy); the 6 mechanical fixes were already fully specified one-liners from a prior verification round, so bundling them under SDD as a fix wave avoided a redundant design doc. ARCHITECTURE: check_thought_leaks.py gained --level {minimum,standard,high,max} with level-gated context capture (sentence extraction, full file text, git log history); test-thought-leaks/SKILL.md rewritten to require a per-hit verdict and produce a chat/HTML/markdown report instead of auto-editing scanned docs. Track B: dropped redundant aria-label, freed report text from memory in search_reports(), corrected stderr warning scope logic, added profile to test module-purge list, trimmed duplicate pending.py wording, reworded a stale comment. NEXT: /monitor:report before merging to dev; then merge. GAPS: _strip_markdown() has a known latent edge case with multiple underscore-delimited identifiers on one line (non-blocking, parked in final review); no pytest coverage for check_thought_leaks.py by design (matches its pre-existing untested status).</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 4 · 36 total</span>
+    <span class="pageinfo">Page 1 of 4 · 37 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 36 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 37 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
