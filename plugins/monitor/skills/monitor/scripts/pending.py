@@ -29,7 +29,7 @@ from pathlib import Path
 import monitor_lib as mlib
 
 _DEFAULT = {"branch": "", "pending_logs": [], "pending_report": None,
-            "last_report_sha": "", "last_seen_sha": ""}
+            "last_report_sha": "", "last_seen_sha": "", "pending_task_signal": None}
 
 
 def pending_path(root: Path) -> Path:
@@ -154,6 +154,36 @@ WARNING = ("[Warn!] Monitor: Pending logs and report. Do you want Monitor to "
            "record now [Y/N]\n\n" + INSTRUCTIONS)
 
 
+_PLAN_PATH_RE = re.compile(r"(?:^|/)(plans|specs)/[^/]+\.md$", re.I)
+
+
+def _looks_like_plan_file(path: str) -> bool:
+    """True for a Write to any *.md file under a "plans" or "specs" directory
+    at any depth (docs/superpowers/plans/x.md, docs/plans/x.md, specs/x.md,
+    ...) — generic, not tied to any one companion skill's own convention, so
+    the signal fires the same whether or not superpowers is installed."""
+    return bool(_PLAN_PATH_RE.search(path.replace("\\", "/")))
+
+
+def track_task_signal(root: Path, path: str) -> None:
+    """Record that a plan/spec file was written with no task currently
+    tracking the work. No-op if a task is already open — an agent mid-task
+    writing more plan files shouldn't get re-nagged."""
+    if open_tasks(root):
+        return
+    data = load_pending(root)
+    data["pending_task_signal"] = {
+        "path": path, "detected_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    save_pending(root, data)
+
+
+def clear_task_signal(root: Path) -> None:
+    data = load_pending(root)
+    data["pending_task_signal"] = None
+    save_pending(root, data)
+
+
 def open_tasks(root: Path) -> list[dict]:
     """Every task whose most-recent status is non-terminal, i.e. still open."""
     try:
@@ -205,21 +235,35 @@ def _task_block(tasks: list[dict]) -> str:
             "not blocking):\n" + task_lines)
 
 
+def _task_signal_line(signal: dict) -> str:
+    return (f"A plan/spec file was written ({signal['path']}) with no task "
+            f"tracking this work. Start one with /monitor:task-start if this "
+            f"is a multi-step unit — informational, not blocking.")
+
+
 def check_text(root: Path) -> str:
     data = load_pending(root)
     tasks = open_tasks(root)
+    # A signal only means anything while no task is open — once one starts,
+    # start_task() clears it; this guard also covers the (theoretical) case
+    # where a task opened through some other path without clearing it.
+    task_signal = data.get("pending_task_signal") if not tasks else None
     phrase = _pending_phrase(data, len(tasks))
-    if not phrase:
+    if not phrase and not task_signal:
         return ""
     needs_record = bool(data.get("pending_logs") or data.get("pending_report"))
     if not needs_record:
-        # Only open tasks — nothing to log or report. Stated, not asked:
-        # there is no record action to accept or decline here, so the
-        # header stays a plain notice and the log/report instructions
-        # (which are what a Y answer would mean) are omitted.
-        noun = "task" if len(tasks) == 1 else "tasks"
-        return "\n".join([f"[Warn!] Monitor: {len(tasks)} open {noun}.", "",
-                          TASKS_ONLY_INSTRUCTIONS, _task_block(tasks)])
+        if tasks:
+            # Open tasks — nothing to log or report. Stated, not asked:
+            # there is no record action to accept or decline here, so the
+            # header stays a plain notice and the log/report instructions
+            # (which are what a Y answer would mean) are omitted.
+            noun = "task" if len(tasks) == 1 else "tasks"
+            return "\n".join([f"[Warn!] Monitor: {len(tasks)} open {noun}.", "",
+                              TASKS_ONLY_INSTRUCTIONS, _task_block(tasks)])
+        # Only a task-start nudge — same plain-notice treatment.
+        return "\n".join(["[Warn!] Monitor: no task tracked for recent "
+                          "plan/spec work.", "", _task_signal_line(task_signal)])
     # The Y/N question covers the log/report work only — Y records those and
     # nothing else, so open tasks are kept out of the question's subject and
     # stated separately below it.
@@ -232,6 +276,8 @@ def check_text(root: Path) -> str:
         lines.append(f"\nSeparately, {len(tasks)} open {noun} — not part of "
                      f"the Y/N above.")
         lines.append(_task_block(tasks))
+    if task_signal:
+        lines.append("\n" + _task_signal_line(task_signal))
     return "\n".join(lines)
 
 
@@ -270,21 +316,26 @@ def _monitor_initialized(root: Path) -> bool:
 
 
 def hook_post_tool_use(root: Path) -> None:
-    """PostToolUse hook entrypoint. Silent no-op unless the Bash command that
-    just ran was a git commit/merge/rebase — matcher only filters on tool
-    name ("Bash"), so this reads tool_input.command itself to self-filter."""
+    """PostToolUse hook entrypoint. Silent no-op unless the tool call that
+    just ran was either a git commit/merge/rebase (Bash) or a Write to a
+    plan/spec markdown file with no task open — matcher covers both tool
+    names, so this reads tool_input itself to tell them apart."""
     if not _monitor_initialized(root):
         return
     try:
         payload = json.load(sys.stdin)
     except Exception:  # noqa: BLE001 — malformed/empty stdin, nothing to do
         return
-    if (payload.get("tool_name") or "") != "Bash":
-        return
-    command = (payload.get("tool_input") or {}).get("command", "") or ""
-    event = _classify(command)
-    if event:
-        track(root, event, None, "")
+    tool_name = payload.get("tool_name") or ""
+    tool_input = payload.get("tool_input") or {}
+    if tool_name == "Bash":
+        event = _classify(tool_input.get("command", "") or "")
+        if event:
+            track(root, event, None, "")
+    elif tool_name == "Write":
+        path = tool_input.get("file_path", "") or ""
+        if path and _looks_like_plan_file(path):
+            track_task_signal(root, path)
 
 
 def hook_user_prompt_submit(root: Path) -> None:

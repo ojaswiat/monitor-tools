@@ -29,3 +29,18 @@ def test_unlogged_commit_then_clears_on_log(project_root, monkeypatch):
                          summary="added f.txt", status="success", last_commit_hash=sha)
     data = pending.load_pending(project_root)
     assert data["pending_logs"] == []
+
+
+def test_plan_file_write_then_clears_on_task_start(project_root, monkeypatch):
+    payload = json.dumps({"tool_name": "Write",
+                          "tool_input": {"file_path": "docs/plans/x.md"}})
+    monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
+    pending.hook_post_tool_use(project_root)
+    data = pending.load_pending(project_root)
+    assert data["pending_task_signal"]["path"] == "docs/plans/x.md"
+    assert "no task tracked" in pending.check_text(project_root)
+
+    import tasks
+    tasks.start_task(project_root, title="Tracking the plan")
+    data = pending.load_pending(project_root)
+    assert data["pending_task_signal"] is None

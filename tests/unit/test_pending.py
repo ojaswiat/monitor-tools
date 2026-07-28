@@ -93,3 +93,47 @@ def test_clear_log_drains_oldest_reachable_entry(project_root):
     pending.save_pending(project_root, data)
     pending.clear_log(project_root, "deadbeef")
     assert pending.load_pending(project_root)["pending_logs"] == []
+
+
+def test_looks_like_plan_file_matches_plans_and_specs_at_any_depth():
+    assert pending._looks_like_plan_file("docs/superpowers/plans/2026-01-01-x.md")
+    assert pending._looks_like_plan_file("docs/specs/design.md")
+    assert pending._looks_like_plan_file("specs/design.md")
+    assert not pending._looks_like_plan_file("docs/README.md")
+    assert not pending._looks_like_plan_file("plans.md")
+    assert not pending._looks_like_plan_file("docs/plans/notes.txt")
+
+
+def test_track_task_signal_noop_when_a_task_is_already_open(project_root):
+    tasks.start_task(project_root, title="In progress")
+    pending.track_task_signal(project_root, "docs/plans/x.md")
+    assert pending.load_pending(project_root)["pending_task_signal"] is None
+
+
+def test_check_text_nudges_to_start_a_task_when_none_is_open(project_root):
+    pending.track_task_signal(project_root, "docs/plans/x.md")
+    text = pending.check_text(project_root)
+    assert text.splitlines()[0] == \
+        "[Warn!] Monitor: no task tracked for recent plan/spec work."
+    assert "docs/plans/x.md" in text
+    assert "/monitor:task-start" in text
+    assert "[Y/N]" not in text
+
+
+def test_starting_a_task_clears_the_task_signal(project_root):
+    pending.track_task_signal(project_root, "docs/plans/x.md")
+    tasks.start_task(project_root, title="Now tracked")
+    assert pending.load_pending(project_root)["pending_task_signal"] is None
+    assert "no task tracked" not in pending.check_text(project_root)
+
+
+def test_check_text_folds_task_signal_into_the_yes_no_message(project_root):
+    pending.track_task_signal(project_root, "docs/plans/x.md")
+    data = pending.load_pending(project_root)
+    data["pending_logs"] = [{"sha": "deadbeef", "message": "x", "committed_at": "now"}]
+    pending.save_pending(project_root, data)
+    text = pending.check_text(project_root)
+    assert text.splitlines()[0] == ("[Warn!] Monitor: Pending logs. Do you want "
+                                     "Monitor to record now [Y/N]")
+    assert "docs/plans/x.md" in text
+    assert "/monitor:task-start" in text

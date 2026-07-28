@@ -152,6 +152,11 @@ def start_task(root: Path, *, title, status="open", summary=None, level="INFO",
                          cost=cost, skills_used=skills_used, tools_called=tools_called,
                          details=details, branch=branch)
     _write_entry(root, entry)
+    try:
+        import pending
+        pending.clear_task_signal(root)
+    except Exception as err:  # noqa: BLE001 — best-effort pending-state update
+        print(f"warning: could not update pending state: {err}", file=sys.stderr)
     return task_id
 
 
