@@ -81,6 +81,7 @@ From then on:
 | `/monitor:report` | Author one HTML report and rebuild the Reports index. |
 | `/monitor:record` | Log an operation and, if code changed, write a report — in one step. |
 | `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
+| `/monitor:status` | Show open tasks, recent activity, pending items, and next steps directly in chat. Never writes a file. |
 | `/monitor:update` | Additively reconcile the profile and regenerate the template/indexes. |
 | `/monitor:task-start "<title>"` | Start a new lifecycle-tracked task; prints the generated `task_id`. |
 | `/monitor:task-update <id>` | Append a status/metrics update to an existing task. |

@@ -39,6 +39,7 @@ commands/*.md            the slash commands (/monitor:init, :log, :update, …)
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
 | `/monitor:record` | Log **and** (when code changed) report, in one step. |
 | `/monitor:search <query>` | Search the operations log by keyword; plain-text output. |
+| `/monitor:status` | Show open tasks, recent activity, pending items, and next steps directly in chat. Never writes a file. |
 | `/monitor:task-start "<title>"` | Start a new lifecycle-tracked task; prints the generated `task_id`. |
 | `/monitor:task-update <id>` | Append a status/metrics update to an existing task. |
 | `/monitor:task-close <id>` | Close a task with a terminal status (success/failed/cancelled). |
@@ -286,6 +287,31 @@ compress the reminder, not the record.
 | Sourcing Files-Touched from graphify | graphify has no diff capability. Files-Touched always comes from `git diff --name-only` or the operation's explicit `--files`. |
 | Putting task info in `--details` on a log entry | Tasks are a separate tracked entity, not a log field. Use `/monitor:task-start`/`update`/`close`; cross-reference with `logger.py --task-id`. |
 | Assuming `/monitor:search` only covers logs | It covers logs, reports, and tasks by default (`--scope all`); narrow with `--scope logs|reports|tasks` if you only want one source. |
+| Writing a file for `/monitor:status` | It's chat-only by design — a status snapshot, not a durable artifact. Never create a report, dashboard entry, or any other file for it. |
+
+## Status
+
+`/monitor:status` gives a chat-only project snapshot — open tasks, recent
+activity, pending items, and next steps — with no file written. `status.py`
+prints one JSON object to stdout; every field in it is extracted
+mechanically, nothing is inferred by the script:
+- `open_tasks` — every non-terminal task (same set `pending.open_tasks()`
+  already returns for the pending-state gate).
+- `recent_logs` — the last `--log-limit` (default 5) log entries.
+- `pending` — `pending_logs`/`pending_report`/`pending_task_signal` straight
+  from `monitor/.pending.json`, the same data the pending-state gate reads.
+- `current_activity` — the most recently started open task's title if one
+  exists, else the most recent log entry's summary, else `none`.
+- `next_steps` — `NEXT:`/`GAPS:`/`ASSUMPTIONS:` lines regex-extracted from
+  the last `--log-limit` entries' `--details` text (the same labeled-field
+  convention logging already uses) — never invented, only ever what a log
+  entry already recorded.
+- `git` — current branch, uncommitted/untracked file counts, and the last
+  `--commit-limit` (default 5) commit subjects.
+
+The agent's only job is to read this JSON and answer in chat, organized as
+What Happened / Currently Working On / Pending & Queued / Next Steps For
+You — formatting already-deterministic data, not judging or inventing it.
 
 ## Pending-state enforcement
 

@@ -56,7 +56,7 @@ cp "$PLUGIN"/commands/*.md "$DEST_CMD/monitor/"
 
 echo "✓ installed monitor into $TARGET/.claude/"
 echo "    skills/monitor/           (engine + SKILL.md + assets)"
-echo "    commands/monitor/         (/monitor:init, :log, :report, :record, :search, :update, :task-start, :task-update, :task-close, :clean-logs, :clean-reports, :clean-tasks)"
+echo "    commands/monitor/         (/monitor:init, :log, :report, :record, :search, :status, :update, :task-start, :task-update, :task-close, :clean-logs, :clean-reports, :clean-tasks)"
 echo
 echo "Next: open the target project in Claude Code and run  /monitor:init"
 echo "      (that generates the project-local monitor/ Dashboard, Reports, and Logs)."

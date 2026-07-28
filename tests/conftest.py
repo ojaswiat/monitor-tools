@@ -45,6 +45,6 @@ def project_root(tmp_path: Path) -> Path:
     # It is safe here because engine modules take their project root as an
     # argument and keep no module-level state tied to it — a module that
     # cached a root at import time would still leak across tests.
-    for mod in ("tasks", "pending", "clean", "logger", "search", "profile",
+    for mod in ("tasks", "pending", "clean", "logger", "search", "status", "profile",
                "render_tasks", "render_logs", "render_report", "monitor_lib"):
         sys.modules.pop(mod, None)

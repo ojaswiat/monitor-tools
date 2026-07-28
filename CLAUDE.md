@@ -178,6 +178,20 @@ reports, and tasks are each pruned independently, oldest first.
 - `/monitor:clean-tasks <N>` — delete the oldest N tasks (all their
   events).
 
+### Status
+
+**Use case:** a quick "what's going on" snapshot — open tasks, recent
+activity, pending items, next steps — without reading logs/tasks/git by
+hand. Chat-only: it never writes a report, dashboard entry, or any other
+file.
+
+**How to use:**
+- `/monitor:status` — prints straight to chat. Every fact comes from
+  existing data (open tasks, the last few log entries, `NEXT:`/`GAPS:`/
+  `ASSUMPTIONS:` fields already recorded in those entries, the
+  pending-state gate, and recent git history) — nothing is inferred or
+  guessed.
+
 ### Commands
 
 | Command | Does |
@@ -187,6 +201,7 @@ reports, and tasks are each pruned independently, oldest first.
 | `/monitor:report` | Author one HTML report + rebuild the Reports index. |
 | `/monitor:record` | Log, and if code changed, report — in one step. |
 | `/monitor:search <query>` | Search logs, reports, and tasks by keyword; plain-text output. |
+| `/monitor:status` | Show open tasks, recent activity, pending items, and next steps directly in chat. Never writes a file. |
 | `/monitor:update` | Re-detect + additively reconcile the profile, refresh assets. |
 | `/monitor:task-start "<title>"` | Start a lifecycle-tracked task; prints its `task_id`. |
 | `/monitor:task-update <id>` | Append a status/metrics update to an open task. |

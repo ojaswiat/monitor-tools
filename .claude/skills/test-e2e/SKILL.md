@@ -160,7 +160,24 @@ session but run 3-at-once with varying companion-install levels.
       broken; try a different real word from your own log before
       concluding it's broken. Paste the exact query and one matched
       result block verbatim into your final report.
-   9. Report back in plain language: what you changed, whether/how you
+   9. Somewhere after you have at least one open or recently-touched task
+      and a few log entries, run the project's status command — discovered
+      from the project's own docs, the same way as the other commands
+      above, not named here — and check its output against what you
+      actually did: it must mention your real open/most-recent task under
+      "currently working on," at least one of your real recent log
+      summaries, and (if any NEXT:/GAPS:/ASSUMPTIONS: field was written in
+      a --details block this run) that field's real text under next steps
+      — not a placeholder or an invented one. It must answer directly in
+      chat, not as a file — confirm no new file appeared under `monitor/`
+      from running it (`git status --short monitor/` immediately before
+      and after should be identical). If the project's docs don't make the
+      exact command clear, fall back to running:
+      `python3 monitor/scripts/status.py --project-root .` and read its
+      JSON directly. Paste the command you ran and the relevant part of
+      its output (or the JSON fields you checked) verbatim into your final
+      report.
+   10. Report back in plain language: what you changed, whether/how you
       used monitor (which commands, how many times), and anything that
       looked broken, confusing, inconsistent, or undocumented — including
       anything about the companion-install step if companion_level wasn't
@@ -173,8 +190,10 @@ session but run 3-at-once with varying companion-install levels.
       block copied verbatim from `operations.mtr` (not paraphrased) so it can be
       checked for real content vs. placeholder text, the pending-hook test
       outcome from step 7 — pass or fail, with the warning message text pasted
-      verbatim — and the search-test outcome from step 8: the exact query used
-      and one matched result block pasted verbatim.
+      verbatim, the search-test outcome from step 8: the exact query used
+      and one matched result block pasted verbatim, and the status-test
+      outcome from step 9: the command run and the relevant output pasted
+      verbatim, plus confirmation no file was created by it.
    ```
 
 3. **Wait for all 3 to complete** (event-driven completion notifications —
@@ -191,10 +210,11 @@ session but run 3-at-once with varying companion-install levels.
    the subagent stopped), so treat that as the expected case, not an
    error: fall back to checking the verbatim log-entry count, report
    count, distinct-task_id count, one task's metrics, the pending-hook
-   pass/fail, and the search-test query/result each subagent was told to
-   paste into its own report (template step 9) for internal consistency
-   and real content, same verify-before-trusting-a-subagent's-claims
-   practice as any manual drill — just against pasted evidence instead
+   pass/fail, the search-test query/result, and the status-test command/
+   output each subagent was told to paste into its own report (template
+   step 10) for internal consistency and real content, same
+   verify-before-trusting-a-subagent's-claims practice as any manual
+   drill — just against pasted evidence instead
    of live files.
 
 5. **Synthesize one combined HTML report.** Invoke the `ui-ux-pro-max`

@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 15:10</span>
+      <span class="mono">2026-07-28 19:26</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">45</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">45</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">46</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">46</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 15:10:45,764</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 19:26:23,896</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-28 19:26:23,896</time>
+      <span class="op">add-monitor-status-command</span>
+      <span class="toolchip">Write</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
+      <span class="toolchip">commit: 3cb427b</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added /monitor:status: a new chat-only, deterministic status command (open tasks, recent logs, pending state, git history, mechanically-extracted next steps) plus unit + integration tests and test-e2e coverage</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: schema/script designed via /superpowers:brainstorming (scope=open tasks + last N logs, git=branch+commits+uncommitted, fold in .pending.json, next_steps mechanically regex-extracted from NEXT:/GAPS:/ASSUMPTIONS: fields) -- all confirmed with user before implementation. WHY: user explicitly wants a deterministic script (not LLM judgment) computing the schema, with the agent only responsible for formatting the JSON into a chat reply -- matches monitor&#x27;s existing philosophy (record, don&#x27;t guess) already used for logs/tasks. ARCHITECTURE: new status.py (reuses render_logs.parse_log, pending.open_tasks/load_pending -- no duplicated parsing logic), new commands/status.md, SKILL.md/README/install-monitor.sh/injected-CLAUDE.md-block/this-repo&#x27;s-own-CLAUDE.md+AGENTS.md all updated. Chat-only by design -- the command never writes a file, verified by a dedicated unit test. NEXT: commit, sync engine copies, bump plugin version, run test-e2e to dogfood the new command for real. GAPS: none known -- 12 unit tests + 2 integration tests added, 96/96 total pass, thought-leak scan clean.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 15:10:45,764</time>
@@ -298,25 +314,13 @@
       <p>DECISION: added extraKnownMarketplaces (monitor-tools -&gt; github ojaswiat/monitor-tools) and enabledPlugins (monitor@monitor-tools) to .claude/settings.json, mirroring exactly how the three companion plugins (superpowers, ui-ux-pro-max) are already registered. WHY: user wants this Host repo to use monitor exactly as a Guest project would, resolving commands via $CLAUDE_PLUGIN_ROOT instead of the manual install-monitor.sh copy under .claude/skills/monitor. GAPS: plugin activation is loaded at Claude Code startup, not mid-session, so this session cannot yet confirm $CLAUDE_PLUGIN_ROOT resolves for monitor. .claude/skills/monitor/ and .claude/commands/monitor/ deliberately left in place as a working fallback until the user restarts and confirms. NEXT: after user restarts and confirms monitor commands still work via the plugin path, remove .claude/skills/monitor/ and .claude/commands/monitor/ (monitor/scripts/ stays regardless — it&#x27;s the permanent per-project runtime location in both install modes, per commands/init.md&#x27;s ENGINE resolution).</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 12:30:00,135</time>
-      <span class="op">merge</span>
-      <span class="toolchip">Bash</span>
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="toolchip">commit: c4fa7d0</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Merged chore/commit-monitor-data into dev and pushed</p>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 5 · 45 total</span>
+    <span class="pageinfo">Page 1 of 5 · 46 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 45 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 46 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
