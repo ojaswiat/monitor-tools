@@ -1,3 +1,8 @@
+2026-07-28 14:39:28,604 INFO [branch-cleanup] (git) Fast-forwarded main to dev (09d7b9c), pushed both; deleted 4 fully-merged local branches and 3 merged remote branches after audit confirmed zero unmerged commits anywhere -- success
+branch:  dev
+last_commit_hash: 09d7b9c
+details: DECISION: delete all merged local+remote feature branches, keep dev and main only. WHY: git merge-base --is-ancestor confirmed every deleted branch was a strict ancestor of both dev and main -- zero risk, commits remain reachable through branch history regardless. NEXT: none.
+================================================================================
 2026-07-28 14:26:04,205 INFO [create-test-installation-skill] (Write) Added .claude/skills/test-installation/ documenting the real /plugin marketplace add + /plugin install registration flow, verified via subagent baseline/check -- success
 branch:  dev
 last_commit_hash: 47f69fe

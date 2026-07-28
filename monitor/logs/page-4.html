@@ -131,7 +131,7 @@
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 14:26</span>
+      <span class="mono">2026-07-28 14:39</span>
     </span>
   </div>
 
@@ -143,11 +143,11 @@
 
   <div class="kpis">
     <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">41</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">41</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">42</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">42</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:26:04,205</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 14:39:28,604</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,20 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-26 00:22:13,952</time>
+      <span class="op">write-round-2-report</span>
+      <span class="toolchip">Write</span>
+      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
+      <span class="toolchip">commit: 368925c</span>
+      <span class="xchip">task: add-monitor-search</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Authored the test-e2e round 2 + fixes report</p>
+    <div class="files"><span class="file">monitor/reports/2026-07-26-test-e2e-round-2-fixes.html</span></div>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-26 00:20:41,251</time>
@@ -317,32 +331,14 @@
       <ul><li>DECISION: plain-text stdout only, no HTML results page</li><li>WHY: a search result is dynamic and different every run, while every other monitor page is static/pre-built</li><li>ARCHITECTURE: reuses render_logs.parse_log() for parsing so matching never drifts from how entries are actually rendered</li></ul>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-25 23:02:00,156</time>
-      <span class="op">auto-capture-commit-hash</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: add-monitor-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">add-monitor-search</span></span>
-      <span class="toolchip">commit: 92d678b</span>
-      <span class="xchip">task: add-monitor-search</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">logger.py now auto-stamps every entry with last_commit_hash (git HEAD short sha), mirroring how branch is already auto-captured</p>
-    <div class="files"><span class="file">plugins/monitor/skills/monitor/scripts/monitor_lib.py</span><span class="file">plugins/monitor/skills/monitor/scripts/logger.py</span><span class="file">plugins/monitor/skills/monitor/scripts/render_logs.py</span></div>
-    <details>
-      <summary>Details</summary>
-      <ul><li>DECISION: auto-capture instead of a manual --set commit=&lt;sha&gt; flag</li><li>WHY: a manual flag can be forgotten by the agent, and never applies to log entries the user triggers by hand</li><li>ARCHITECTURE: new monitor_lib.git_last_commit() mirrors git_branch(); threaded through logger.py&#x27;s log_operation() and render_logs.py&#x27;s parser/card renderer</li></ul>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
     <a href="page-3.html">← Prev</a>
-    <span class="pageinfo">Page 4 of 5 · 41 total</span>
+    <span class="pageinfo">Page 4 of 5 · 42 total</span>
     <a href="page-5.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 41 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 42 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
