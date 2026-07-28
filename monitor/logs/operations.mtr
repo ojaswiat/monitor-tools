@@ -1,0 +1,198 @@
+2026-07-28 12:28:22,977 INFO [edit-file] (Edit) Committed monitor/ data folder to git; removed the Host-repo carve-out from .gitignore/CLAUDE.md -- success
+branch:  chore/commit-monitor-data
+last_commit_hash: ed3b246
+files:   .gitignore, CLAUDE.md, AGENTS.md, monitor/
+details: DECISION: this repo now commits monitor/ (profile.json, logs, reports, tasks, scripts) exactly like a Guest project would, dropping the previous repo-specific gitignore carve-out. .claude/skills/monitor/ and .claude/commands/monitor/ remain gitignored — that duplication (installed engine copy vs plugins/monitor/ source) is unique to this repo having its own source, distinct from monitor/scripts/'s duplication which the user explicitly chose to accept for exact Guest-project parity. WHY: explicit user instruction to use monitor in this repo exactly as a Guest project is supposed to. ARCHITECTURE: performed a hard re-install first (removed and re-copied .claude/skills/monitor + .claude/commands/monitor from plugins/monitor/ source), re-synced monitor/scripts/, discovered and fixed AGENTS.md having drifted out of sync with CLAUDE.md's monitor block (never regenerated via /monitor:update after direct hand-edits earlier today). GAPS: monitor/scripts/*.py now duplicates plugins/monitor/skills/monitor/scripts/*.py within the same repo; keeping them in sync requires manually re-running install-monitor.sh + copying into monitor/scripts/ after any engine change, same discipline already required for .claude/skills/monitor/.
+================================================================================
+2026-07-28 12:21:24,526 INFO [merge] (Bash) Merged fix/dashboard-back-link into dev and pushed -- success
+branch:  dev
+last_commit_hash: a94beff
+================================================================================
+2026-07-28 12:20:19,687 INFO [edit-file] (Edit) Added top masthead Back-to-Dashboard link to Reports/Logs/Tasks index pages -- success
+branch:  fix/dashboard-back-link
+last_commit_hash: b5b6d10
+files:   plugins/monitor/skills/monitor/scripts/monitor_lib.py, plugins/monitor/skills/monitor/scripts/render_logs.py, plugins/monitor/skills/monitor/scripts/render_report.py, plugins/monitor/skills/monitor/scripts/render_tasks.py
+details: DECISION: added masthead_extra param + back_link() helper to mlib.page(), refactoring the report template's existing ad-hoc string-replace onto the same mechanism rather than duplicating it three more times. NEXT: merge to dev.
+================================================================================
+2026-07-28 12:14:38,895 INFO [merge] (Bash) Merged feat/tasks-hook-and-block-docs into dev and pushed -- success
+branch:  dev
+last_commit_hash: 5ae4292
+================================================================================
+2026-07-28 12:13:08,032 INFO [edit-file] (Edit) Added task-tracking nudge hook and reformatted the injected CLAUDE.md/AGENTS.md block with per-feature headings -- success
+branch:  feat/tasks-hook-and-block-docs
+last_commit_hash: e082177
+files:   plugins/monitor/skills/monitor/scripts/pending.py, plugins/monitor/skills/monitor/scripts/tasks.py, plugins/monitor/commands/init.md, CLAUDE.md, plugins/monitor/skills/monitor/SKILL.md, .claude/settings.json
+details: DECISION: task-tracking has no mechanically detectable start event like git commit does for logs, so instead of full automation the PostToolUse hook now also matches Write and treats a *.md file written under any plans/ or specs/ directory (generic pattern, not tied to superpowers' own path convention) as a heuristic signal — recorded only when no task is currently open, cleared automatically when tasks.py's start_task() runs. WHY: user explicitly wanted the plugin independent of other plugins (no hard dependency on superpowers' docs/superpowers/plans/ convention) while still working seamlessly with it when present. User also wanted logging and task-tracking treated as hard rules while reporting stays judgment-based, since reports cost more tokens to generate than a log entry. ARCHITECTURE: pending.py gained pending_task_signal state, track_task_signal()/clear_task_signal(), and a check_text() branch that surfaces the nudge as plain informational text, never a Y/N question. The injected CLAUDE.md/AGENTS.md block (commands/init.md, mirrored in this repo's own CLAUDE.md) restructured from a flat section into six headed subsections (Logging/Task Tracking/Reporting/Search/Cleanup/Commands/Rules), each with a Use case and How to use pair. NEXT: merge to dev via finishing-a-development-branch. GAPS: the nudge is a heuristic — it only fires on a Write to a path matching plans/specs, so multi-step work that never touches such a file gets no nudge at all; documented as a known limitation in both the block and SKILL.md rather than treated as a guarantee.
+================================================================================
+2026-07-28 11:54:48,978 INFO [merge] (Bash) Merged feat/hard-rule-logging-block into dev and pushed -- success
+branch:  dev
+last_commit_hash: b7cb48c
+details: NEXT: implement a task-tracking nudge hook, then update the injected CLAUDE.md block with clear headings and per-feature use-case/how-to-use sections.
+================================================================================
+2026-07-28 11:43:41,689 INFO [edit-file] (Edit) Split injected CLAUDE.md/AGENTS.md block: logging+tasks hard rules, reports stay judgment-based -- success
+branch:  feat/hard-rule-logging-block
+last_commit_hash: 89fd0ef
+files:   plugins/monitor/commands/init.md, CLAUDE.md, plugins/monitor/.claude-plugin/plugin.json
+details: DECISION: logging and task lifecycle tracking framed as non-negotiable hard rules in the injected CLAUDE.md/AGENTS.md block; report generation keeps its current judgment-based defaults. WHY: reports render a full HTML page and cost more tokens than a log entry, so forcing one per operation would be wasteful; logging/tasks are cheap and are the actual context-recovery mechanism, so they get the strict treatment. User explicitly requested this split after a discussion about whether Claude Code invokes skills automatically and whether user silence counts as an opt-out. NEXT: none — small, contained doc change, already merged into the feature branch. GAPS: only init.md's source text and this repo's own CLAUDE.md dogfood copy were edited; update.md needs no edit since it references init.md's block by pointer rather than duplicating it.
+================================================================================
+2026-07-28 05:41:14,271 INFO [report] (render_report.py) Authored branch report covering the full follow-up-fixes work (95442cf..a3005f9) -- success
+branch:  feat/followup-fixes
+last_commit_hash: a3005f9
+files:   monitor/reports/2026-07-28-thought-leak-scanner-v2-and-mechanical-fixes.html
+details: DECISION: single report covering the whole branch's unreported work (7-item feature, two verification rounds, scanner v2 redesign) rather than splitting by session, since no report had covered any of this branch's commits yet. NEXT: merge feat/followup-fixes into dev.
+================================================================================
+2026-07-28 05:37:19,384 INFO [commit] (Bash) Level-gated thought-leak scanner (v2) + 6 mechanical fixes committed -- success
+branch:  feat/followup-fixes
+last_commit_hash: a3005f9
+details: DECISION: split thought-leak scanner redesign (Track A) from six independently-specified mechanical fixes (Track B) into one spec/plan, executed via subagent-driven-development with per-task review plus a final whole-branch review. WHY: scanner redesign needed real design decisions (context-capture depth, agentic verification, no-auto-edit policy); the 6 mechanical fixes were already fully specified one-liners from a prior verification round, so bundling them under SDD as a fix wave avoided a redundant design doc. ARCHITECTURE: check_thought_leaks.py gained --level {minimum,standard,high,max} with level-gated context capture (sentence extraction, full file text, git log history); test-thought-leaks/SKILL.md rewritten to require a per-hit verdict and produce a chat/HTML/markdown report instead of auto-editing scanned docs. Track B: dropped redundant aria-label, freed report text from memory in search_reports(), corrected stderr warning scope logic, added profile to test module-purge list, trimmed duplicate pending.py wording, reworded a stale comment. NEXT: /monitor:report before merging to dev; then merge. GAPS: _strip_markdown() has a known latent edge case with multiple underscore-delimited identifiers on one line (non-blocking, parked in final review); no pytest coverage for check_thought_leaks.py by design (matches its pre-existing untested status).
+================================================================================
+2026-07-27 18:14:50,188 INFO [version-bump-and-cleanup] (Bash) Bumped plugin to 1.13.0, globbed skill docs in leak scanner, fixed pip invocation -- success
+branch:  feat/followup-fixes
+last_commit_hash: 2ee48ab
+details: DECISION: plugin.json version bump required by this repo's own CLAUDE.md rule whenever plugins/monitor/skills/monitor/ changes.\nGAPS: this repo's own local .claude/skills/monitor/ install copy is now one version behind until re-installed.
+================================================================================
+2026-07-27 18:14:49,910 INFO [fix-search-css-and-pending-message] (Bash) Fixed report search matching CSS text and misleading tasks-only pending message -- success
+branch:  feat/followup-fixes
+last_commit_hash: 7139c2f
+details: DECISION: search_reports() strips <style>/<script> blocks before plaintext extraction; pending.py's check_text() only shows log/report instructions when logs/report are actually pending, task-only case gets its own short note.
+================================================================================
+2026-07-27 18:14:49,684 INFO [fix-script-injection] (Bash) Fixed script-tag-breakout injection in the Dashboard search index -- success
+branch:  feat/followup-fixes
+last_commit_hash: eec21a5
+details: DECISION: escape <, >, & in the JSON dump before embedding in <script>, since JSON escaping alone doesn't prevent a title containing </script> from breaking out.\nWHY: found live-verified by the final whole-branch review — a real, exploitable bug, not theoretical.
+================================================================================
+2026-07-27 18:14:24,859 INFO [test-automated-skill] (Bash) Added test-automated skill orchestrating unit + integration + thought-leaks -- success
+branch:  feat/followup-fixes
+last_commit_hash: 6123929
+details: DECISION: thin orchestration skill, does not invoke test-e2e (stays manual/on-demand).
+================================================================================
+2026-07-27 18:14:24,683 INFO [test-thought-leaks-skill] (Bash) Added test-thought-leaks skill automating dev-history-leakage checks -- success
+branch:  feat/followup-fixes
+last_commit_hash: 2f1b5d1
+details: DECISION: scripts/check_thought_leaks.py greps shipped docs for banned phrasing, flags candidates for human judgment rather than auto-failing (false positives are expected).
+================================================================================
+2026-07-27 18:14:24,508 INFO [report-timestamp-placeholders] (Bash) Added date_created/last_modified placeholders to the report template -- success
+branch:  feat/followup-fixes
+last_commit_hash: 502edf5
+details: DECISION: both stamped once — date_created by the authoring agent's judgment, last_modified automatically by render_report.py --lock-report — reports stay immutable snapshots.
+================================================================================
+2026-07-27 18:14:24,324 INFO [dashboard-search-box] (Bash) Added a client-side grep search box to the Dashboard page -- success
+branch:  feat/followup-fixes
+last_commit_hash: 3a24593
+details: DECISION: one narrow, deliberate exception to monitor's no-JS rule, scoped to index.html only — every other generated page stays script-free.\nGAPS: initial version had a script-tag-breakout injection risk, fixed in a later commit (eec21a5) this same branch.
+================================================================================
+2026-07-27 18:14:24,127 INFO [test-unit-integration-skills] (Bash) Added test-unit and test-integration skills wrapping the pytest suite -- success
+branch:  feat/followup-fixes
+last_commit_hash: 9453020
+details: DECISION: thin skill wrappers, flat kebab-case names (test-unit, test-integration) since colon namespacing requires real plugin packaging.
+================================================================================
+2026-07-27 18:14:23,911 INFO [pytest-suite-scaffolding] (Bash) Added a pytest test suite for the monitor engine (unit + integration) -- success
+branch:  feat/followup-fixes
+last_commit_hash: d3f189c
+details: DECISION: pytest (dev-only requirements-dev.txt), tests/unit + tests/integration, shared tmp_path-based project_root fixture in conftest.py.\nARCHITECTURE: every test runs against a fresh scratch project, never this repo's real monitor/ directory.
+================================================================================
+2026-07-27 18:14:23,706 INFO [clean-tasks-creation-order] (Bash) clean --tasks now sorts oldest-N by real creation time, not last activity -- success
+branch:  feat/followup-fixes
+last_commit_hash: 13bf6c6
+details: DECISION: render_tasks.group_tasks() gained a created_at field (the task-start event's timestamp), clean_tasks() sorts ascending by it instead of relying on group_tasks()'s newest-activity-first default order.\nGAPS: block-membership deletion logic (task_id-anchored, not substring) was left untouched, already correct from an earlier fix.
+================================================================================
+2026-07-27 18:14:23,500 INFO [open-tasks-pending-gate] (Bash) Open tasks now surface in the pending-state hook warning -- success
+branch:  feat/followup-fixes
+last_commit_hash: f67090a
+details: DECISION: pending.py's check_text() now folds currently-open (non-terminal-status) tasks into the same [Warn!] message, read fresh from tasks.mtr on every call rather than stored in .pending.json.\nWHY: symmetric with how pending_logs/pending_report already work unconditionally, no invented time threshold.
+================================================================================
+2026-07-27 10:45:33,742 INFO [reinstall-monitor] (Bash) Reinstalled monitor with tasks/hooks/search feature set -- success
+branch:  dev
+last_commit_hash: ef64423
+details: DECISION: ran install-monitor.sh . --force then re-ran profile.py/render_report.py/render_logs.py/render_tasks.py to pick up the new engine.\nARCHITECTURE: monitor/tasks/ now exists; PostToolUse/UserPromptSubmit pending-state hooks merged into .claude/settings.json; CLAUDE.md and AGENTS.md monitor:start blocks refreshed to the current canonical content (tasks commands, pending-hook rule).\nNEXT: run /test-e2e against one medium project.
+================================================================================
+2026-07-27 01:21:09,678 INFO [fix-final-review-findings] (Edit,Bash,Write) Fixed all 10 findings from the final whole-branch review of feat/monitor-tasks -- success
+branch:  feat/monitor-tasks
+last_commit_hash: 9b9f277
+files:   plugins/monitor/skills/monitor/scripts/clean.py, plugins/monitor/skills/monitor/scripts/render_tasks.py, plugins/monitor/commands/clean-tasks.md, plugins/monitor/commands/init.md, README.md, CLAUDE.md
+details: DECISION: derive clean --tasks block membership from each block's own parsed task_id (new render_tasks.split_blocks/block_task_id helpers) rather than a line-anchored regex.\nWHY: a regex over raw text still couples the cleaner to the file format; sharing the splitter with parse_tasks makes reader and cleaner incapable of drifting, and preserves unparseable blocks the way parse_tasks already tolerates them.\nARCHITECTURE: render_tasks gained two public helpers; parse_tasks now uses split_blocks; group_tasks tracks has_tokens so the tokens chip is conditional like credits/cost; tasks.py --tokens is int; init.md's monitor:start block now carries the Tasks policy shipped into every consumer project.\nNEXT: branch is ready to merge; a report was authored for it.\nGAPS: .claude/worktrees/ is still untracked and deliberately unignored, out of scope for this wave.\nASSUMPTIONS: 1.12.1 is the right release version for this fix wave — no further bump was made.
+================================================================================
+2026-07-26 02:16:46,994 INFO [finalize-pending-enforcement] (Bash) Adjudicated final-review residuals, bumped plugin to 1.11.1, refreshed dogfood engine copy -- success
+branch:  pending-enforcement
+last_commit_hash: 659cce9
+task:    pending-enforcement
+details: GAPS: unreachable pending_logs entries after amend/reset can still stick (parked, bounded impact); bootstrap false positive on first-ever hook call (parked, self-limiting); flag-substring false-negative (parked, rare)\nNEXT: merge pending-enforcement into dev, then start the solo-dev-SaaS drill on a fresh branch off add-monitor-search
+================================================================================
+2026-07-26 00:22:13,952 INFO [write-round-2-report] (Write) Authored the test-e2e round 2 + fixes report -- success
+branch:  add-monitor-search
+last_commit_hash: 368925c
+task:    add-monitor-search
+files:   monitor/reports/2026-07-26-test-e2e-round-2-fixes.html
+================================================================================
+2026-07-26 00:20:41,251 INFO [fix-second-test-e2e-round] (Edit) Fixed render_logs.py's identical singular/plural footer bug and logger.py's silent-success gap, both found by the second /test-e2e run -- success
+branch:  add-monitor-search
+last_commit_hash: eb6a03f
+task:    add-monitor-search
+files:   plugins/monitor/skills/monitor/scripts/render_logs.py, plugins/monitor/skills/monitor/scripts/logger.py
+details: GAPS: render_logs.py had the same class of bug as render_report.py's already-fixed 'N reports.' footer, missed in the first pass because only render_report.py was checked at the time\nDECISION: logger.py now prints 'logged: <operation> (<status>)' on success, matching render_report.py/render_logs.py's existing confirmation-print convention\nWHY: flagged independently by 3 separate test-e2e subagents across 2 drills\nNEXT: version bump, second combined test-e2e report, merge add-monitor-search
+================================================================================
+2026-07-25 23:50:04,616 INFO [revert-gitignore-check] (Edit) Reverted the gitignore detect/remove logic added to init.md and update.md -- success
+branch:  add-monitor-search
+last_commit_hash: 96bfb8f
+task:    add-monitor-search
+files:   plugins/monitor/commands/init.md, plugins/monitor/commands/update.md
+details: DECISION: no gitignore repair logic at all, revert to the plain monitor/scripts/__pycache__/ line only\nWHY: researched standard convention (project .gitignore = shared build artifacts only; .git/info/exclude = personal/local; core.excludesFile = machine-wide) — monitor/ belongs in none of the three since it's real content, not an artifact, so there's nothing for install/update to detect or repair
+================================================================================
+2026-07-25 23:47:38,539 INFO [strip-dev-history-narration] (Edit) Removed dev-history narration from init.md/update.md's gitignore-repair instructions -- success
+branch:  add-monitor-search
+last_commit_hash: 9f1ecbd
+task:    add-monitor-search
+files:   plugins/monitor/commands/init.md, plugins/monitor/commands/update.md
+details: DECISION: rewrote as plain mechanical instructions, no reference to monitor-tools' own repo or monitor's early-version history\nWHY: commands/*.md ship verbatim into every consumer project — a fresh agent reading it has no context for monitor-tools' internal history, and it doesn't need any to follow the instruction
+================================================================================
+2026-07-25 23:22:54,969 INFO [commit-fixes] (Bash) Committed the dashboard/grammar/doc-gap/gitignore-ambiguity fixes -- success
+branch:  add-monitor-search
+last_commit_hash: 9f1ecbd
+task:    add-monitor-search
+================================================================================
+2026-07-25 23:22:17,050 INFO [verify-fixes] (Bash) Fixed render_report.py singular/plural footer bug, Dashboard log-count staleness, log.md/record.md redundant-render doc gap, and the consumer-project gitignore ambiguity in CLAUDE.md -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+task:    add-monitor-search
+files:   plugins/monitor/skills/monitor/scripts/render_report.py, plugins/monitor/skills/monitor/scripts/logger.py, plugins/monitor/commands/log.md, plugins/monitor/commands/record.md, plugins/monitor/commands/init.md, CLAUDE.md
+details: DECISION: dashboard refresh runs as a lightweight render_report.refresh_dashboard() call from inside logger.py, not a full render_all()\nWHY: template.html and the Reports index don't change on a log-only entry, only the two KPI numbers do\nGAPS: none open\nNEXT: bump version (done), commit, merge branch
+================================================================================
+2026-07-25 23:02:00,898 INFO [final-review-fixes] (Edit) Addressed whole-branch final review findings for /monitor:search -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+task:    add-monitor-search
+details: GAPS: README entry, misleading commit-range claim, limit=0 bug, stale command lists, missing range command example, hardcoded status/level choices — all fixed\nNEXT: dogfood via /test-e2e and a real /monitor:report, then merge add-monitor-search into main
+================================================================================
+2026-07-25 23:02:00,718 INFO [report-commit-range] (Edit) Reports now fill the template's {{ commit }} placeholder with a first..last short-sha range -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+task:    add-monitor-search
+files:   plugins/monitor/commands/report.md, plugins/monitor/commands/record.md, plugins/monitor/skills/monitor/SKILL.md
+details: DECISION: first..last range, not a single sha or a full comma-separated list\nWHY: shows the whole span a report covers in one glance, mirroring git's own range notation; a single sha loses multi-commit reports, a full list gets unreadable past a few commits
+================================================================================
+2026-07-25 23:02:00,537 INFO [add-monitor-search-command] (Write) Registered /monitor:search across the command tables and plugin manifest -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+task:    add-monitor-search
+files:   plugins/monitor/commands/search.md, plugins/monitor/skills/monitor/SKILL.md, plugins/monitor/commands/init.md, plugins/monitor/.claude-plugin/plugin.json
+details: ARCHITECTURE: new commands/search.md follows the same PRECONDITION-gate pattern as every other monitor command\nNEXT: bump plugin version once all tasks land (done in same branch)
+================================================================================
+2026-07-25 23:02:00,342 INFO [add-search-script] (Write) Added search.py: greps operations.mtr by keyword plus optional branch/status/level filters, plain-text output -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+task:    add-monitor-search
+files:   plugins/monitor/skills/monitor/scripts/search.py
+details: DECISION: plain-text stdout only, no HTML results page\nWHY: a search result is dynamic and different every run, while every other monitor page is static/pre-built\nARCHITECTURE: reuses render_logs.parse_log() for parsing so matching never drifts from how entries are actually rendered
+================================================================================
+2026-07-25 23:02:00,156 INFO [auto-capture-commit-hash] (Edit) logger.py now auto-stamps every entry with last_commit_hash (git HEAD short sha), mirroring how branch is already auto-captured -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+task:    add-monitor-search
+files:   plugins/monitor/skills/monitor/scripts/monitor_lib.py, plugins/monitor/skills/monitor/scripts/logger.py, plugins/monitor/skills/monitor/scripts/render_logs.py
+details: DECISION: auto-capture instead of a manual --set commit=<sha> flag\nWHY: a manual flag can be forgotten by the agent, and never applies to log entries the user triggers by hand\nARCHITECTURE: new monitor_lib.git_last_commit() mirrors git_branch(); threaded through logger.py's log_operation() and render_logs.py's parser/card renderer
+================================================================================
+2026-07-25 23:01:59,968 INFO [monitor-init] (Bash) Installed and initialised monitor on monitor-tools itself (dogfooding the plugin on its own source repo) -- success
+branch:  add-monitor-search
+last_commit_hash: 92d678b
+details: DECISION: gitignore the top-level monitor/ folder plus the installed .claude/skills/monitor and .claude/commands/monitor copies\nWHY: this repo already ships the plugin source under plugins/monitor/ and its own CLAUDE.md forbids committing a generated per-project monitor/ data folder from this repo\nARCHITECTURE: root-anchored gitignore patterns (/monitor/, /.claude/skills/monitor/, /.claude/commands/monitor/) so plugins/monitor/ (the real source) is unaffected\nNEXT: retroactively log this session's add-monitor-search branch milestones, generate a report, then run /test-e2e
+================================================================================

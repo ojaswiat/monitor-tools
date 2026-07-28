@@ -1,0 +1,403 @@
+#!/usr/bin/env python3
+"""Shared library for the `monitor` engine.
+
+Provides project-root resolution, profile/JSON IO, the shared
+self-contained page CSS, and the Dashboard chrome (masthead + Reports/Logs
+tab-nav) used by every generated page. All engine scripts import this.
+
+Path model: when copied into a project as `monitor/scripts/<x>.py`, a script's
+project root is `Path(__file__).resolve().parents[2]` and its monitor dir is
+`.../monitor`. All scripts also accept `--project-root` to override.
+"""
+
+from __future__ import annotations
+
+import argparse
+import html
+import json
+import re
+import subprocess
+from datetime import datetime
+from pathlib import Path
+
+# ---------------------------------------------------------------- paths
+
+def add_root_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--project-root", default=None,
+        help="Repo root containing the monitor/ folder (default: inferred).")
+
+
+def resolve_root(args) -> Path:
+    """Return the project root that contains monitor/."""
+    if getattr(args, "project_root", None):
+        return Path(args.project_root).resolve()
+    # monitor/scripts/<this>.py -> parents[2] is the repo root.
+    p = Path(__file__).resolve()
+    if p.parent.name == "scripts" and p.parent.parent.name == "monitor":
+        return p.parents[2]
+    return Path.cwd()
+
+
+def monitor_dir(root: Path) -> Path:
+    return root / "monitor"
+
+
+# ---------------------------------------------------------------- IO
+
+def load_json(path: Path, default):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def save_json(path: Path, obj) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
+
+
+def load_profile(root: Path) -> dict:
+    return load_json(monitor_dir(root) / "profile.json", {})
+
+
+def require_init(root: Path) -> None:
+    """Fail fast if monitor is not initialised (no profile.json). Only
+    profile.py (which creates it) is exempt. Belt-and-suspenders behind the
+    command-level init gate."""
+    if not (monitor_dir(root) / "profile.json").exists():
+        import sys
+        print("monitor is not initialised for this project (no monitor/"
+              "profile.json). Run /monitor:init first.", file=sys.stderr)
+        sys.exit(2)
+
+
+# ---------------------------------------------------------------- html
+
+def esc(s) -> str:
+    return html.escape(str(s), quote=True)
+
+
+_NUM_ITEM = re.compile(r"^\s*\d+[.)]\s+(.*)$")
+_BULLET_ITEM = re.compile(r"^\s*[-*•]\s+(.*)$")
+
+
+def format_list_block(text: str) -> str:
+    """Render a free-text field (log `details`, `--set` values) as real HTML.
+
+    Storage stays single-line (the log is line-based), so multi-point details
+    are written with literal ``\\n`` between points — this decodes that into
+    actual lines, then renders as a real ``<ol>``/``<ul>`` when the lines look
+    like a numbered or bulleted list, so "1. x. 2. y." never lands as one
+    run-on sentence. A single line (or no list markers) stays a plain ``<p>``.
+    """
+    if not text:
+        return ""
+    lines = [ln.strip() for ln in str(text).replace("\\n", "\n").split("\n")]
+    lines = [ln for ln in lines if ln]
+    if len(lines) <= 1:
+        return f"<p>{esc(text)}</p>"
+    num_items = [m.group(1) for m in (_NUM_ITEM.match(ln) for ln in lines) if m]
+    if len(num_items) == len(lines):
+        return "<ol>" + "".join(f"<li>{esc(i)}</li>" for i in num_items) + "</ol>"
+    bullet_items = [m.group(1) for m in (_BULLET_ITEM.match(ln) for ln in lines) if m]
+    if len(bullet_items) == len(lines):
+        return "<ul>" + "".join(f"<li>{esc(i)}</li>" for i in bullet_items) + "</ul>"
+    # Multiple lines with no consistent markers: still one point per line.
+    return "<ul>" + "".join(f"<li>{esc(ln)}</li>" for ln in lines) + "</ul>"
+
+
+def now_stamp() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M")
+
+
+# Strips ASCII control bytes (NUL..BS, VT, FF, SO..US, DEL) — e.g. the raw
+# ANSI escape codes a backtick-quoted example command can splice into a field
+# via accidental shell command substitution. Tab is left alone; real newlines
+# are handled separately since they'd break the block format.
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def sanitize(value):
+    """Every field written to an .mtr file is sanitized first: strip control
+    characters, flatten real newlines to spaces (the log is block/line-based —
+    a raw newline inside a field would corrupt parsing), and trim."""
+    if value is None:
+        return value
+    value = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    return _CONTROL_CHARS.sub("", value).strip()
+
+
+# ---------------------------------------------------------------- vcs
+
+def git_branch(root: Path) -> str:
+    """Current git branch name, or "" when unavailable.
+
+    Returns "" (never raises) outside a repo, without git, or on a detached
+    HEAD that has no symbolic name — callers render a neutral placeholder so a
+    non-git project still gets a working Dashboard.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True, timeout=5)
+    except Exception:  # noqa: BLE001 — git missing/unusable is not an error here
+        return ""
+    name = out.stdout.strip()
+    if out.returncode != 0 or not name:
+        return ""
+    if name == "HEAD":  # detached — report the short sha instead
+        sha = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5)
+        head = sha.stdout.strip()
+        return f"detached@{head}" if sha.returncode == 0 and head else ""
+    return name
+
+
+def git_last_commit(root: Path) -> str:
+    """Short sha of HEAD at call time, or "" when unavailable (no repo, or a
+    repo with no commits yet). Mirrors git_branch()'s never-raises contract."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5)
+    except Exception:  # noqa: BLE001 — git missing/unusable is not an error here
+        return ""
+    sha = out.stdout.strip()
+    return sha if out.returncode == 0 and sha else ""
+
+
+# The single source of truth for the report/log palette. Sharp corners, dual
+# theme (light: near-black on off-white; dark: yellow on near-black), tabular
+# numerals. Kept verbatim in generated pages so each file is self-contained.
+PALETTE_CSS = """
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, summary:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .branchchip.none { color: var(--muted); font-style: italic; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .tabnav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .tabnav a { border: 1px solid var(--border); padding: 8px 18px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+  .tabnav a.active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .tabnav a:hover { text-decoration: none; color: var(--text); }
+  .tabnav a.active:hover { color: var(--accent-ink); }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); } .kpi.warn { border-left: 3px solid var(--warn); } .kpi.fail { border-left: 3px solid var(--fail); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.pass .label { color: var(--pass); } .kpi.warn .label { color: var(--warn); } .kpi.fail .label { color: var(--fail); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  .table-scroll { overflow-x: auto; margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th { text-align: left; padding: 10px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  .timestamp { color: var(--muted); font-size: 0.8rem; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+  .description { color: var(--muted); font-size: 0.88rem; }
+  .day-divider td { padding: 6px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); background: var(--code-bg); border-bottom: 1px solid var(--border); }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.fail { color: var(--fail); } .tag.info { color: var(--accent); }
+  .filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 22px 0 8px; border: none; }
+  .filter .flabel { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-right: 4px; }
+  .filter input { position: absolute; opacity: 0; pointer-events: none; }
+  .filter label { border: 1px solid var(--border); padding: 5px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; background: var(--surface); }
+  .filter label:hover { color: var(--text); }
+  #f-all:checked ~ label[for="f-all"], #f-success:checked ~ label[for="f-success"], #f-partial:checked ~ label[for="f-partial"], #f-fail:checked ~ label[for="f-fail"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  body:has(#f-success:checked) .logcard:not(.success), body:has(#f-partial:checked) .logcard:not(.partial), body:has(#f-fail:checked) .logcard:not(.fail) { display: none; }
+  @supports not selector(:has(a)) { .filter { display: none; } }
+  .log { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .logcard { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--muted); padding: 14px 16px; }
+  .logcard.success { border-left-color: var(--pass); } .logcard.partial { border-left-color: var(--warn); } .logcard.fail { border-left-color: var(--fail); }
+  .logcard .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+  .logcard time { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .logcard .op { font-weight: 750; letter-spacing: -0.01em; }
+  .logcard .toolchip, .logcard .xchip { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; color: var(--muted); border: 1px solid var(--hairline); padding: 1px 6px; }
+  .logcard .branchchip, td .branchchip { font-size: 0.7rem; padding: 1px 6px; border-color: var(--hairline); background: var(--code-bg); }
+  td .branchchip { margin-top: 6px; }
+  .logcard .spacer { flex: 1 1 auto; }
+  .logcard .summary { margin-top: 8px; font-size: 0.95rem; }
+  .logcard .task { margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
+  .logcard .task b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.68rem; }
+  .files { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .files .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; background: var(--code-bg); border: 1px solid var(--hairline); padding: 1px 6px; word-break: break-all; }
+  .logcard details { margin-top: 10px; }
+  .logcard summary { cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .logcard details p { margin-top: 8px; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details ol, .logcard details ul { margin-top: 8px; padding-left: 1.4em; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details li { margin-top: 2px; }
+  .empty { border: 1px solid var(--border); background: var(--surface); padding: 28px; text-align: center; color: var(--muted); margin-top: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
+  .navcard { display: block; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface); padding: 20px 22px; }
+  .navcard:hover { text-decoration: none; background: var(--code-bg); }
+  .navcard h3 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
+  .navcard p { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
+  .dsearch { margin-top: 20px; }
+  .dsearch input { width: 100%; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 10px 14px; font-size: 0.92rem; font-family: inherit; }
+  .dsearch input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dsearch ul { list-style: none; margin-top: 8px; }
+  .dsearch li { border-bottom: 1px solid var(--hairline); padding: 6px 2px; font-size: 0.88rem; }
+  .dsearch li:last-child { border-bottom: none; }
+  .dsearch .status { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+  .dsearch .status:empty { display: none; }
+  .rsection { border: 1px solid var(--border); background: var(--surface); padding: 20px 22px; margin-top: 16px; }
+  .rsection h2 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px; }
+  .rsection p { font-size: 0.95rem; line-height: 1.6; }
+  .rsection ul, .rsection ol:not(.steps) { padding-left: 1.4em; font-size: 0.92rem; line-height: 1.65; }
+  .rsection li { margin-top: 4px; }
+  .rsection pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 12px 14px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55; }
+  ol.steps { list-style: none; counter-reset: step; padding-left: 0; }
+  ol.steps li { counter-increment: step; display: flex; gap: 12px; margin-top: 10px; font-size: 0.92rem; line-height: 1.5; }
+  ol.steps li::before { content: counter(step); flex: 0 0 auto; width: 22px; height: 22px; border: 1px solid var(--accent); color: var(--accent); font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+  .pagenav { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 28px 0 4px; padding-top: 18px; border-top: 1px solid var(--hairline); }
+  .pagenav a { border: 1px solid var(--border); padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .pagenav a:hover { background: var(--code-bg); text-decoration: none; }
+  .pagenav .pageinfo { font-size: 0.76rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer, .filter, .pagenav { border-color: #999; } .logcard { break-inside: avoid; } }
+"""
+
+BACK_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" '
+            'aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>')
+
+# git-branch glyph. An inline SVG (never an emoji) so it inherits currentColor
+# and stays identical across platforms.
+BRANCH_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+              'aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/>'
+              '<circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>'
+              '<path d="M18 9a9 9 0 0 1-9 9"/></svg>')
+
+NO_BRANCH = "no branch"
+
+
+def branch_chip(branch: str, extra_class: str = "") -> str:
+    """Inline branch indicator: icon + name, with a visually-hidden "Branch"
+    label so the meaning never rests on the icon or colour alone."""
+    name = branch or NO_BRANCH
+    cls = "branchchip" + (" none" if not branch else "")
+    if extra_class:
+        cls += " " + extra_class
+    return (f'<span class="{cls}" title="Branch: {esc(name)}">{BRANCH_SVG}'
+            f'<span class="sr-only">Branch </span>'
+            f'<span class="bname">{esc(name)}</span></span>')
+
+
+def project_name(profile: dict, root: Path) -> str:
+    return (profile.get("project", {}) or {}).get("name") or root.name
+
+
+def tabnav(active: str, prefix: str) -> str:
+    """Reports/Logs/Tasks tab-nav. `prefix` is the relative path back to
+    monitor/. active is 'reports', 'logs', or 'tasks'."""
+    def a(name, href, key):
+        cls = ' class="active" aria-current="page"' if key == active else ''
+        return f'<a href="{href}"{cls}>{name}</a>'
+    return (f'<nav class="tabnav" aria-label="Dashboard pages">'
+            f'{a("Reports", prefix + "reports/index.html", "reports")}'
+            f'{a("Logs", prefix + "logs/index.html", "logs")}'
+            f'{a("Tasks", prefix + "tasks/index.html", "tasks")}</nav>')
+
+
+PAGE_SIZE = 10
+
+
+def page_filename(n: int) -> str:
+    """Static pagination file naming: page 1 is index.html, page N>1 is page-N.html."""
+    return "index.html" if n == 1 else f"page-{n}.html"
+
+
+def pagination_nav(page_num: int, total_pages: int, total_items: int) -> str:
+    """Prev/Next static-page nav — plain <a> links, no JS. Omits Prev on page 1
+    and Next on the last page rather than disabling them, so there's nothing
+    non-functional to click."""
+    if total_pages <= 1:
+        return ""
+    parts = ['  <nav class="pagenav" aria-label="Pagination">']
+    if page_num > 1:
+        parts.append(f'    <a href="{page_filename(page_num - 1)}">← Prev</a>')
+    parts.append(f'    <span class="pageinfo">Page {page_num} of {total_pages} '
+                 f'· {total_items} total</span>')
+    if page_num < total_pages:
+        parts.append(f'    <a href="{page_filename(page_num + 1)}">Next →</a>')
+    parts.append('  </nav>')
+    return "\n".join(parts)
+
+
+def back_link(href: str, label: str) -> str:
+    """A masthead "back" link (e.g. "← Dashboard") using BACK_SVG — the
+    same top-of-page affordance every non-Dashboard page/report carries."""
+    return f'    <a class="back" href="{esc(href)}" aria-label="{esc(label)}">{BACK_SVG}Back</a>\n'
+
+
+def page(title: str, brand: str, tag_kind: str, tag_text: str,
+         header_html: str, body_html: str, footer_html: str,
+         branch: str | None = None, masthead_extra: str = "") -> str:
+    """Render a page shell. `branch` is the current branch shown in the masthead
+    of every page; pass None to omit the chip (e.g. the report template, which
+    carries a `{{ branch }}` placeholder instead). `masthead_extra` is raw HTML
+    inserted at the start of the masthead — typically a `back_link()` call;
+    every page except the Dashboard itself passes one."""
+    chip = f"{branch_chip(branch)}\n      " if branch is not None else ""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{esc(title)}</title>
+<style>{PALETTE_CSS}</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+{masthead_extra}    <span><span class="brand">{esc(brand)}</span> · {esc(tag_text)}</span>
+    <span class="mh-right">
+      {chip}<span class="mono">{esc(now_stamp())}</span>
+    </span>
+  </div>
+
+{header_html}
+
+{body_html}
+
+{footer_html}
+
+</div>
+</body>
+</html>
+"""

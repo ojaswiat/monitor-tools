@@ -7,10 +7,10 @@ temp/
 .superpowers/
 todo.md
 
-# This repo dogfoods monitor on itself (installed via install-monitor.sh .) —
-# the generated data folder and the installed engine copy are project-local,
-# not portable source; plugins/monitor/ (the actual source) is unaffected
-# since these paths are root-anchored.
-/monitor/
+# This repo dogfoods monitor on itself (installed via install-monitor.sh .).
+# The installed engine copy under .claude/ is project-local, not portable
+# source (plugins/monitor/ is the actual source, unaffected since these
+# paths are root-anchored) — monitor/, the generated data folder, is
+# committed like any consumer project's.
 /.claude/skills/monitor/
 /.claude/commands/monitor/

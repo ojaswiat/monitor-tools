@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pending-state enforcement — monitor-tools Report</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, summary:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .branchchip.none { color: var(--muted); font-style: italic; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .tabnav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .tabnav a { border: 1px solid var(--border); padding: 8px 18px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+  .tabnav a.active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .tabnav a:hover { text-decoration: none; color: var(--text); }
+  .tabnav a.active:hover { color: var(--accent-ink); }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); } .kpi.warn { border-left: 3px solid var(--warn); } .kpi.fail { border-left: 3px solid var(--fail); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.pass .label { color: var(--pass); } .kpi.warn .label { color: var(--warn); } .kpi.fail .label { color: var(--fail); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  .table-scroll { overflow-x: auto; margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th { text-align: left; padding: 10px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  .timestamp { color: var(--muted); font-size: 0.8rem; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+  .description { color: var(--muted); font-size: 0.88rem; }
+  .day-divider td { padding: 6px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); background: var(--code-bg); border-bottom: 1px solid var(--border); }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.fail { color: var(--fail); } .tag.info { color: var(--accent); }
+  .filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 22px 0 8px; border: none; }
+  .filter .flabel { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-right: 4px; }
+  .filter input { position: absolute; opacity: 0; pointer-events: none; }
+  .filter label { border: 1px solid var(--border); padding: 5px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; background: var(--surface); }
+  .filter label:hover { color: var(--text); }
+  #f-all:checked ~ label[for="f-all"], #f-success:checked ~ label[for="f-success"], #f-partial:checked ~ label[for="f-partial"], #f-fail:checked ~ label[for="f-fail"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  body:has(#f-success:checked) .logcard:not(.success), body:has(#f-partial:checked) .logcard:not(.partial), body:has(#f-fail:checked) .logcard:not(.fail) { display: none; }
+  @supports not selector(:has(a)) { .filter { display: none; } }
+  .log { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .logcard { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--muted); padding: 14px 16px; }
+  .logcard.success { border-left-color: var(--pass); } .logcard.partial { border-left-color: var(--warn); } .logcard.fail { border-left-color: var(--fail); }
+  .logcard .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+  .logcard time { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .logcard .op { font-weight: 750; letter-spacing: -0.01em; }
+  .logcard .toolchip, .logcard .xchip { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; color: var(--muted); border: 1px solid var(--hairline); padding: 1px 6px; }
+  .logcard .branchchip, td .branchchip { font-size: 0.7rem; padding: 1px 6px; border-color: var(--hairline); background: var(--code-bg); }
+  td .branchchip { margin-top: 6px; }
+  .logcard .spacer { flex: 1 1 auto; }
+  .logcard .summary { margin-top: 8px; font-size: 0.95rem; }
+  .logcard .task { margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
+  .logcard .task b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.68rem; }
+  .files { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .files .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; background: var(--code-bg); border: 1px solid var(--hairline); padding: 1px 6px; word-break: break-all; }
+  .logcard details { margin-top: 10px; }
+  .logcard summary { cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .logcard details p { margin-top: 8px; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details ol, .logcard details ul { margin-top: 8px; padding-left: 1.4em; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details li { margin-top: 2px; }
+  .empty { border: 1px solid var(--border); background: var(--surface); padding: 28px; text-align: center; color: var(--muted); margin-top: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
+  .navcard { display: block; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface); padding: 20px 22px; }
+  .navcard:hover { text-decoration: none; background: var(--code-bg); }
+  .navcard h3 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
+  .navcard p { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
+  .rsection { border: 1px solid var(--border); background: var(--surface); padding: 20px 22px; margin-top: 16px; }
+  .rsection h2 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px; }
+  .rsection p { font-size: 0.95rem; line-height: 1.6; }
+  .rsection ul, .rsection ol:not(.steps) { padding-left: 1.4em; font-size: 0.92rem; line-height: 1.65; }
+  .rsection li { margin-top: 4px; }
+  .rsection pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 12px 14px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55; }
+  ol.steps { list-style: none; counter-reset: step; padding-left: 0; }
+  ol.steps li { counter-increment: step; display: flex; gap: 12px; margin-top: 10px; font-size: 0.92rem; line-height: 1.5; }
+  ol.steps li::before { content: counter(step); flex: 0 0 auto; width: 22px; height: 22px; border: 1px solid var(--accent); color: var(--accent); font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+  .pagenav { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 28px 0 4px; padding-top: 18px; border-top: 1px solid var(--hairline); }
+  .pagenav a { border: 1px solid var(--border); padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .pagenav a:hover { background: var(--code-bg); text-decoration: none; }
+  .pagenav .pageinfo { font-size: 0.76rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer, .filter, .pagenav { border-color: #999; } .logcard { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead" id="top">
+    <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
+    <span class="branchchip">pending-enforcement</span>
+  </div>
+  <header class="report">
+    <h1>Pending-state enforcement</h1>
+    <p class="subtitle">A soft Y/N reminder gate so unlogged commits and unreported merges don't silently slip through.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-26</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">pending-enforcement</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">12d5142..58e6cd3</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">verified</span></span>
+    </div>
+  </header>
+  <div class="kpis">
+    <div class="kpi"><div class="label">Tests</div><div class="value">n/a (no suite)</div></div>
+    <div class="kpi"><div class="label">Commit</div><div class="value mono">12d5142..58e6cd3</div></div>
+  </div>
+
+  <section class="rsection">
+    <h2>Summary</h2>
+    <p>Implemented the already-approved pending-state-enforcement design: a new <code>pending.py</code> engine script backed by two real Claude Code hooks, installed via <code>/monitor:init</code>/<code>/monitor:update</code>. 4 tasks, each built + task-reviewed clean (2 fix rounds along the way). The final whole-branch review found the hook-installation JSON used a schema that doesn't exist in real Claude Code (the feature would have shipped completely inert) plus a state-machine bug that could leave the warning stuck forever — both fixed in one dedicated fix wave, independently re-verified. Three smaller, bounded findings were parked rather than spending a second fix wave.</p>
+  </section>
+
+  <section class="rsection">
+    <h2>What Was Done</h2>
+    <ul>
+      <li><code>pending.py</code>: tracks <code>monitor/.pending.json</code> (committed, per-branch state) — <code>track</code>/<code>check</code> for manual use, plus real hook entrypoints (<code>hook-post-tool-use</code>, <code>hook-user-prompt-submit</code>) speaking Claude Code's actual hook I/O contract.</li>
+      <li><code>logger.py</code>/<code>render_report.py</code> clear the matching pending state exactly when a log or report completes (pinned to <code>--lock-report</code>, not the broader <code>render_all()</code>, to avoid clearing a genuinely-pending report during a plain init/update).</li>
+      <li><code>/monitor:init</code>/<code>/monitor:update</code> install the two hooks into a consumer project's <code>.claude/settings.json</code>; <code>SKILL.md</code> documents the mechanism.</li>
+      <li>Final review caught the hook JSON using a nonexistent <code>command</code>+<code>args</code> shape (verified against real Claude Code plugin schema-validation tooling) and wrong argparse ordering — both fixed to a single shell-string <code>command</code> with correct arg order.</li>
+      <li>Fixed a missing <code>hookEventName</code> key that would have silently dropped the injected warning.</li>
+      <li>Fixed the core "sticks forever" bug (2+ pending commits before a log) via a git-reachability-aware drain in <code>clear_log()</code>, plus anchored command classification (no more false positives on <code>--dry-run</code>/<code>--abort</code>), commit messages now sourced from real git history instead of the raw shell string, and commits touching only <code>monitor/</code> no longer re-trigger the gate they themselves satisfy.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Decisions &amp; Rationale</h2>
+    <ul>
+      <li><b>Soft Y/N gate, not a hard tool-call block</b> — deliberate choice from the original design conversation, preserved through implementation.</li>
+      <li><b>Self-filtering in the hook script, not the settings.json <code>matcher</code></b> — confirmed the <code>matcher</code> field only filters by tool name, not command content, so <code>pending.py</code> reads <code>tool_input.command</code> itself.</li>
+      <li><b><code>clear_log()</code>'s reachability-aware fallback over a new <code>--last-commit-hash</code> CLI flag</b> — simpler, matches the "one <code>/monitor:log</code> per pending entry" usage pattern without adding surface area.</li>
+      <li><b>One fix wave for the final review, not a second</b> — per the subagent-driven-development process cap; 3 residual findings were adjudicated and parked rather than looping further, since none were load-bearing (worst case is an extra reminder prompt, not data loss).</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Evidence</h2>
+    <pre>Final review verdict: "do not merge as-is" (4 Critical, 4 Important, 3 Minor)
+Fix wave: 1 commit, 13/13 behavioral checks pass on a fresh fixture
+Scoped re-review: 8/8 findings independently re-verified ADDRESSED
+Residual: 1 Important + 2 Minor parked with rulings (see ledger)</pre>
+  </section>
+
+  <section class="rsection">
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
+      <tr><td>plugins/monitor/skills/monitor/scripts/pending.py</td><td>New — data model, track/check, hook entrypoints, classifier, reachability-aware clearing</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/scripts/logger.py</td><td>Clears matching pending_logs entry on success; <code>--last-commit-hash</code> override added</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/scripts/render_report.py</td><td>Clears pending_report on <code>--lock-report</code></td></tr>
+      <tr><td>plugins/monitor/commands/init.md, update.md</td><td>Install the two hooks (corrected JSON schema)</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/SKILL.md</td><td>Documents the pending-state enforcement mechanism</td></tr>
+      <tr><td>CLAUDE.md</td><td>Script list entry for pending.py</td></tr>
+      <tr><td>plugins/monitor/.claude-plugin/plugin.json</td><td>Version 1.11.1, description updated</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="rsection">
+    <h2>Risks</h2>
+    <ul>
+      <li>An unreachable <code>pending_logs</code> entry (created via <code>git commit --amend</code> or <code>reset --hard</code> without a following merge/rebase) can still stick permanently — bounded to an extra unnecessary Y/N prompt, not data loss.</li>
+      <li>This feature has not yet been exercised against a live Claude Code session with real hooks firing — all verification so far is piped-fixture-based, matching every other engine script's testing convention in this repo, but the hook integration itself is new surface.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Gaps &amp; Assumptions</h2>
+    <ul>
+      <li>Parked (Important): unreachable-entry stuck state after amend/reset — real, bounded, deferred.</li>
+      <li>Parked (Minor): bootstrap false positive on the very first-ever hook call; flag-substring false-negative if a commit message happens to contain "--dry-run"/"--abort"/"--quit" text.</li>
+      <li>No automated test suite (standing project decision) — verification is fixture-based throughout.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Next Steps</h2>
+    <ol class="steps">
+      <li>Merge <code>pending-enforcement</code> into <code>dev</code> (not <code>main</code>, per instruction).</li>
+      <li>Exercise the feature in a real live session at some point to close the "not yet live-tested" gap.</li>
+    </ol>
+  </section>
+
+  <footer><span>Generated by the monitor workflow.</span><span><a href="index.html">← All reports</a></span></footer>
+</div>
+</body>
+</html>

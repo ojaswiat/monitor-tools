@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>monitor-tools · Monitor</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
+    --accent: #16181a; --accent-ink: #ffffff; --border: #d6d3cd; --hairline: #eae7e1;
+    --code-bg: #f3f1ec; --pass: #15803d; --warn: #b45309; --fail: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --surface: #0f1216; --text: #e9e7e2; --muted: #9aa3ad;
+      --accent: #f5c518; --accent-ink: #111111; --border: #2c333b; --hairline: #1d2229;
+      --code-bg: #14181e; --pass: #4ade80; --warn: #fbbf24; --fail: #f87171;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, summary:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .masthead .brand { color: var(--accent); font-weight: 700; }
+  .masthead .mh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .branchchip { display: inline-flex; align-items: center; gap: 5px; max-width: 34ch; border: 1px solid var(--border); background: var(--surface); padding: 2px 8px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); vertical-align: middle; }
+  .branchchip svg { width: 11px; height: 11px; flex: 0 0 auto; color: var(--accent); }
+  .branchchip .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .branchchip.none { color: var(--muted); font-style: italic; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .back svg { width: 13px; height: 13px; }
+  header.report { padding: 40px 0 20px; border-bottom: 3px solid var(--accent); }
+  header.report h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; max-width: 26ch; }
+  header.report .subtitle { margin-top: 10px; color: var(--muted); font-size: 0.95rem; }
+  .tabnav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .tabnav a { border: 1px solid var(--border); padding: 8px 18px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+  .tabnav a.active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .tabnav a:hover { text-decoration: none; color: var(--text); }
+  .tabnav a.active:hover { color: var(--accent-ink); }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--border); padding: 4px 10px; font-size: 0.74rem; color: var(--muted); }
+  .chip b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 6px; font-size: 0.68rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+  .kpi { border: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .kpi.pass { border-left: 3px solid var(--pass); } .kpi.warn { border-left: 3px solid var(--warn); } .kpi.fail { border-left: 3px solid var(--fail); }
+  .kpi .label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .kpi.pass .label { color: var(--pass); } .kpi.warn .label { color: var(--warn); } .kpi.fail .label { color: var(--fail); }
+  .kpi .value { margin-top: 4px; font-size: 1.45rem; font-weight: 750; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .kpi .value.small { font-size: 1.0rem; }
+  .table-scroll { overflow-x: auto; margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th { text-align: left; padding: 10px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); border-bottom: 2px solid var(--accent); }
+  td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: var(--code-bg); }
+  .timestamp { color: var(--muted); font-size: 0.8rem; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+  .description { color: var(--muted); font-size: 0.88rem; }
+  .day-divider td { padding: 6px 14px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); background: var(--code-bg); border-bottom: 1px solid var(--border); }
+  .tag { display: inline-block; border: 1px solid currentColor; padding: 1px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: "SF Mono", ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .tag.pass { color: var(--pass); } .tag.warn { color: var(--warn); } .tag.fail { color: var(--fail); } .tag.info { color: var(--accent); }
+  .filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 22px 0 8px; border: none; }
+  .filter .flabel { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-right: 4px; }
+  .filter input { position: absolute; opacity: 0; pointer-events: none; }
+  .filter label { border: 1px solid var(--border); padding: 5px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; background: var(--surface); }
+  .filter label:hover { color: var(--text); }
+  #f-all:checked ~ label[for="f-all"], #f-success:checked ~ label[for="f-success"], #f-partial:checked ~ label[for="f-partial"], #f-fail:checked ~ label[for="f-fail"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  body:has(#f-success:checked) .logcard:not(.success), body:has(#f-partial:checked) .logcard:not(.partial), body:has(#f-fail:checked) .logcard:not(.fail) { display: none; }
+  @supports not selector(:has(a)) { .filter { display: none; } }
+  .log { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .logcard { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--muted); padding: 14px 16px; }
+  .logcard.success { border-left-color: var(--pass); } .logcard.partial { border-left-color: var(--warn); } .logcard.fail { border-left-color: var(--fail); }
+  .logcard .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+  .logcard time { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .logcard .op { font-weight: 750; letter-spacing: -0.01em; }
+  .logcard .toolchip, .logcard .xchip { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; color: var(--muted); border: 1px solid var(--hairline); padding: 1px 6px; }
+  .logcard .branchchip, td .branchchip { font-size: 0.7rem; padding: 1px 6px; border-color: var(--hairline); background: var(--code-bg); }
+  td .branchchip { margin-top: 6px; }
+  .logcard .spacer { flex: 1 1 auto; }
+  .logcard .summary { margin-top: 8px; font-size: 0.95rem; }
+  .logcard .task { margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
+  .logcard .task b { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.68rem; }
+  .files { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .files .file { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; background: var(--code-bg); border: 1px solid var(--hairline); padding: 1px 6px; word-break: break-all; }
+  .logcard details { margin-top: 10px; }
+  .logcard summary { cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .logcard details p { margin-top: 8px; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details ol, .logcard details ul { margin-top: 8px; padding-left: 1.4em; font-size: 0.86rem; color: var(--text); line-height: 1.6; }
+  .logcard details li { margin-top: 2px; }
+  .empty { border: 1px solid var(--border); background: var(--surface); padding: 28px; text-align: center; color: var(--muted); margin-top: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
+  .navcard { display: block; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface); padding: 20px 22px; }
+  .navcard:hover { text-decoration: none; background: var(--code-bg); }
+  .navcard h3 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
+  .navcard p { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
+  .dsearch { margin-top: 20px; }
+  .dsearch input { width: 100%; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 10px 14px; font-size: 0.92rem; font-family: inherit; }
+  .dsearch input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dsearch ul { list-style: none; margin-top: 8px; }
+  .dsearch li { border-bottom: 1px solid var(--hairline); padding: 6px 2px; font-size: 0.88rem; }
+  .dsearch li:last-child { border-bottom: none; }
+  .dsearch .status { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+  .dsearch .status:empty { display: none; }
+  .rsection { border: 1px solid var(--border); background: var(--surface); padding: 20px 22px; margin-top: 16px; }
+  .rsection h2 { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px; }
+  .rsection p { font-size: 0.95rem; line-height: 1.6; }
+  .rsection ul, .rsection ol:not(.steps) { padding-left: 1.4em; font-size: 0.92rem; line-height: 1.65; }
+  .rsection li { margin-top: 4px; }
+  .rsection pre { background: var(--code-bg); border: 1px solid var(--hairline); padding: 12px 14px; overflow-x: auto; font-size: 0.85rem; line-height: 1.55; }
+  ol.steps { list-style: none; counter-reset: step; padding-left: 0; }
+  ol.steps li { counter-increment: step; display: flex; gap: 12px; margin-top: 10px; font-size: 0.92rem; line-height: 1.5; }
+  ol.steps li::before { content: counter(step); flex: 0 0 auto; width: 22px; height: 22px; border: 1px solid var(--accent); color: var(--accent); font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+  .pagenav { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 28px 0 4px; padding-top: 18px; border-top: 1px solid var(--hairline); }
+  .pagenav a { border: 1px solid var(--border); padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .pagenav a:hover { background: var(--code-bg); text-decoration: none; }
+  .pagenav .pageinfo { font-size: 0.76rem; color: var(--muted); }
+  @media print { :root { --bg: #ffffff; --text: #000000; --muted: #333333; } .masthead, footer, .filter, .pagenav { border-color: #999; } .logcard { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead" id="top">
+    <span><span class="brand">monitor-tools</span> · Monitor</span>
+    <span class="mh-right">
+      <span class="branchchip" title="Branch: chore/commit-monitor-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/commit-monitor-data</span></span>
+      <span class="mono">2026-07-28 12:28</span>
+    </span>
+  </div>
+
+  <header class="report">
+    <h1>monitor-tools · Monitor</h1>
+    <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
+    <nav class="tabnav" aria-label="Dashboard pages"><a href="reports/index.html">Reports</a><a href="logs/index.html">Logs</a><a href="tasks/index.html">Tasks</a></nav>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">chore/commit-monitor-data</div></div>
+    <div class="kpi"><div class="label">Reports</div><div class="value">5</div></div>
+    <div class="kpi"><div class="label">Log entries</div><div class="value">35</div></div>
+    <div class="kpi warn"><div class="label">Open tasks</div><div class="value">0</div></div>
+    <div class="kpi"><div class="label">Profile</div><div class="value small mono">v5</div></div>
+  </div>
+
+  <div class="dsearch">
+    <label class="sr-only" for="monitor-search">Search titles across logs, reports, and tasks</label>
+    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..."
+           autocomplete="off" aria-describedby="monitor-search-status">
+    <ul id="monitor-search-results"></ul>
+    <p class="status" id="monitor-search-status" role="status" aria-live="polite"></p>
+  </div>
+
+  <div class="card-grid">
+    <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
+    <a class="navcard" href="logs/index.html"><h3>Logs →</h3><p>Every logged operation with status and details.</p></a>
+    <a class="navcard" href="tasks/index.html"><h3>Tasks →</h3><p>Lifecycle-tracked units of work with self-reported metrics.</p></a>
+  </div>
+
+  <footer><span>monitor · project dashboard</span><span><a href="#top">↑ Back to Top</a></span></footer>
+
+</div>
+<script>
+const MONITOR_SEARCH_INDEX = [{"kind": "log", "title": "Committed monitor/ data folder to git; removed the Host-repo carve-out from .gitignore/CLAUDE.md", "href": "logs/index.html"}, {"kind": "log", "title": "Merged fix/dashboard-back-link into dev and pushed", "href": "logs/index.html"}, {"kind": "log", "title": "Added top masthead Back-to-Dashboard link to Reports/Logs/Tasks index pages", "href": "logs/index.html"}, {"kind": "log", "title": "Merged feat/tasks-hook-and-block-docs into dev and pushed", "href": "logs/index.html"}, {"kind": "log", "title": "Added task-tracking nudge hook and reformatted the injected CLAUDE.md/AGENTS.md block with per-feature headings", "href": "logs/index.html"}, {"kind": "log", "title": "Merged feat/hard-rule-logging-block into dev and pushed", "href": "logs/index.html"}, {"kind": "log", "title": "Split injected CLAUDE.md/AGENTS.md block: logging+tasks hard rules, reports stay judgment-based", "href": "logs/index.html"}, {"kind": "log", "title": "Authored branch report covering the full follow-up-fixes work (95442cf..a3005f9)", "href": "logs/index.html"}, {"kind": "log", "title": "Level-gated thought-leak scanner (v2) + 6 mechanical fixes committed", "href": "logs/index.html"}, {"kind": "log", "title": "Bumped plugin to 1.13.0, globbed skill docs in leak scanner, fixed pip invocation", "href": "logs/index.html"}, {"kind": "log", "title": "Fixed report search matching CSS text and misleading tasks-only pending message", "href": "logs/page-2.html"}, {"kind": "log", "title": "Fixed script-tag-breakout injection in the Dashboard search index", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added test-automated skill orchestrating unit + integration + thought-leaks", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added test-thought-leaks skill automating dev-history-leakage checks", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added date_created/last_modified placeholders to the report template", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added a client-side grep search box to the Dashboard page", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added test-unit and test-integration skills wrapping the pytest suite", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added a pytest test suite for the monitor engine (unit + integration)", "href": "logs/page-2.html"}, {"kind": "log", "title": "clean --tasks now sorts oldest-N by real creation time, not last activity", "href": "logs/page-2.html"}, {"kind": "log", "title": "Open tasks now surface in the pending-state hook warning", "href": "logs/page-2.html"}, {"kind": "log", "title": "Reinstalled monitor with tasks/hooks/search feature set", "href": "logs/page-3.html"}, {"kind": "log", "title": "Fixed all 10 findings from the final whole-branch review of feat/monitor-tasks", "href": "logs/page-3.html"}, {"kind": "log", "title": "Adjudicated final-review residuals, bumped plugin to 1.11.1, refreshed dogfood engine copy", "href": "logs/page-3.html"}, {"kind": "log", "title": "Authored the test-e2e round 2 + fixes report", "href": "logs/page-3.html"}, {"kind": "log", "title": "Fixed render_logs.py's identical singular/plural footer bug and logger.py's silent-success gap, both found by the second /test-e2e run", "href": "logs/page-3.html"}, {"kind": "log", "title": "Reverted the gitignore detect/remove logic added to init.md and update.md", "href": "logs/page-3.html"}, {"kind": "log", "title": "Removed dev-history narration from init.md/update.md's gitignore-repair instructions", "href": "logs/page-3.html"}, {"kind": "log", "title": "Committed the dashboard/grammar/doc-gap/gitignore-ambiguity fixes", "href": "logs/page-3.html"}, {"kind": "log", "title": "Fixed render_report.py singular/plural footer bug, Dashboard log-count staleness, log.md/record.md redundant-render doc gap, and the consumer-project gitignore ambiguity in CLAUDE.md", "href": "logs/page-3.html"}, {"kind": "log", "title": "Addressed whole-branch final review findings for /monitor:search", "href": "logs/page-3.html"}, {"kind": "log", "title": "Reports now fill the template's {{ commit }} placeholder with a first..last short-sha range", "href": "logs/page-4.html"}, {"kind": "log", "title": "Registered /monitor:search across the command tables and plugin manifest", "href": "logs/page-4.html"}, {"kind": "log", "title": "Added search.py: greps operations.mtr by keyword plus optional branch/status/level filters, plain-text output", "href": "logs/page-4.html"}, {"kind": "log", "title": "logger.py now auto-stamps every entry with last_commit_hash (git HEAD short sha), mirroring how branch is already auto-captured", "href": "logs/page-4.html"}, {"kind": "log", "title": "Installed and initialised monitor on monitor-tools itself (dogfooding the plugin on its own source repo)", "href": "logs/page-4.html"}, {"kind": "report", "title": "Follow-Up Fixes: Tasks, Tests, Search, Timestamps \u0026 Thought-Leak Scanner", "href": "reports/2026-07-28-thought-leak-scanner-v2-and-mechanical-fixes.html"}, {"kind": "report", "title": "Tasks, hooks, and search: full drill coverage", "href": "reports/2026-07-27-tasks-hooks-search-coverage.html"}, {"kind": "report", "title": "Pending-state enforcement", "href": "reports/2026-07-26-pending-state-enforcement.html"}, {"kind": "report", "title": "test-e2e round 2 + fixes", "href": "reports/2026-07-26-test-e2e-round-2-fixes.html"}, {"kind": "report", "title": "Add /monitor:search", "href": "reports/2026-07-25-monitor-search.html"}];
+(function() {
+  const input = document.getElementById('monitor-search');
+  const results = document.getElementById('monitor-search-results');
+  const status = document.getElementById('monitor-search-status');
+  input.addEventListener('input', function() {
+    const q = input.value.trim().toLowerCase();
+    results.innerHTML = '';
+    if (!q) { status.textContent = ''; return; }
+    const matches = MONITOR_SEARCH_INDEX
+      .filter(item => item.title.toLowerCase().includes(q))
+      .slice(0, 20);
+    if (matches.length === 0) {
+      status.textContent = 'No matches for "' + input.value.trim() + '".';
+      return;
+    }
+    matches.forEach(item => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = item.href;
+      a.textContent = '[' + item.kind + '] ' + item.title;
+      li.appendChild(a);
+      results.appendChild(li);
+    });
+    status.textContent = matches.length + (matches.length === 1 ? ' match.' : ' matches.');
+  });
+})();
+</script>
+</body>
+</html>
