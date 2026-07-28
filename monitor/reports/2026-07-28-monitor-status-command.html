@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>monitor-tools · Monitor</title>
+<title>Add /monitor:status — Chat-Only Deterministic Project Snapshot — monitor-tools Report</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -127,72 +127,129 @@
 <div class="wrap">
 
   <div class="masthead" id="top">
-    <span><span class="brand">monitor-tools</span> · Monitor</span>
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 19:27</span>
     </span>
   </div>
 
   <header class="report">
-    <h1>monitor-tools · Monitor</h1>
-    <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
-    <nav class="tabnav" aria-label="Dashboard pages"><a href="reports/index.html">Reports</a><a href="logs/index.html">Logs</a><a href="tasks/index.html">Tasks</a></nav>
+    <h1>Add /monitor:status — Chat-Only Deterministic Project Snapshot</h1>
+    <p class="subtitle">A new command for Guest projects: open tasks, recent log activity, pending-gate state, a bit of git history, and next steps mechanically extracted from already-recorded NEXT:/GAPS:/ASSUMPTIONS: fields — all facts computed by a deterministic script, the agent's only job is formatting them into chat. Never writes a file.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Created</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">2026-07-28 19:27</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">dev</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">3cb427b..1542863</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">success</span></span>
+    </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Reports</div><div class="value">11</div></div>
-    <div class="kpi"><div class="label">Log entries</div><div class="value">46</div></div>
-    <div class="kpi warn"><div class="label">Open tasks</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Profile</div><div class="value small mono">v5</div></div>
+    <div class="kpi pass"><div class="label">Tests</div><div class="value small">96 unit + integration pass</div></div>
+    <div class="kpi"><div class="label">Plugin version</div><div class="value small mono">1.15.4 → 1.16.0</div></div>
+    <div class="kpi"><div class="label">New tests added</div><div class="value">14</div></div>
   </div>
 
-  <div class="dsearch">
-    <label class="sr-only" for="monitor-search">Search titles across logs, reports, and tasks</label>
-    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..."
-           autocomplete="off" aria-describedby="monitor-search-status">
-    <ul id="monitor-search-results"></ul>
-    <p class="status" id="monitor-search-status" role="status" aria-live="polite"></p>
-  </div>
+  <section class="rsection">
+    <h2>Summary</h2>
+    <p>Added a new command, <code>/monitor:status</code>, designed via <code>/superpowers:brainstorming</code> with the schema and scope confirmed against the user before implementation: chat-only by default (no file ever written), backed by a fully deterministic Python script (<code>status.py</code>) that computes open tasks, recent log activity, pending-gate state, a slice of git history, and next steps — the last of these mechanically regex-extracted from <code>NEXT:</code>/<code>GAPS:</code>/<code>ASSUMPTIONS:</code> fields already recorded in prior log entries' <code>--details</code> text, never invented. The agent's only role is to read the JSON and phrase it in chat across four sections. Covered by 12 new unit tests and 2 new integration tests (96 total, all passing), plus a new dogfood step added to <code>test-e2e</code>'s checklist for future end-to-end runs.</p>
+  </section>
 
-  <div class="card-grid">
-    <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
-    <a class="navcard" href="logs/index.html"><h3>Logs →</h3><p>Every logged operation with status and details.</p></a>
-    <a class="navcard" href="tasks/index.html"><h3>Tasks →</h3><p>Lifecycle-tracked units of work with self-reported metrics.</p></a>
-  </div>
+  <section class="rsection">
+    <h2>What Was Asked</h2>
+    <p>Using <code>/superpowers:writing-skills</code>, create a <code>monitor:status</code> command for Guest projects that checks current tasks, logs, and a bit of git history, and tells the user the status directly in chat by default with no file created. The schema and script were to be designed via <code>/superpowers:brainstorming</code> first, producing a deterministic output covering what happened, what's currently being worked on, what's pending/queued, and next steps for the user — with unit, integration, and test-e2e coverage added for the feature.</p>
+  </section>
 
-  <footer><span>monitor · project dashboard</span><span><a href="#top">↑ Back to Top</a></span></footer>
+  <section class="rsection">
+    <h2>What Was Done</h2>
+    <ul>
+      <li>Ran <code>/superpowers:brainstorming</code> through four rounds of clarifying questions (data scope, git scope, whether to fold in the pending-state gate, and how to derive "currently working on"/"next steps" without any live session-state file) — all resolved in favor of the fully deterministic option at each step, matching monitor's existing design philosophy of recording rather than guessing.</li>
+      <li>Implemented <code>plugins/monitor/skills/monitor/scripts/status.py</code>: reuses <code>render_logs.parse_log</code> and <code>pending.open_tasks</code>/<code>load_pending</code> rather than duplicating parsing logic, with <code>--log-limit</code>/<code>--commit-limit</code> flags (defaults 5/5) mirroring <code>search.py</code>'s existing <code>--limit</code> pattern.</li>
+      <li>Added <code>plugins/monitor/commands/status.md</code>, instructing the agent to answer in four chat sections (What Happened / Currently Working On / Pending &amp; Queued / Next Steps For You) and explicitly forbidding creating any file.</li>
+      <li>Documented the command and its schema in <code>SKILL.md</code> (a new "Status" section plus a command-table row and a "Common mistakes" entry), <code>README.md</code>, <code>install-monitor.sh</code>'s echo output, and — since this propagates to every Guest project — the injected <code>CLAUDE.md</code>/<code>AGENTS.md</code> block in <code>commands/init.md</code>, mirrored into this repo's own <code>CLAUDE.md</code>/<code>AGENTS.md</code> per the self-host convention.</li>
+      <li>Wrote 12 unit tests (<code>tests/unit/test_status.py</code>) covering empty-project defaults, current-activity precedence (open task over log), open-task filtering, log-limit/commit-limit truncation, next-steps field extraction, pending-state mirroring, git uncommitted/untracked counting, and — specifically — that the command writes zero files.</li>
+      <li>Wrote 2 integration tests (<code>tests/integration/test_status_flow.py</code>) driving the real CLI subprocess entrypoint (not the Python function directly) against a project that had been through a real log+task+pending-commit flow, plus a pre-init failure case.</li>
+      <li>Added a new dogfood step to <code>test-e2e</code>'s per-subagent checklist (now step 9, with the final report step renumbered to 10): run the status command mid-drill, verify its output actually reflects the subagent's own real task/log/next-steps content (not placeholder text), and confirm no file appeared under <code>monitor/</code> from running it.</li>
+      <li>Bumped the plugin version 1.15.4 → 1.16.0 (a new command/feature, not a patch), updated the plugin manifest's description, synced the engine script into this repo's own <code>monitor/scripts/</code>, ran the full suite (96 pass) and the thought-leak scanner (clean) before committing.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Decisions &amp; Rationale</h2>
+    <ul>
+      <li><b>DECISION:</b> the script is 100% deterministic — no LLM judgment inside <code>status.py</code> itself; the agent only formats already-computed JSON into chat. <b>WHY:</b> confirmed explicitly with the user during brainstorming, and matches how monitor already treats logs/tasks/reports — record and extract mechanically, never guess, so the same project state always produces the same facts regardless of which agent or session reads it.</li>
+      <li><b>DECISION:</b> "currently working on" prefers the most recently started open task over the most recent log entry; falls back to the log only if no task is open. <b>WHY:</b> a task represents a deliberately-started unit of work the user cares about tracking, which is a stronger signal of "what's actually being worked on right now" than an arbitrary log entry that could be a small mechanical aside.</li>
+      <li><b>DECISION:</b> chat-only, zero files, enforced by a dedicated unit test (<code>test_main_writes_no_files</code>) rather than left to command-prompt discretion alone. <b>WHY:</b> the user was explicit that this must never create a file by default; a test that fails if a future edit accidentally adds a write is a stronger guarantee than a prose instruction alone.</li>
+      <li><b>DECISION:</b> reuse <code>render_logs.parse_log</code> and <code>pending.open_tasks</code>/<code>load_pending</code> rather than writing new parsing logic. <b>WHY:</b> the operations-log and pending-state formats are already parsed correctly elsewhere; duplicating that logic would risk the two implementations drifting out of sync on edge cases (malformed blocks, escaped detail text) that the existing parsers already handle.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Evidence</h2>
+    <pre>$ PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ tests/integration/ -q
+96 passed in 37.10s
+
+$ python3 scripts/check_thought_leaks.py
+clean: no development-history/reasoning-leakage phrases found
+
+$ python3 monitor/scripts/status.py --project-root .
+{
+  "branch": "dev",
+  "git": { "uncommitted": {...}, "recent_commits": [...] },
+  "open_tasks": [],
+  "recent_logs": [...],
+  "pending": {...},
+  "current_activity": {...},
+  "next_steps": []
+}
+(ran successfully against this repo's real state, confirming the schema
+and CLI entrypoint work end-to-end, not just in isolated tests)</pre>
+  </section>
+
+  <section class="rsection">
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
+      <tr><td>plugins/monitor/skills/monitor/scripts/status.py (new)</td><td>Deterministic status-computation engine script</td></tr>
+      <tr><td>plugins/monitor/commands/status.md (new)</td><td>Chat-only status command, forbids file creation</td></tr>
+      <tr><td>monitor/scripts/status.py (new)</td><td>Synced project-runtime copy</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/SKILL.md</td><td>New Status section, command-table row, mistakes-table row</td></tr>
+      <tr><td>README.md, install-monitor.sh</td><td>Command table / echo output updated</td></tr>
+      <tr><td>plugins/monitor/commands/init.md</td><td>Injected CLAUDE.md/AGENTS.md block: new Status section + command row</td></tr>
+      <tr><td>CLAUDE.md, AGENTS.md (this repo's own)</td><td>Mirrored the same block changes, per self-host convention</td></tr>
+      <tr><td>plugins/monitor/.claude-plugin/plugin.json</td><td>Version 1.15.4 → 1.16.0, description updated</td></tr>
+      <tr><td>tests/unit/test_status.py (new)</td><td>12 unit tests</td></tr>
+      <tr><td>tests/integration/test_status_flow.py (new)</td><td>2 integration tests, real CLI subprocess</td></tr>
+      <tr><td>tests/conftest.py</td><td>Added "status" to the module-cleanup list</td></tr>
+      <tr><td>.claude/skills/test-e2e/SKILL.md</td><td>New per-subagent status-check step, evidence list updated</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="rsection">
+    <h2>Risks</h2>
+    <ul>
+      <li>None identified — the command is purely read-only (no write path exists in <code>status.py</code> at all, not just "unused"), so there's no data-corruption surface even in a future misuse.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Gaps &amp; Assumptions</h2>
+    <ul>
+      <li><b>GAPS:</b> the new test-e2e dogfood step (checking status output against a subagent's real task/log activity) has been added to the skill's instructions but not yet run for real — the next full <code>test-e2e</code> drill will be the first live exercise of it.</li>
+      <li><b>ASSUMPTIONS:</b> <code>--log-limit</code>/<code>--commit-limit</code> defaults of 5 are a starting judgment call, not user-specified — reasonable for "what's going on right now" but could warrant tuning once used on a real long-lived project.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Follow-ups</h2>
+    <ul>
+      <li>Run a real <code>test-e2e</code> drill to exercise the new status dogfood step end-to-end, the same way the comment-stripping change was verified.</li>
+      <li>Fast-forward <code>main</code> to <code>dev</code> once this report is committed.</li>
+    </ul>
+  </section>
 
 </div>
-<script>
-const MONITOR_SEARCH_INDEX = [{"kind": "log", "title": "Added /monitor:status: a new chat-only, deterministic status command (open tasks, recent logs, pending state, git history, mechanically-extracted next steps) plus unit + integration tests and test-e2e coverage", "href": "logs/index.html"}, {"kind": "log", "title": "Trimmed the Next Steps template comment in render_report.py back to a short mechanical pointer; the full rule/rationale lives only in SKILL.md now, not duplicated into the code", "href": "logs/index.html"}, {"kind": "log", "title": "Confirmed no monitor command/skill reads .py source comments for behavioral context; all scripts are invoked as CLI black boxes. The only intentional exception is HTML placeholder comments inside reports/template.html, which report.md explicitly documents.", "href": "logs/index.html"}, {"kind": "log", "title": "Fixed Next Steps report section to forbid chat-turn/meta content after user flagged a leaked 'present options for approval' line", "href": "logs/index.html"}, {"kind": "log", "title": "Fast-forwarded main to dev (09d7b9c), pushed both; deleted 4 fully-merged local branches and 3 merged remote branches after audit confirmed zero unmerged commits anywhere", "href": "logs/index.html"}, {"kind": "log", "title": "Added .claude/skills/test-installation/ documenting the real /plugin marketplace add + /plugin install registration flow, verified via subagent baseline/check", "href": "logs/index.html"}, {"kind": "log", "title": "70 unit + 12 integration pass; thought-leak scan clean", "href": "logs/index.html"}, {"kind": "log", "title": "Registered monitor via /plugin marketplace add + /plugin install (not settings.json hand-edit); removed .claude/skills/monitor + .claude/commands/monitor fallback; confirmed real plugin-path skill invocation with zero fallback present", "href": "logs/index.html"}, {"kind": "log", "title": "Merged dev into main (fast-forward) to fix stale plugin marketplace resolution", "href": "logs/index.html"}, {"kind": "log", "title": "Registered this repo's own marketplace and enabled monitor as a plugin on itself", "href": "logs/index.html"}, {"kind": "log", "title": "Merged chore/commit-monitor-data into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Committed monitor/ data folder to git; removed the Host-repo carve-out from .gitignore/CLAUDE.md", "href": "logs/page-2.html"}, {"kind": "log", "title": "Merged fix/dashboard-back-link into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added top masthead Back-to-Dashboard link to Reports/Logs/Tasks index pages", "href": "logs/page-2.html"}, {"kind": "log", "title": "Merged feat/tasks-hook-and-block-docs into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added task-tracking nudge hook and reformatted the injected CLAUDE.md/AGENTS.md block with per-feature headings", "href": "logs/page-2.html"}, {"kind": "log", "title": "Merged feat/hard-rule-logging-block into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Split injected CLAUDE.md/AGENTS.md block: logging+tasks hard rules, reports stay judgment-based", "href": "logs/page-2.html"}, {"kind": "log", "title": "Authored branch report covering the full follow-up-fixes work (95442cf..a3005f9)", "href": "logs/page-2.html"}, {"kind": "log", "title": "Level-gated thought-leak scanner (v2) + 6 mechanical fixes committed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Bumped plugin to 1.13.0, globbed skill docs in leak scanner, fixed pip invocation", "href": "logs/page-3.html"}, {"kind": "log", "title": "Fixed report search matching CSS text and misleading tasks-only pending message", "href": "logs/page-3.html"}, {"kind": "log", "title": "Fixed script-tag-breakout injection in the Dashboard search index", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added test-automated skill orchestrating unit + integration + thought-leaks", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added test-thought-leaks skill automating dev-history-leakage checks", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added date_created/last_modified placeholders to the report template", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added a client-side grep search box to the Dashboard page", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added test-unit and test-integration skills wrapping the pytest suite", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added a pytest test suite for the monitor engine (unit + integration)", "href": "logs/page-3.html"}, {"kind": "log", "title": "clean --tasks now sorts oldest-N by real creation time, not last activity", "href": "logs/page-3.html"}, {"kind": "log", "title": "Open tasks now surface in the pending-state hook warning", "href": "logs/page-4.html"}, {"kind": "log", "title": "Reinstalled monitor with tasks/hooks/search feature set", "href": "logs/page-4.html"}, {"kind": "log", "title": "Fixed all 10 findings from the final whole-branch review of feat/monitor-tasks", "href": "logs/page-4.html"}, {"kind": "log", "title": "Adjudicated final-review residuals, bumped plugin to 1.11.1, refreshed dogfood engine copy", "href": "logs/page-4.html"}, {"kind": "log", "title": "Authored the test-e2e round 2 + fixes report", "href": "logs/page-4.html"}, {"kind": "log", "title": "Fixed render_logs.py's identical singular/plural footer bug and logger.py's silent-success gap, both found by the second /test-e2e run", "href": "logs/page-4.html"}, {"kind": "log", "title": "Reverted the gitignore detect/remove logic added to init.md and update.md", "href": "logs/page-4.html"}, {"kind": "log", "title": "Removed dev-history narration from init.md/update.md's gitignore-repair instructions", "href": "logs/page-4.html"}, {"kind": "log", "title": "Committed the dashboard/grammar/doc-gap/gitignore-ambiguity fixes", "href": "logs/page-4.html"}, {"kind": "log", "title": "Fixed render_report.py singular/plural footer bug, Dashboard log-count staleness, log.md/record.md redundant-render doc gap, and the consumer-project gitignore ambiguity in CLAUDE.md", "href": "logs/page-4.html"}, {"kind": "log", "title": "Addressed whole-branch final review findings for /monitor:search", "href": "logs/page-5.html"}, {"kind": "log", "title": "Reports now fill the template's {{ commit }} placeholder with a first..last short-sha range", "href": "logs/page-5.html"}, {"kind": "log", "title": "Registered /monitor:search across the command tables and plugin manifest", "href": "logs/page-5.html"}, {"kind": "log", "title": "Added search.py: greps operations.mtr by keyword plus optional branch/status/level filters, plain-text output", "href": "logs/page-5.html"}, {"kind": "log", "title": "logger.py now auto-stamps every entry with last_commit_hash (git HEAD short sha), mirroring how branch is already auto-captured", "href": "logs/page-5.html"}, {"kind": "log", "title": "Installed and initialised monitor on monitor-tools itself (dogfooding the plugin on its own source repo)", "href": "logs/page-5.html"}, {"kind": "report", "title": "Add /monitor:status \u2014 Chat-Only Deterministic Project Snapshot", "href": "reports/2026-07-28-monitor-status-command.html"}, {"kind": "report", "title": "Strip Shipped Comments and Verify via a Real-Plugin-Path E2E Dogfood Run", "href": "reports/2026-07-28-comment-strip-real-plugin-e2e.html"}, {"kind": "report", "title": "Keep Process Instructions in SKILL.md, Not in Code Comments", "href": "reports/2026-07-28-comment-scope-fix.html"}, {"kind": "report", "title": "Fix Next Steps Section: Project Actions Only, Never Chat-Turn Content", "href": "reports/2026-07-28-next-steps-guidance-fix.html"}, {"kind": "report", "title": "Hard-Rule Logging/Tasks, Self-Host, and Plugin Registration Fix", "href": "reports/2026-07-28-hard-rule-block-self-host-and-plugin-registration.html"}, {"kind": "report", "title": "Branch Audit \u2014 Purpose, Merge Status, and Cleanup Recommendations", "href": "reports/2026-07-28-branch-audit.html"}, {"kind": "report", "title": "Follow-Up Fixes: Tasks, Tests, Search, Timestamps \u0026 Thought-Leak Scanner", "href": "reports/2026-07-28-thought-leak-scanner-v2-and-mechanical-fixes.html"}, {"kind": "report", "title": "Tasks, hooks, and search: full drill coverage", "href": "reports/2026-07-27-tasks-hooks-search-coverage.html"}, {"kind": "report", "title": "test-e2e round 2 + fixes", "href": "reports/2026-07-26-test-e2e-round-2-fixes.html"}, {"kind": "report", "title": "Pending-state enforcement", "href": "reports/2026-07-26-pending-state-enforcement.html"}, {"kind": "report", "title": "Add /monitor:search", "href": "reports/2026-07-25-monitor-search.html"}];
-(function() {
-  const input = document.getElementById('monitor-search');
-  const results = document.getElementById('monitor-search-results');
-  const status = document.getElementById('monitor-search-status');
-  input.addEventListener('input', function() {
-    const q = input.value.trim().toLowerCase();
-    results.innerHTML = '';
-    if (!q) { status.textContent = ''; return; }
-    const matches = MONITOR_SEARCH_INDEX
-      .filter(item => item.title.toLowerCase().includes(q))
-      .slice(0, 20);
-    if (matches.length === 0) {
-      status.textContent = 'No matches for "' + input.value.trim() + '".';
-      return;
-    }
-    matches.forEach(item => {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = item.href;
-      a.textContent = '[' + item.kind + '] ' + item.title;
-      li.appendChild(a);
-      results.appendChild(li);
-    });
-    status.textContent = matches.length + (matches.length === 1 ? ' match.' : ' matches.');
-  });
-})();
-</script>
 </body>
 </html>
