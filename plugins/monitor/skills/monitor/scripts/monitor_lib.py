@@ -358,12 +358,20 @@ def pagination_nav(page_num: int, total_pages: int, total_items: int) -> str:
     return "\n".join(parts)
 
 
+def back_link(href: str, label: str) -> str:
+    """A masthead "back" link (e.g. "← Dashboard") using BACK_SVG — the
+    same top-of-page affordance every non-Dashboard page/report carries."""
+    return f'    <a class="back" href="{esc(href)}" aria-label="{esc(label)}">{BACK_SVG}Back</a>\n'
+
+
 def page(title: str, brand: str, tag_kind: str, tag_text: str,
          header_html: str, body_html: str, footer_html: str,
-         branch: str | None = None) -> str:
+         branch: str | None = None, masthead_extra: str = "") -> str:
     """Render a page shell. `branch` is the current branch shown in the masthead
     of every page; pass None to omit the chip (e.g. the report template, which
-    carries a `{{ branch }}` placeholder instead)."""
+    carries a `{{ branch }}` placeholder instead). `masthead_extra` is raw HTML
+    inserted at the start of the masthead — typically a `back_link()` call;
+    every page except the Dashboard itself passes one."""
     chip = f"{branch_chip(branch)}\n      " if branch is not None else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -377,7 +385,7 @@ def page(title: str, brand: str, tag_kind: str, tag_text: str,
 <div class="wrap">
 
   <div class="masthead" id="top">
-    <span><span class="brand">{esc(brand)}</span> · {esc(tag_text)}</span>
+{masthead_extra}    <span><span class="brand">{esc(brand)}</span> · {esc(tag_text)}</span>
     <span class="mh-right">
       {chip}<span class="mono">{esc(now_stamp())}</span>
     </span>

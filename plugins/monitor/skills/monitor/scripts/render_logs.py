@@ -193,7 +193,8 @@ def build_html(page_entries: list[dict], brand: str, branch: str, *, total: int,
               f'<span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>')
     title = "Logs" if total_pages <= 1 else f"Logs (page {page_num}/{total_pages})"
     return mlib.page(f"{title} — {brand} Monitor", brand, "info", "Monitor · Logs",
-                     header, body, footer, branch=branch)
+                     header, body, footer, branch=branch,
+                     masthead_extra=mlib.back_link("../index.html", "Back to Dashboard"))
 
 
 def _prune_stale_pages(logs_dir: Path, total_pages: int) -> None:
