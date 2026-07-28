@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>monitor-tools · Monitor</title>
+<title>Strip Shipped Comments and Verify via a Real-Plugin-Path E2E Dogfood Run — monitor-tools Report</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -127,72 +127,132 @@
 <div class="wrap">
 
   <div class="masthead" id="top">
-    <span><span class="brand">monitor-tools</span> · Monitor</span>
+    <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
+    <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
     <span class="mh-right">
       <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 15:49</span>
     </span>
   </div>
 
   <header class="report">
-    <h1>monitor-tools · Monitor</h1>
-    <p class="subtitle">Reports, logs, and tasks for this project's agent workflow.</p>
-    <nav class="tabnav" aria-label="Dashboard pages"><a href="reports/index.html">Reports</a><a href="logs/index.html">Logs</a><a href="tasks/index.html">Tasks</a></nav>
+    <h1>Strip Shipped Comments and Verify via a Real-Plugin-Path E2E Dogfood Run</h1>
+    <p class="subtitle">Removed every Python comment from the engine scripts shipped to Guest projects (shebang and docstrings preserved), backed up main first, and proved nothing depends on them with a real end-to-end dogfood run across three fresh guest projects installed through the actual plugin cache path, not the manual-copy fallback.</p>
+    <div class="meta-chips">
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Created</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">2026-07-28 15:49</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">dev</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">4567522..0bd060d</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">success</span></span>
+    </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Reports</div><div class="value">10</div></div>
-    <div class="kpi"><div class="label">Log entries</div><div class="value">45</div></div>
-    <div class="kpi warn"><div class="label">Open tasks</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Profile</div><div class="value small mono">v5</div></div>
+    <div class="kpi pass"><div class="label">Guest projects dogfooded</div><div class="value">3 / 3 pass</div></div>
+    <div class="kpi pass"><div class="label">Real comment lines shipped</div><div class="value">0 (excl. shebang)</div></div>
+    <div class="kpi"><div class="label">Plugin version</div><div class="value small mono">1.15.3 → 1.15.4</div></div>
+    <div class="kpi"><div class="label">Rollback point</div><div class="value small mono">main-backup @ 4567522</div></div>
   </div>
 
-  <div class="dsearch">
-    <label class="sr-only" for="monitor-search">Search titles across logs, reports, and tasks</label>
-    <input type="text" id="monitor-search" placeholder="Search titles across logs, reports, tasks..."
-           autocomplete="off" aria-describedby="monitor-search-status">
-    <ul id="monitor-search-results"></ul>
-    <p class="status" id="monitor-search-status" role="status" aria-live="polite"></p>
-  </div>
+  <section class="rsection">
+    <h2>Summary</h2>
+    <p>Following the earlier confirmation that no monitor skill reads <code>.py</code> source comments for behavioral context, this task went further: stripped every comment from the engine scripts actually shipped to a Guest project (<code>plugins/monitor/skills/monitor/scripts/*.py</code>, mirrored into this repo's own <code>monitor/scripts/*.py</code>), then proved the claim empirically rather than by inspection alone — a real end-to-end dogfood run against three fresh guest projects (Python, Node, Go), each installed via the actual plugin mechanism (the mirrored plugin cache, resolved through <code>$CLAUDE_PLUGIN_ROOT</code>) rather than the manual-copy fallback (<code>install-monitor.sh</code>) test-e2e normally uses. All three completed their full monitor lifecycle — logging, reporting, task tracking, search, the pending-state hook — with zero real comment lines present in the shipped code they ran against.</p>
+  </section>
 
-  <div class="card-grid">
-    <a class="navcard" href="reports/index.html"><h3>Reports →</h3><p>Task and change reports, newest first.</p></a>
-    <a class="navcard" href="logs/index.html"><h3>Logs →</h3><p>Every logged operation with status and details.</p></a>
-    <a class="navcard" href="tasks/index.html"><h3>Tasks →</h3><p>Lifecycle-tracked units of work with self-reported metrics.</p></a>
-  </div>
+  <section class="rsection">
+    <h2>What Was Asked</h2>
+    <p>Merge dev to main, back main up first, strip all comments from the Python scripts shipped to a Guest project during plugin installation, commit to main, then run a real end-to-end dogfood test with genuine plugin installation and registration in guest projects, confirming everything still works with no comments present.</p>
+  </section>
 
-  <footer><span>monitor · project dashboard</span><span><a href="#top">↑ Back to Top</a></span></footer>
+  <section class="rsection">
+    <h2>What Was Done</h2>
+    <ul>
+      <li>Confirmed <code>dev</code> and <code>main</code> were already in sync, then created and pushed a <code>main-backup</code> branch pinned to the pre-strip commit (<code>4567522</code>) as the rollback point before touching anything.</li>
+      <li>Wrote a one-off script using Python's <code>tokenize</code> module (not regex, to avoid corrupting a <code>#</code> inside a string literal) to strip only <code>COMMENT</code> tokens from every file in <code>plugins/monitor/skills/monitor/scripts/</code>, explicitly preserving the shebang line and all docstrings (some of which argparse uses for real <code>--help</code> output, not just documentation). Verified every file still compiles with <code>py_compile</code>.</li>
+      <li>Mirrored the same stripped files into this repo's own <code>monitor/scripts/*.py</code> project-runtime copy, per this repo's engine-copy convention.</li>
+      <li>Ran the full test suite and thought-leak scanner after stripping — both clean — before committing, bumped the plugin version 1.15.3 → 1.15.4, committed to <code>main</code> directly, and fast-forwarded <code>dev</code> to match.</li>
+      <li>Manually mirrored the local plugin cache directory to the stripped-comment <code>main</code> content (substituting for the interactive <code>/plugin marketplace update</code> command, which isn't available as a tool call), restoring one internal marker file rsync's <code>--delete</code> had removed.</li>
+      <li>Ran a real end-to-end dogfood test against three fresh guest projects, sourced via a live search rather than reused from any prior run — a Python CLI, a Node CLI, and a Go CLI — each with a different companion-skill level (none / some / all). Each was installed by invoking the real <code>monitor:init</code> plugin mechanism against the mirrored comment-stripped cache, explicitly overriding <code>test-e2e</code>'s normal <code>install-monitor.sh</code> manual-copy default.</li>
+      <li>Each guest project's dogfooding subagent did real substantive work (bug fixes, added tests, docs, CI/build updates) while exercising the full monitor lifecycle, then pasted a verbatim comment-grep of its own <code>monitor/scripts/*.py</code> confirming zero real comment lines landed.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Decisions &amp; Rationale</h2>
+    <ul>
+      <li><b>DECISION:</b> strip only <code>#</code> comment tokens via <code>tokenize</code>, never docstrings or the shebang. <b>WHY:</b> docstrings are runtime string literals some scripts read at execution time (argparse <code>description=__doc__...</code>), and the shebang is an interpreter directive — removing either changes real behavior, not just documentation; a naive regex strip also risks corrupting a literal <code>#</code> inside a string.</li>
+      <li><b>DECISION:</b> create and push <code>main-backup</code> before making any destructive change to the shared <code>main</code> branch. <b>WHY:</b> this was an irreversible-feeling, direct-to-main operation across the entire shipped engine — a pinned rollback point costs nothing and removes the risk entirely.</li>
+      <li><b>DECISION:</b> override <code>test-e2e</code>'s default manual-copy install with the real plugin mechanism for this run specifically. <b>WHY:</b> the whole point was verifying the actual shipped plugin path with zero comments, not the manual-copy fallback which sources from a different code path (<code>.claude/skills/monitor</code>) and wouldn't have proven anything about the plugin cache.</li>
+      <li><b>DECISION:</b> the git-mutating parts of this task (backup, strip-commit, and this report) were executed from the primary checkout, not a worktree-isolated subagent, once that boundary surfaced. <b>WHY:</b> a worktree-isolated agent's git operations are hard-scoped to its own worktree by the sandbox itself — not a permission choice, a structural one — so the task split naturally into git operations (primary session) and dogfood/verification work (worktree-isolated subagents), which is exactly how it played out.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Evidence</h2>
+    <pre>Plugin cache verification (before dogfood run):
+real Python comment lines outside shebang = 0 across all monitor scripts
+in ~/.claude/plugins/cache/monitor-tools/monitor/1.15.1/
+(one grep hit in monitor_lib.py was a CSS selector "#f-all:checked..."
+inside an embedded stylesheet string -- confirmed false positive, not code)
+
+Guest project 1 -- python-cli-example (companion=none):
+  7 log entries, 1 report, 1 task (start/update/close, id 15c057cb)
+  pending-hook test PASS, search test PASS (query "F541")
+  comment-grep of monitor/scripts/*.py: only the same false-positive
+  CSS selector line, zero real comments
+
+Guest project 2 -- latest-version-cli (Node, companion=some/superpowers):
+  6 log entries, 1 report, 1 task (6a8c089a)
+  pending-hook test PASS, search test PASS (query "unhandled-rejection")
+  comment-grep clean, same as above
+
+Guest project 3 -- go-cli-starter (Go, companion=all, 5/6 installed):
+  6 log entries, 1 report, 1 task (bf60b010)
+  pending-hook test PASS, search test PASS (query "kingpin")
+  comment-grep clean, same as above
+
+$ PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ tests/integration/ -q
+82 passed
+
+$ python3 scripts/check_thought_leaks.py
+clean: no development-history/reasoning-leakage phrases found</pre>
+  </section>
+
+  <section class="rsection">
+    <h2>Files Touched</h2>
+    <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
+      <tr><td>plugins/monitor/skills/monitor/scripts/*.py (all 9 engine scripts)</td><td>All # comments stripped via tokenize; shebang and docstrings preserved</td></tr>
+      <tr><td>monitor/scripts/*.py</td><td>Synced to match the stripped source</td></tr>
+      <tr><td>plugins/monitor/.claude-plugin/plugin.json</td><td>Version 1.15.3 → 1.15.4</td></tr>
+      <tr><td>~/.claude/plugins/cache/monitor-tools/monitor/1.15.1/</td><td>Manually mirrored to match stripped-comment main content</td></tr>
+      <tr><td>main-backup branch (new)</td><td>Pinned to 4567522, pushed to origin, rollback point</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="rsection">
+    <h2>Risks</h2>
+    <ul>
+      <li>Removing comments permanently reduces in-code documentation for future engine maintainers reading <code>plugins/monitor/skills/monitor/scripts/</code> directly — this trades maintainer readability for a smaller shipped footprint and a stronger structural guarantee (nothing can ever depend on comment content again, by construction).</li>
+      <li>The manual plugin-cache mirror substituted for the real <code>/plugin marketplace update</code> command — correct for this session, but a genuinely fresh session installing the plugin from scratch will pull from GitHub's actual default-branch content, which is what was pushed, so this should hold without intervention going forward.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Gaps &amp; Assumptions</h2>
+    <ul>
+      <li><b>GAPS:</b> for 2 of 3 guest projects (Node, Go), the dogfooding subagent could not literally dispatch a fresh <code>/monitor:init</code> slash command (a nested subagent session doesn't get its own independent slash-command dispatch) — it set <code>$CLAUDE_PLUGIN_ROOT</code> and ran the underlying install commands directly instead. The effective code path was identical (same mirrored cache directory), so the comment-stripped-code claim is still verified, but this is not literally proof of a fresh slash-command-driven install for those two.</li>
+      <li><b>GAPS:</b> this run proves the real plugin's shipped comment-stripped code works correctly when installed and dogfooded in a guest project — it does not re-prove that a brand-new top-level session can freshly register the plugin from scratch via <code>/plugin marketplace add</code> + <code>/plugin install</code> (already verified separately, earlier this session, and out of scope here).</li>
+      <li><b>ASSUMPTIONS:</b> the three guest-project worktrees were pruned automatically after their subagents finished, per <code>test-e2e</code>'s normal behavior — their reported log/report/task counts and verbatim evidence blocks were verified for internal consistency but not independently re-inspected against the (now-gone) worktree files.</li>
+    </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Follow-ups</h2>
+    <ul>
+      <li>Clean up the leftover <code>.claude/worktrees/agent-a896ae08cdeba206c</code> worktree directory now that its subagent has finished.</li>
+    </ul>
+  </section>
 
 </div>
-<script>
-const MONITOR_SEARCH_INDEX = [{"kind": "log", "title": "Trimmed the Next Steps template comment in render_report.py back to a short mechanical pointer; the full rule/rationale lives only in SKILL.md now, not duplicated into the code", "href": "logs/index.html"}, {"kind": "log", "title": "Confirmed no monitor command/skill reads .py source comments for behavioral context; all scripts are invoked as CLI black boxes. The only intentional exception is HTML placeholder comments inside reports/template.html, which report.md explicitly documents.", "href": "logs/index.html"}, {"kind": "log", "title": "Fixed Next Steps report section to forbid chat-turn/meta content after user flagged a leaked 'present options for approval' line", "href": "logs/index.html"}, {"kind": "log", "title": "Fast-forwarded main to dev (09d7b9c), pushed both; deleted 4 fully-merged local branches and 3 merged remote branches after audit confirmed zero unmerged commits anywhere", "href": "logs/index.html"}, {"kind": "log", "title": "Added .claude/skills/test-installation/ documenting the real /plugin marketplace add + /plugin install registration flow, verified via subagent baseline/check", "href": "logs/index.html"}, {"kind": "log", "title": "70 unit + 12 integration pass; thought-leak scan clean", "href": "logs/index.html"}, {"kind": "log", "title": "Registered monitor via /plugin marketplace add + /plugin install (not settings.json hand-edit); removed .claude/skills/monitor + .claude/commands/monitor fallback; confirmed real plugin-path skill invocation with zero fallback present", "href": "logs/index.html"}, {"kind": "log", "title": "Merged dev into main (fast-forward) to fix stale plugin marketplace resolution", "href": "logs/index.html"}, {"kind": "log", "title": "Registered this repo's own marketplace and enabled monitor as a plugin on itself", "href": "logs/index.html"}, {"kind": "log", "title": "Merged chore/commit-monitor-data into dev and pushed", "href": "logs/index.html"}, {"kind": "log", "title": "Committed monitor/ data folder to git; removed the Host-repo carve-out from .gitignore/CLAUDE.md", "href": "logs/page-2.html"}, {"kind": "log", "title": "Merged fix/dashboard-back-link into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added top masthead Back-to-Dashboard link to Reports/Logs/Tasks index pages", "href": "logs/page-2.html"}, {"kind": "log", "title": "Merged feat/tasks-hook-and-block-docs into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Added task-tracking nudge hook and reformatted the injected CLAUDE.md/AGENTS.md block with per-feature headings", "href": "logs/page-2.html"}, {"kind": "log", "title": "Merged feat/hard-rule-logging-block into dev and pushed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Split injected CLAUDE.md/AGENTS.md block: logging+tasks hard rules, reports stay judgment-based", "href": "logs/page-2.html"}, {"kind": "log", "title": "Authored branch report covering the full follow-up-fixes work (95442cf..a3005f9)", "href": "logs/page-2.html"}, {"kind": "log", "title": "Level-gated thought-leak scanner (v2) + 6 mechanical fixes committed", "href": "logs/page-2.html"}, {"kind": "log", "title": "Bumped plugin to 1.13.0, globbed skill docs in leak scanner, fixed pip invocation", "href": "logs/page-2.html"}, {"kind": "log", "title": "Fixed report search matching CSS text and misleading tasks-only pending message", "href": "logs/page-3.html"}, {"kind": "log", "title": "Fixed script-tag-breakout injection in the Dashboard search index", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added test-automated skill orchestrating unit + integration + thought-leaks", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added test-thought-leaks skill automating dev-history-leakage checks", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added date_created/last_modified placeholders to the report template", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added a client-side grep search box to the Dashboard page", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added test-unit and test-integration skills wrapping the pytest suite", "href": "logs/page-3.html"}, {"kind": "log", "title": "Added a pytest test suite for the monitor engine (unit + integration)", "href": "logs/page-3.html"}, {"kind": "log", "title": "clean --tasks now sorts oldest-N by real creation time, not last activity", "href": "logs/page-3.html"}, {"kind": "log", "title": "Open tasks now surface in the pending-state hook warning", "href": "logs/page-3.html"}, {"kind": "log", "title": "Reinstalled monitor with tasks/hooks/search feature set", "href": "logs/page-4.html"}, {"kind": "log", "title": "Fixed all 10 findings from the final whole-branch review of feat/monitor-tasks", "href": "logs/page-4.html"}, {"kind": "log", "title": "Adjudicated final-review residuals, bumped plugin to 1.11.1, refreshed dogfood engine copy", "href": "logs/page-4.html"}, {"kind": "log", "title": "Authored the test-e2e round 2 + fixes report", "href": "logs/page-4.html"}, {"kind": "log", "title": "Fixed render_logs.py's identical singular/plural footer bug and logger.py's silent-success gap, both found by the second /test-e2e run", "href": "logs/page-4.html"}, {"kind": "log", "title": "Reverted the gitignore detect/remove logic added to init.md and update.md", "href": "logs/page-4.html"}, {"kind": "log", "title": "Removed dev-history narration from init.md/update.md's gitignore-repair instructions", "href": "logs/page-4.html"}, {"kind": "log", "title": "Committed the dashboard/grammar/doc-gap/gitignore-ambiguity fixes", "href": "logs/page-4.html"}, {"kind": "log", "title": "Fixed render_report.py singular/plural footer bug, Dashboard log-count staleness, log.md/record.md redundant-render doc gap, and the consumer-project gitignore ambiguity in CLAUDE.md", "href": "logs/page-4.html"}, {"kind": "log", "title": "Addressed whole-branch final review findings for /monitor:search", "href": "logs/page-4.html"}, {"kind": "log", "title": "Reports now fill the template's {{ commit }} placeholder with a first..last short-sha range", "href": "logs/page-5.html"}, {"kind": "log", "title": "Registered /monitor:search across the command tables and plugin manifest", "href": "logs/page-5.html"}, {"kind": "log", "title": "Added search.py: greps operations.mtr by keyword plus optional branch/status/level filters, plain-text output", "href": "logs/page-5.html"}, {"kind": "log", "title": "logger.py now auto-stamps every entry with last_commit_hash (git HEAD short sha), mirroring how branch is already auto-captured", "href": "logs/page-5.html"}, {"kind": "log", "title": "Installed and initialised monitor on monitor-tools itself (dogfooding the plugin on its own source repo)", "href": "logs/page-5.html"}, {"kind": "report", "title": "Strip Shipped Comments and Verify via a Real-Plugin-Path E2E Dogfood Run", "href": "reports/2026-07-28-comment-strip-real-plugin-e2e.html"}, {"kind": "report", "title": "Keep Process Instructions in SKILL.md, Not in Code Comments", "href": "reports/2026-07-28-comment-scope-fix.html"}, {"kind": "report", "title": "Fix Next Steps Section: Project Actions Only, Never Chat-Turn Content", "href": "reports/2026-07-28-next-steps-guidance-fix.html"}, {"kind": "report", "title": "Hard-Rule Logging/Tasks, Self-Host, and Plugin Registration Fix", "href": "reports/2026-07-28-hard-rule-block-self-host-and-plugin-registration.html"}, {"kind": "report", "title": "Branch Audit \u2014 Purpose, Merge Status, and Cleanup Recommendations", "href": "reports/2026-07-28-branch-audit.html"}, {"kind": "report", "title": "Follow-Up Fixes: Tasks, Tests, Search, Timestamps \u0026 Thought-Leak Scanner", "href": "reports/2026-07-28-thought-leak-scanner-v2-and-mechanical-fixes.html"}, {"kind": "report", "title": "Tasks, hooks, and search: full drill coverage", "href": "reports/2026-07-27-tasks-hooks-search-coverage.html"}, {"kind": "report", "title": "test-e2e round 2 + fixes", "href": "reports/2026-07-26-test-e2e-round-2-fixes.html"}, {"kind": "report", "title": "Pending-state enforcement", "href": "reports/2026-07-26-pending-state-enforcement.html"}, {"kind": "report", "title": "Add /monitor:search", "href": "reports/2026-07-25-monitor-search.html"}];
-(function() {
-  const input = document.getElementById('monitor-search');
-  const results = document.getElementById('monitor-search-results');
-  const status = document.getElementById('monitor-search-status');
-  input.addEventListener('input', function() {
-    const q = input.value.trim().toLowerCase();
-    results.innerHTML = '';
-    if (!q) { status.textContent = ''; return; }
-    const matches = MONITOR_SEARCH_INDEX
-      .filter(item => item.title.toLowerCase().includes(q))
-      .slice(0, 20);
-    if (matches.length === 0) {
-      status.textContent = 'No matches for "' + input.value.trim() + '".';
-      return;
-    }
-    matches.forEach(item => {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = item.href;
-      a.textContent = '[' + item.kind + '] ' + item.title;
-      li.appendChild(a);
-      results.appendChild(li);
-    });
-    status.textContent = matches.length + (matches.length === 1 ? ' match.' : ' matches.');
-  });
-})();
-</script>
 </body>
 </html>

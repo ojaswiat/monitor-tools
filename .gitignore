@@ -14,3 +14,7 @@ todo.md
 # committed like any consumer project's.
 /.claude/skills/monitor/
 /.claude/commands/monitor/
+
+# Isolated agent worktrees (spawned with isolation: worktree) live here —
+# local scratch state, never portable source.
+/.claude/worktrees/
