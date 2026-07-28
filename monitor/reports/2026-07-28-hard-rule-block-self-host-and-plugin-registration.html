@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ title }} — monitor-tools Report</title>
+<title>Hard-Rule Logging/Tasks, Self-Host, and Plugin Registration Fix — monitor-tools Report</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -130,93 +130,130 @@
     <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: {{ branch }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">{{ branch }}</span></span>
-      <span class="mono">2026-07-28 14:35</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
     </span>
   </div>
 
   <header class="report">
-    <h1>{{ title }}</h1>
-    <p class="subtitle">{{ subtitle }}</p>
+    <h1>Hard-Rule Logging/Tasks, Self-Host, and Plugin Registration Fix</h1>
+    <p class="subtitle">Reformatted the injected CLAUDE.md/AGENTS.md policy block into hard-rule logging and task tracking, added the task-signal nudge hook, committed monitor's own data folder as a Guest-parity dogfood, and fixed a real plugin-registration failure by switching from a hand-edited settings.json to the documented /plugin marketplace add + /plugin install flow.</p>
     <div class="meta-chips">
-      <span class="chip"><b>Generated</b><span class="mono">{{ date }}</span></span>
-      <span class="chip"><b>Created</b><span class="mono">{{ date_created }}</span></span>
-      <span class="chip"><b>Last modified</b><span class="mono">{{ last_modified }}</span></span>
-      <span class="chip"><b>Branch</b><span class="mono">{{ branch }}</span></span>
-      <span class="chip"><b>Commit</b><span class="mono">{{ commit }}</span></span>
-      <span class="chip"><b>Status</b><span class="tag {{ status_class }}">{{ status }}</span></span>
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Created</b><span class="mono">2026-07-26</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">2026-07-28 14:33</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">dev</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">a3005f9..54e4b51</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">success</span></span>
     </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Tests</div><div class="value">{{ tests }}</div></div>
-    <div class="kpi"><div class="label">Commit</div><div class="value">{{ commit }}</div></div>
+    <div class="kpi pass"><div class="label">Tests</div><div class="value small">70 unit + 12 integration pass</div></div>
+    <div class="kpi"><div class="label">Commit range</div><div class="value small mono">a3005f9..54e4b51</div></div>
   </div>
 
   <section class="rsection">
     <h2>Summary</h2>
-    <p><!-- One coherent paragraph. Project notes: — --></p>
+    <p>This range covers three linked pieces of work on <code>dev</code>: (1) making the injected Guest-project <code>CLAUDE.md</code>/<code>AGENTS.md</code> policy block hard-instructioned for logging and task tracking (reporting stays judgment-based), plus a task-signal nudge hook for untracked plan/spec work; (2) making this Host repo consume <code>monitor</code> exactly as a Guest project would — committing <code>monitor/</code> data to git and removing it from <code>.gitignore</code>; and (3) diagnosing and fixing a real plugin-registration failure where hand-editing <code>.claude/settings.json</code>'s <code>extraKnownMarketplaces</code>/<code>enabledPlugins</code> silently failed to register <code>monitor:*</code> skills, resolved by using the documented <code>/plugin marketplace add</code> + <code>/plugin install</code> flow instead, and codified as a new <code>test-installation</code> skill.</p>
   </section>
 
   <section class="rsection">
     <h2>What Was Asked</h2>
-    <p><!-- One coherent paragraph. --></p>
+    <p>Merge the in-flight branch to dev; make logging and task tracking hard rules (not soft/judgment-based like reporting) in the Guest-project policy block, with clear per-entity Use case/How to use documentation; add the dashboard back-link to Reports/Logs/Tasks masthead tops; make this Host repo use monitor exactly as a Guest project would (commit its own <code>monitor/</code> data, register the plugin properly instead of a manual copy); and diagnose why the plugin wasn't resolving as invokable skills.</p>
   </section>
 
   <section class="rsection">
     <h2>What Was Done</h2>
     <ul>
-      <!-- One <li> per point. -->
+      <li>Split the injected block's logging and task-tracking sections into explicit hard rules ("not optional, no exceptions"), keeping reporting as default judgment (HTML reports cost more tokens than a log entry).</li>
+      <li>Added a task-tracking nudge hook: <code>pending.py</code> gained <code>pending_task_signal</code> state, <code>_looks_like_plan_file()</code> (generic <code>plans/</code>/<code>specs/</code> path match, not tied to any one companion skill), <code>track_task_signal()</code>, <code>clear_task_signal()</code>; the <code>PostToolUse</code> hook matcher widened from <code>Bash</code> to <code>Bash|Write</code>.</li>
+      <li>Reformatted the injected block into headed sections (Logging / Task Tracking / Reporting / Search / Cleanup / Commands / Rules), each with a Use case and How to use pair, matching the Logs-vs-Tasks-vs-Reports distinction.</li>
+      <li>Added a masthead "← Dashboard" back-link to the top of Reports/Logs/Tasks index pages (previously footer-only); <code>monitor_lib.page()</code> gained a <code>masthead_extra</code> param and new <code>back_link()</code> helper.</li>
+      <li>Committed this repo's own <code>monitor/</code> data folder to git for the first time (profile, logs, reports, scripts) and removed <code>/monitor/</code> from <code>.gitignore</code>, so the Host repo now uses monitor exactly like a Guest project — only the installed engine copy under <code>.claude/skills/monitor/</code> stays gitignored.</li>
+      <li>Registered this repo's own marketplace and enabled <code>monitor</code> as a plugin on itself; diagnosed a stale-cache bug (the marketplace's <code>github</code> source with no branch pin resolves to the default branch, and <code>main</code> was 67 commits behind <code>dev</code>) by fast-forwarding <code>main</code> to <code>dev</code>.</li>
+      <li>Diagnosed that hand-editing <code>.claude/settings.json</code>'s <code>extraKnownMarketplaces</code>/<code>enabledPlugins</code> directly does not register plugin skills; switched to running the documented <code>/plugin marketplace add</code> + <code>/plugin install</code> + <code>/reload-plugins</code> flow, then removed the manual-copy fallback (<code>.claude/skills/monitor/</code>, <code>.claude/commands/monitor/</code>) and confirmed a genuine plugin-path <code>Skill()</code> call resolves with zero fallback present.</li>
+      <li>Added a new <code>.claude/skills/test-installation/</code> skill documenting this registration trap and the verification procedure, verified via a baseline+check subagent pair.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Decisions &amp; Rationale</h2>
     <ul>
-      <!-- One <li> per real decision: what was chosen, why, alternatives
-           rejected. Pull straight from this branch's DECISION:/WHY:/
-           ARCHITECTURE: log fields — don't re-derive from scratch. -->
+      <li><b>DECISION:</b> logging and task tracking are hard rules; reporting stays default judgment. <b>WHY:</b> HTML report generation costs meaningfully more tokens than a log entry, so it should stay judgment-based (before merges, after code changes), while logs/tasks are cheap and are the actual context-recovery mechanism — skipping them loses information a later agent can't reconstruct.</li>
+      <li><b>DECISION:</b> the task-signal nudge is a generic <code>plans/</code>/<code>specs/</code> path match, not tied to any specific companion skill (e.g. superpowers). <b>WHY:</b> monitor must stay independent of other plugins while working seamlessly with them — hard-coding a companion skill's directory convention would break that independence for projects not using it.</li>
+      <li><b>DECISION:</b> commit this repo's own <code>monitor/</code> data folder to git, removing the prior repo-specific "never commit" carve-out. <b>WHY:</b> explicit user request that the Host project use monitor exactly as a Guest project is expected to — logs and reports are the context-recovery mechanism, which only works if they're actually in the repo.</li>
+      <li><b>DECISION:</b> switch from hand-edited <code>settings.json</code> plugin entries to the documented <code>/plugin marketplace add</code> + <code>/plugin install</code> commands. <b>WHY:</b> the hand-edit produced JSON that looked structurally correct (matching working plugins) but never registered <code>monitor:*</code> skills; the real commands write additional state a direct edit skips, confirmed by the settings.json diff after running them (reformatted key order and structure, not just value changes).</li>
+      <li><b>ARCHITECTURE:</b> <code>monitor/scripts/*.py</code> stays a required project-local copy in both plugin and manual-install modes — never removed — because project-level hooks in <code>.claude/settings.json</code> cannot reliably resolve <code>$CLAUDE_PLUGIN_ROOT</code> outside the plugin's own hook manifest context, and monitor's self-containment principle requires <code>monitor/</code> to keep working even if the plugin is later disabled.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Evidence</h2>
-    <pre><!-- Command + output, verbatim. --></pre>
+    <pre>$ PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/unit/ -q
+70 passed in 23.09s
+
+$ PYTHONPATH=plugins/monitor/skills/monitor/scripts pytest tests/integration/ -q
+12 passed in 4.96s
+
+$ python3 scripts/check_thought_leaks.py
+clean: no development-history/reasoning-leakage phrases found
+
+$ rm -rf .claude/skills/monitor .claude/commands/monitor
+$ echo $CLAUDE_PLUGIN_ROOT
+(empty)
+$ Skill(skill: "monitor:search")  # genuine plugin-path resolution, no fallback present
+→ resolved and ran correctly (no "Unknown skill" error)</pre>
   </section>
 
   <section class="rsection">
     <h2>Files Touched</h2>
     <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
-      <!-- One row per file. -->
+      <tr><td>plugins/monitor/commands/init.md</td><td>Hard-rule block reformat, task-nudge hook JSON, Bash|Write matcher</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/SKILL.md</td><td>Pending-state enforcement section rewritten for the task-signal mechanism</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/scripts/pending.py</td><td>pending_task_signal state, plan-file detection, track/clear helpers</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/scripts/tasks.py</td><td>start_task() clears the task signal on task start</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/scripts/monitor_lib.py</td><td>page() masthead_extra param, back_link() helper</td></tr>
+      <tr><td>plugins/monitor/skills/monitor/scripts/render_report.py, render_logs.py, render_tasks.py</td><td>Dashboard back-link at top masthead of index pages</td></tr>
+      <tr><td>plugins/monitor/.claude-plugin/plugin.json</td><td>Version bumped 1.14.2 → 1.15.1 across this range</td></tr>
+      <tr><td>tests/unit/test_pending.py, tests/integration/test_pending_hook_flow.py</td><td>6 unit + 1 integration test for the task-signal nudge</td></tr>
+      <tr><td>CLAUDE.md, AGENTS.md</td><td>Mirrored block reformat; monitor/ commit-carve-out language removed</td></tr>
+      <tr><td>.gitignore</td><td>Removed /monitor/; kept .claude/skills/monitor, .claude/commands/monitor</td></tr>
+      <tr><td>monitor/ (data folder, all files)</td><td>Committed to git for the first time — profile, logs, reports, project-runtime scripts</td></tr>
+      <tr><td>.claude/settings.json</td><td>extraKnownMarketplaces/enabledPlugins registered via real /plugin commands (not hand-edit)</td></tr>
+      <tr><td>.claude/skills/test-installation/SKILL.md</td><td>New skill documenting the registration trap and verification procedure</td></tr>
+      <tr><td>.claude/skills/monitor/, .claude/commands/monitor/</td><td>Removed — manual-copy fallback no longer needed, plugin path confirmed working</td></tr>
     </tbody></table></div>
   </section>
 
   <section class="rsection">
     <h2>Risks</h2>
     <ul>
-      <!-- One <li> per risk. -->
+      <li><code>main</code> is now 3 commits behind <code>dev</code> (including this range's work) — the marketplace's <code>github</code> source resolves to the default branch with no pin, so any fresh <code>/plugin marketplace add owner/repo</code> elsewhere serves a stale plugin until <code>main</code> is fast-forwarded again.</li>
+      <li>The task-signal nudge is heuristic (path-pattern match on <code>plans/</code>/<code>specs/</code> markdown writes) — it does not fire for multi-step work that never touches such a file, and doesn't know whether an already-open task actually covers new work.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Gaps &amp; Assumptions</h2>
     <ul>
-      <!-- One <li> per gap/assumption. Pull from this branch's GAPS:/
-           ASSUMPTIONS: log fields. -->
+      <li><b>GAPS:</b> <code>monitor/tasks/tasks.mtr</code> is still empty in this repo — the task-tracking feature has been shipped and documented but not yet dogfooded on a real multi-step unit of work here.</li>
+      <li><b>ASSUMPTIONS:</b> the fix (running the real <code>/plugin marketplace add</code> + <code>/plugin install</code> commands) is assumed to be the complete and correct root cause — confirmed by a successful genuine no-fallback <code>Skill()</code> call, but not cross-checked against Claude Code's own plugin-registration internals.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Follow-ups</h2>
     <ul>
-      <!-- One <li> per follow-up. -->
+      <li>Fast-forward <code>main</code> to <code>dev</code> and push, so the marketplace's default-branch resolution serves current code.</li>
+      <li>Dogfood the task-tracking feature on this repo with a real multi-step unit of work (task-start/update/close).</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Next Steps</h2>
     <ol class="steps">
-      <!-- One <li> per actionable next step. -->
+      <li>Decide when to rebuild <code>main</code> (fast-forward, clean, no conflicts confirmed).</li>
+      <li>Continue with the requested branch-status analysis and its own report.</li>
     </ol>
   </section>
 

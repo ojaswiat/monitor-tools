@@ -1,12 +1,8 @@
 {
   "branch": "dev",
   "pending_logs": [],
-  "pending_report": {
-    "event": "merge",
-    "since_sha": "a3005f9",
-    "detected_at": "2026-07-28T14:24:01"
-  },
-  "last_report_sha": "a3005f9",
+  "pending_report": null,
+  "last_report_sha": "54e4b51",
   "last_seen_sha": "47f69fe",
   "pending_task_signal": null
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ title }} — monitor-tools Report</title>
+<title>Branch Audit — Purpose, Merge Status, and Cleanup Recommendations — monitor-tools Report</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --text: #101418; --muted: #5a6472;
@@ -130,93 +130,125 @@
     <a class="back" href="index.html" aria-label="Back to reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Report</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: {{ branch }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">{{ branch }}</span></span>
-      <span class="mono">2026-07-28 14:35</span>
+      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
     </span>
   </div>
 
   <header class="report">
-    <h1>{{ title }}</h1>
-    <p class="subtitle">{{ subtitle }}</p>
+    <h1>Branch Audit — Purpose, Merge Status, and Cleanup Recommendations</h1>
+    <p class="subtitle">Repo-wide audit of every local and remote-only branch: what each was for, whether it's merged, and what to do with it. Every non-dev branch checked is fully merged into both main and dev — none carry unique unmerged work.</p>
     <div class="meta-chips">
-      <span class="chip"><b>Generated</b><span class="mono">{{ date }}</span></span>
-      <span class="chip"><b>Created</b><span class="mono">{{ date_created }}</span></span>
-      <span class="chip"><b>Last modified</b><span class="mono">{{ last_modified }}</span></span>
-      <span class="chip"><b>Branch</b><span class="mono">{{ branch }}</span></span>
-      <span class="chip"><b>Commit</b><span class="mono">{{ commit }}</span></span>
-      <span class="chip"><b>Status</b><span class="tag {{ status_class }}">{{ status }}</span></span>
+      <span class="chip"><b>Generated</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Created</b><span class="mono">2026-07-28</span></span>
+      <span class="chip"><b>Last modified</b><span class="mono">2026-07-28 14:35</span></span>
+      <span class="chip"><b>Branch</b><span class="mono">dev</span></span>
+      <span class="chip"><b>Commit</b><span class="mono">54e4b51</span></span>
+      <span class="chip"><b>Status</b><span class="tag pass">success</span></span>
     </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Tests</div><div class="value">{{ tests }}</div></div>
-    <div class="kpi"><div class="label">Commit</div><div class="value">{{ commit }}</div></div>
+    <div class="kpi pass"><div class="label">Local branches</div><div class="value">6</div></div>
+    <div class="kpi pass"><div class="label">Remote-only branches</div><div class="value">2</div></div>
+    <div class="kpi warn"><div class="label">Behind: main vs dev</div><div class="value small">3 commits</div></div>
+    <div class="kpi pass"><div class="label">Unmerged branches</div><div class="value">0</div></div>
   </div>
 
   <section class="rsection">
     <h2>Summary</h2>
-    <p><!-- One coherent paragraph. Project notes: — --></p>
+    <p>Checked every local branch (<code>git branch -vv</code>) and every remote branch not tracked locally (<code>git branch -a</code>), comparing each against both <code>main</code> and <code>dev</code> with <code>git merge-base --is-ancestor</code>. Result: <code>dev</code> is the only active branch — everything else (5 local, 2 remote-only) is a fully merged, stale feature branch left over from prior work, safe to delete with zero risk of losing unmerged commits. The one real gap is <code>main</code> itself, which is 3 commits behind <code>dev</code> (a clean fast-forward, already flagged separately this session).</p>
   </section>
 
   <section class="rsection">
     <h2>What Was Asked</h2>
-    <p><!-- One coherent paragraph. --></p>
+    <p>Audit all local branches, compare each to <code>main</code>, and produce one report clearly stating the purpose and status of each branch.</p>
   </section>
 
   <section class="rsection">
     <h2>What Was Done</h2>
     <ul>
-      <!-- One <li> per point. -->
+      <li>Enumerated all 6 local branches and identified 2 additional remote-only branches with no local tracking ref.</li>
+      <li>For each, computed ahead/behind counts against both <code>main</code> and <code>dev</code>, and confirmed ancestry with <code>git merge-base --is-ancestor</code> rather than relying on ahead/behind counts alone (a branch can show "0 behind" from a stale local ref without actually being an ancestor).</li>
+      <li>Cross-referenced each branch's name and latest commit message against this session's own history to attribute purpose.</li>
+      <li>No branch was staged, stashed, deleted, or otherwise mutated — this is an audit only, per explicit instruction to hold all git operations until reviewed.</li>
     </ul>
+  </section>
+
+  <section class="rsection">
+    <h2>Branch Status</h2>
+    <div class="table-scroll"><table><thead><tr><th>Branch</th><th>Purpose</th><th>Merge status</th><th>Last commit</th><th>Recommendation</th></tr></thead><tbody>
+      <tr><td class="mono">dev</td><td>Primary active development branch — current HEAD.</td><td><span class="tag info">ACTIVE</span></td><td>2026-07-28 · Add test-installation skill</td><td>Keep. Push regularly.</td></tr>
+      <tr><td class="mono">main</td><td>Release/default branch. The marketplace's <code>github</code> source with no branch pin resolves here — what a fresh <code>/plugin marketplace add owner/repo</code> serves.</td><td><span class="tag warn">3 BEHIND DEV</span></td><td>2026-07-28 · Merge chore/enable-monitor-plugin-self-host</td><td>Fast-forward to dev (clean FF, no conflicts) and push — otherwise new installs get stale plugin code.</td></tr>
+      <tr><td class="mono">add-monitor-search</td><td>Added the <code>/monitor:search</code> command/engine script.</td><td><span class="tag pass">MERGED</span></td><td>2026-07-26</td><td>Delete (local + remote) — fully merged into dev and main, zero unique commits.</td></tr>
+      <tr><td class="mono">feat/followup-fixes</td><td>Level-gated thought-leak scanner + 6 mechanical fixes.</td><td><span class="tag pass">MERGED</span></td><td>2026-07-28</td><td>Delete (local) — fully merged, zero unique commits.</td></tr>
+      <tr><td class="mono">ls</td><td>Fixed a render_logs.py pluralization bug and a logger.py silent-success gap.</td><td><span class="tag pass">MERGED</span></td><td>2026-07-26</td><td>Delete (local) — fully merged, zero unique commits.</td></tr>
+      <tr><td class="mono">solo-saas-drill</td><td>Fixed remaining pending-gate review findings (hook JSON, classifier, warning text) — from an e2e dogfood drill.</td><td><span class="tag pass">MERGED</span></td><td>2026-07-26</td><td>Delete (local) — fully merged, zero unique commits.</td></tr>
+      <tr><td class="mono">origin/feat/hard-rule-logging-block</td><td>Remote-only, no local ref. Plugin version bump to 1.14.3 as part of the hard-rule logging block work.</td><td><span class="tag pass">MERGED</span></td><td>2026-07-28</td><td>Delete on remote — fully merged into dev, zero unique commits.</td></tr>
+      <tr><td class="mono">origin/improve/test-e2e-search</td><td>Remote-only, no local ref. Implementation plan for test-e2e monitor:search coverage.</td><td><span class="tag pass">MERGED</span></td><td>2026-07-27</td><td>Delete on remote — fully merged into dev, zero unique commits.</td></tr>
+    </tbody></table></div>
   </section>
 
   <section class="rsection">
     <h2>Decisions &amp; Rationale</h2>
     <ul>
-      <!-- One <li> per real decision: what was chosen, why, alternatives
-           rejected. Pull straight from this branch's DECISION:/WHY:/
-           ARCHITECTURE: log fields — don't re-derive from scratch. -->
+      <li><b>DECISION:</b> use <code>git merge-base --is-ancestor</code> as the authoritative merge check, not just ahead/behind counts. <b>WHY:</b> ahead/behind against a possibly-stale local ref can look clean by coincidence; ancestor-check against the actual tip of <code>dev</code>/<code>main</code> is the only test that can't false-positive a still-unmerged branch as safe to delete.</li>
+      <li><b>DECISION:</b> report worktree/staging state, not just branches. <b>WHY:</b> <code>git worktree list</code> confirms this repo currently has exactly one worktree (the primary checkout on <code>dev</code>) — no dangling worktrees from a prior test-e2e run remain at time of this audit.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Evidence</h2>
-    <pre><!-- Command + output, verbatim. --></pre>
+    <pre>$ git branch -vv
+  add-monitor-search  83cad38 [origin/add-monitor-search] fix: skip graphify's global-only install...
+* dev                 54e4b51 [origin/dev] Add test-installation skill...
+  feat/followup-fixes a3005f9 feat(scanner): level-gated thought-leak scanner + 6 mechanical fixes
+  ls                  368925c fix: render_logs.py plural bug and logger.py silent-success gap
+  main                a8dc405 [origin/main] Merge branch 'chore/enable-monitor-plugin-self-host' into dev
+  solo-saas-drill     8993b45 fix: remaining pending-gate review findings...
+
+$ git worktree list
+/Users/ojaswi/Projects/monitor-tools  54e4b51 [dev]
+
+$ git merge-base --is-ancestor add-monitor-search dev && echo yes
+yes
+(repeated per branch — all 7 non-dev branches return yes against both dev and main)</pre>
   </section>
 
   <section class="rsection">
     <h2>Files Touched</h2>
     <div class="table-scroll"><table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>
-      <!-- One row per file. -->
+      <tr><td>—</td><td>Audit only — no files changed by this task.</td></tr>
     </tbody></table></div>
   </section>
 
   <section class="rsection">
     <h2>Risks</h2>
     <ul>
-      <!-- One <li> per risk. -->
+      <li>Deleting a merged local branch loses its ref but not its commits (they remain reachable through dev/main) — low risk, standard git behavior, reversible via reflog if a ref is deleted in error.</li>
+      <li><code>main</code> staying behind <code>dev</code> is the one real risk in this audit: it's what a fresh marketplace install resolves to.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Gaps &amp; Assumptions</h2>
     <ul>
-      <!-- One <li> per gap/assumption. Pull from this branch's GAPS:/
-           ASSUMPTIONS: log fields. -->
+      <li><b>ASSUMPTIONS:</b> branch purpose was attributed from commit messages and branch names, not from reading each branch's full diff — sufficient for a merged/stale-vs-active classification, but a human should skim before deleting if any name is ambiguous.</li>
+      <li><b>GAPS:</b> no git delete/push operations were performed — this report is the analysis only, per explicit instruction to hold all git mutations until reviewed.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Follow-ups</h2>
     <ul>
-      <!-- One <li> per follow-up. -->
+      <li>Fast-forward <code>main</code> to <code>dev</code> and push.</li>
+      <li>Delete the 5 fully-merged local branches and 2 remote-only merged branches, once approved.</li>
     </ul>
   </section>
 
   <section class="rsection">
     <h2>Next Steps</h2>
     <ol class="steps">
-      <!-- One <li> per actionable next step. -->
+      <li>Present cleanup options to the user for explicit approval before any branch deletion or push.</li>
     </ol>
   </section>
 
