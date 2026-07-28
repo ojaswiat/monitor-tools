@@ -79,18 +79,19 @@ consumer project's data folder, stated above under "Editing the engine."
 Rules for using it live in `.claude/skills/monitor/SKILL.md` — read it
 before running any command below.
 
-**When to use it (defaults — no need to ask first):**
+**Logging & task tracking (hard rules — not optional, no exceptions):**
 - **Log after every state-changing operation, including small ones** (one
   file edit, one command run, one config tweak) — run `/monitor:log` or
-  `/monitor:record`. A tight edit+build+commit can be one entry, but don't
-  skip logging just because the change was small.
-- **Generate a report before every merge.** Before merging the current
-  branch into its base branch, run `/monitor:report` (or `/monitor:record`)
-  if the branch has code changes not yet covered by a report. Do this by
-  default when asked to merge — don't wait to be asked for a report
-  separately.
-- After code changes generally — write a report with `/monitor:report` (or
-  via `/monitor:record`). Never report a discussion or doc-only tweak.
+  `/monitor:record`. This is default behavior, not something to wait for
+  permission on. Do not wait for the user to say "log this" — the
+  operation itself is the trigger. The user staying silent about monitor
+  is not a signal to skip it. A tight edit+build+commit can be one entry,
+  but don't skip logging just because the change was small.
+- **Track multi-step work as a task.** Start a task (`/monitor:task-start
+  "<title>"`) before beginning any unit of work with more than one
+  step, update it (`/monitor:task-update <id>`) as status changes, and
+  close it (`/monitor:task-close <id>`) on completion or failure — same
+  hard-rule treatment as logging, not something to ask about first.
 - On failure, log it anyway with `status=failure` and the real error —
   don't skip logging just because the operation didn't succeed.
 - **For real decisions, log the reasoning, not just the outcome.** In
@@ -101,6 +102,19 @@ before running any command below.
   edit just needs `--summary`, no `--details`. Reports pull their
   **Decisions & Rationale** and **Gaps & Assumptions** sections straight
   from these fields — see `SKILL.md` for the full convention.
+- Only an explicit user instruction to skip logging/task-tracking for a
+  specific action overrides these two rules — and that override applies
+  to the single action it was given for, not the rest of the session.
+
+**Reports (default judgment — apply as usual, not forced every time):**
+- Generate a report before every merge if the branch has code changes not
+  yet covered by one — do this by default when asked to merge, don't wait
+  to be asked for a report separately.
+- After code changes generally, write a report with `/monitor:report` (or
+  via `/monitor:record`) — never report a discussion or doc-only tweak.
+- Reports render an HTML page and cost more to generate than a log entry
+  — apply judgment on *when* one is warranted (per the two rules above),
+  rather than authoring one for every single logged operation.
 
 **Commands:**
 | Command | Does |
