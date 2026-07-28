@@ -225,15 +225,12 @@ def render_template(profile: dict, root: Path) -> None:
               '<span><a href="index.html">← All reports</a> · '
               '<a href="#top">↑ Back to Top</a></span></footer>')
     # Report pages carry a Back link to the reports index (same dir).
-    masthead_extra = (f'    <a class="back" href="index.html" '
-                      f'aria-label="Back to reports">{mlib.BACK_SVG}Back</a>\n')
     # The masthead chip is a placeholder here: a report is a snapshot, so it
     # records the branch the work was done on, not the branch you read it from.
     html = mlib.page(f"{{{{ title }}}} — {brand} Report", brand, "info",
                      "Monitor · Report", header, body, footer,
-                     branch="{{ branch }}")
-    html = html.replace('  <div class="masthead" id="top">\n',
-                        '  <div class="masthead" id="top">\n' + masthead_extra)
+                     branch="{{ branch }}",
+                     masthead_extra=mlib.back_link("index.html", "Back to reports"))
     (mlib.monitor_dir(root) / "reports" / "template.html").write_text(html, encoding="utf-8")
 
 
@@ -295,7 +292,8 @@ def render_reports_index(profile: dict, items: list[dict], root: Path,
                   '<a href="#top">↑ Back to Top</a></span></footer>')
         title = "Reports" if total_pages <= 1 else f"Reports (page {page_num}/{total_pages})"
         out = mlib.page(f"{title} — {brand} Monitor", brand, "info",
-                        "Monitor · Reports", header, table, footer, branch=branch)
+                        "Monitor · Reports", header, table, footer, branch=branch,
+                        masthead_extra=mlib.back_link("../index.html", "Back to Dashboard"))
         (reports_dir / mlib.page_filename(page_num)).write_text(out, encoding="utf-8")
 
     _prune_stale_report_pages(reports_dir, total_pages)
