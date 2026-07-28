@@ -282,19 +282,31 @@ compress the reminder, not the record.
 
 Two Claude Code hooks (installed by `/monitor:init`/`/monitor:update` into
 the project's `.claude/settings.json`) back a soft, real reminder instead of
-pure discretion: a `PostToolUse` hook fires `pending.py hook-post-tool-use`
-after every `git commit`/`merge`/`rebase`, recording it in
-`monitor/.pending.json`. A `UserPromptSubmit` hook fires `pending.py
-hook-user-prompt-submit` on your next turn — if anything is pending, its
-`[Warn!]` text becomes injected context, and you must surface it to the
-user and get a Y/N before continuing:
+pure discretion. A `PostToolUse` hook (matcher `Bash|Write`) fires `pending.py
+hook-post-tool-use` after every tool call and self-filters by inspecting
+`tool_input`: a `Bash` call running `git commit`/`merge`/`rebase` records it
+in `monitor/.pending.json`'s `pending_logs`/`pending_report`; a `Write` call
+to a `*.md` file under any `plans/`/`specs/` directory records a
+`pending_task_signal` **only if no task is currently open** — a heuristic
+proxy for "multi-step work may have just started," not a guarantee. A
+`UserPromptSubmit` hook fires `pending.py hook-user-prompt-submit` on your
+next turn — if anything is pending, its `[Warn!]` text becomes injected
+context:
 
-- **Y** → work through `monitor/.pending.json`'s `pending_logs` (one
-  `/monitor:log` per entry) and `pending_report` (one `/monitor:report`
+- **Logs/report pending** → surface it to the user and get a Y/N before
+  continuing. **Y** → work through `monitor/.pending.json`'s `pending_logs`
+  (one `/monitor:log` per entry) and `pending_report` (one `/monitor:report`
   covering `git log <since_sha>..HEAD`), then continue the user's original
-  request.
-- **N** → say so, leave `.pending.json` untouched (it stays pending and
-  reminds again next turn), and do whatever the user asks instead.
+  request. **N** → say so, leave `.pending.json` untouched (it stays pending
+  and reminds again next turn), and do whatever the user asks instead.
+- **Open tasks** (`open_tasks()`, read fresh from `tasks.mtr` on every call,
+  never stored) and/or a **pending task-start nudge** → surfaced as plain
+  informational text, never a Y/N question — starting/closing a task is
+  never something a Y/N answer resolves. `pending_task_signal` clears
+  automatically the moment a task starts (`tasks.py`'s `start_task()` calls
+  `pending.clear_task_signal()`); open tasks stop appearing the moment they
+  close, with no separate clearing step needed since they're recomputed
+  from `tasks.mtr` each time.
 
 **Clearing more than one `pending_logs` entry.** `logger.py` clears the
 pending entry whose sha matches the entry it just wrote, and that sha

@@ -6,7 +6,7 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Write",
         "hooks": [
           {"type": "command",
            "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
