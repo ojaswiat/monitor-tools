@@ -1,3 +1,8 @@
+2026-07-29 09:17:47,011 INFO [add-post-push-hook] (Write) Added a PostToolUse-based post-push hook that refreshes the plugin marketplace cache after any git push targeting main -- success
+branch:  bug/posttooluse-hooks-not-firing
+last_commit_hash: 3f32080
+details: DECISION: use this repo's existing Claude Code PostToolUse hook mechanism rather than a native git hook. WHY: git has no native post-push hook, and the plugin cache is local machine state a server-side hook couldn't reach anyway. ARCHITECTURE: scripts/post_push_hook.py, dev-only tooling (never shipped to Guest projects), detects a Bash git push targeting main (explicit branch name or bare push while main checked out) and runs claude plugin marketplace update. NEXT: verify it fires live after a session restart. GAPS: initial version depended on $CLAUDE_PROJECT_DIR being set, which turned out to be the root cause of a separate bug found right after this commit -- fixed in a later commit.
+================================================================================
 2026-07-28 19:26:23,896 INFO [add-monitor-status-command] (Write) Added /monitor:status: a new chat-only, deterministic status command (open tasks, recent logs, pending state, git history, mechanically-extracted next steps) plus unit + integration tests and test-e2e coverage -- success
 branch:  dev
 last_commit_hash: 3cb427b

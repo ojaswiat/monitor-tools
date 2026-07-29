@@ -6,12 +6,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-$(pwd)}/monitor/scripts/pending.py\" --project-root \"${CLAUDE_PROJECT_DIR:-$(pwd)}\" hook-post-tool-use",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/post_push_hook.py\"",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-$(pwd)}/scripts/post_push_hook.py\"",
             "timeout": 20
           }
         ]
@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-$(pwd)}/monitor/scripts/pending.py\" --project-root \"${CLAUDE_PROJECT_DIR:-$(pwd)}\" hook-user-prompt-submit",
             "timeout": 10
           }
         ]

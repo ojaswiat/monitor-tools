@@ -81,7 +81,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
            "matcher": "Bash|Write",
            "hooks": [
              {"type": "command",
-              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-post-tool-use",
+              "command": "python3 \"${CLAUDE_PROJECT_DIR:-$(pwd)}/monitor/scripts/pending.py\" --project-root \"${CLAUDE_PROJECT_DIR:-$(pwd)}\" hook-post-tool-use",
               "timeout": 10}
            ]
          }
@@ -90,7 +90,7 @@ Initialise **monitor** for this project. Read the **monitor** skill (`SKILL.md`)
          {
            "hooks": [
              {"type": "command",
-              "command": "python3 \"$CLAUDE_PROJECT_DIR/monitor/scripts/pending.py\" --project-root \"$CLAUDE_PROJECT_DIR\" hook-user-prompt-submit",
+              "command": "python3 \"${CLAUDE_PROJECT_DIR:-$(pwd)}/monitor/scripts/pending.py\" --project-root \"${CLAUDE_PROJECT_DIR:-$(pwd)}\" hook-user-prompt-submit",
               "timeout": 10}
            ]
          }
