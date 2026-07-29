@@ -1,3 +1,7 @@
+2026-07-29 09:54:11,434 INFO [merge] (git) Merged bug/posttooluse-hooks-not-firing into dev -- success
+branch:  dev
+last_commit_hash: 86cb301
+================================================================================
 2026-07-29 09:17:47,011 INFO [add-post-push-hook] (Write) Added a PostToolUse-based post-push hook that refreshes the plugin marketplace cache after any git push targeting main -- success
 branch:  bug/posttooluse-hooks-not-firing
 last_commit_hash: 3f32080
