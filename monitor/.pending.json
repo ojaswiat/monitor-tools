@@ -1,8 +1,8 @@
 {
-  "branch": "dev",
+  "branch": "bug/posttooluse-hooks-not-firing",
   "pending_logs": [],
   "pending_report": null,
   "last_report_sha": "1542863",
-  "last_seen_sha": "0bd060d",
+  "last_seen_sha": "3f32080",
   "pending_task_signal": null
 }

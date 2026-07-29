@@ -130,8 +130,8 @@
     <a class="back" href="../index.html" aria-label="Back to Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</a>
     <span><span class="brand">monitor-tools</span> · Monitor · Logs</span>
     <span class="mh-right">
-      <span class="branchchip" title="Branch: dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">dev</span></span>
-      <span class="mono">2026-07-28 19:26</span>
+      <span class="branchchip" title="Branch: bug/posttooluse-hooks-not-firing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">bug/posttooluse-hooks-not-firing</span></span>
+      <span class="mono">2026-07-29 09:17</span>
     </span>
   </div>
 
@@ -142,12 +142,12 @@
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">dev</div></div>
-    <div class="kpi"><div class="label">Total ops</div><div class="value">46</div></div>
-    <div class="kpi pass"><div class="label">Success</div><div class="value">46</div></div>
+    <div class="kpi"><div class="label">Current branch</div><div class="value small mono">bug/posttooluse-hooks-not-firing</div></div>
+    <div class="kpi"><div class="label">Total ops</div><div class="value">47</div></div>
+    <div class="kpi pass"><div class="label">Success</div><div class="value">47</div></div>
     <div class="kpi warn"><div class="label">Partial</div><div class="value">0</div></div>
     <div class="kpi fail"><div class="label">Failure</div><div class="value">0</div></div>
-    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-28 19:26:23,896</div></div>
+    <div class="kpi"><div class="label">Last activity</div><div class="value small mono">2026-07-29 09:17:47,011</div></div>
   </div>
 
   <fieldset class="filter" aria-label="Filter by status">
@@ -161,6 +161,22 @@
   </fieldset>
 
   <div class="log">
+  <article class="logcard success">
+    <div class="row">
+      <time>2026-07-29 09:17:47,011</time>
+      <span class="op">add-post-push-hook</span>
+      <span class="toolchip">Write</span>
+      <span class="branchchip" title="Branch: bug/posttooluse-hooks-not-firing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">bug/posttooluse-hooks-not-firing</span></span>
+      <span class="toolchip">commit: 3f32080</span>
+      <span class="spacer"></span>
+      <span class="tag pass">SUCCESS</span>
+    </div>
+    <p class="summary">Added a PostToolUse-based post-push hook that refreshes the plugin marketplace cache after any git push targeting main</p>
+    <details>
+      <summary>Details</summary>
+      <p>DECISION: use this repo&#x27;s existing Claude Code PostToolUse hook mechanism rather than a native git hook. WHY: git has no native post-push hook, and the plugin cache is local machine state a server-side hook couldn&#x27;t reach anyway. ARCHITECTURE: scripts/post_push_hook.py, dev-only tooling (never shipped to Guest projects), detects a Bash git push targeting main (explicit branch name or bare push while main checked out) and runs claude plugin marketplace update. NEXT: verify it fires live after a session restart. GAPS: initial version depended on $CLAUDE_PROJECT_DIR being set, which turned out to be the root cause of a separate bug found right after this commit -- fixed in a later commit.</p>
+    </details>
+  </article>
   <article class="logcard success">
     <div class="row">
       <time>2026-07-28 19:26:23,896</time>
@@ -297,30 +313,13 @@
       <p>DECISION: fast-forwarded main to dev (67 commits) since main was the repo&#x27;s default branch and the marketplace source (github ojaswiat/monitor-tools, no branch specified) resolves to the default branch, not dev. WHY: verifying the self-hosted plugin registration surfaced that the cached plugin content in ~/.claude/plugins/cache/monitor-tools/monitor was stuck at old versions (1.2.0/1.3.0) despite dev being at 1.15.1 — root cause was main never having been updated all session, not a bug in the marketplace mechanism. NEXT: run /plugin marketplace update monitor-tools (or restart again) so this machine&#x27;s cached plugin content re-fetches from the now-current main; then verify $CLAUDE_PLUGIN_ROOT resolves for monitor commands before removing .claude/skills/monitor/ and .claude/commands/monitor/.</p>
     </details>
   </article>
-  <article class="logcard success">
-    <div class="row">
-      <time>2026-07-28 12:37:55,304</time>
-      <span class="op">edit-file</span>
-      <span class="toolchip">Edit</span>
-      <span class="branchchip" title="Branch: chore/enable-monitor-plugin-self-host"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><span class="sr-only">Branch </span><span class="bname">chore/enable-monitor-plugin-self-host</span></span>
-      <span class="toolchip">commit: 8987fe8</span>
-      <span class="spacer"></span>
-      <span class="tag pass">SUCCESS</span>
-    </div>
-    <p class="summary">Registered this repo&#x27;s own marketplace and enabled monitor as a plugin on itself</p>
-    <div class="files"><span class="file">.claude/settings.json</span></div>
-    <details>
-      <summary>Details</summary>
-      <p>DECISION: added extraKnownMarketplaces (monitor-tools -&gt; github ojaswiat/monitor-tools) and enabledPlugins (monitor@monitor-tools) to .claude/settings.json, mirroring exactly how the three companion plugins (superpowers, ui-ux-pro-max) are already registered. WHY: user wants this Host repo to use monitor exactly as a Guest project would, resolving commands via $CLAUDE_PLUGIN_ROOT instead of the manual install-monitor.sh copy under .claude/skills/monitor. GAPS: plugin activation is loaded at Claude Code startup, not mid-session, so this session cannot yet confirm $CLAUDE_PLUGIN_ROOT resolves for monitor. .claude/skills/monitor/ and .claude/commands/monitor/ deliberately left in place as a working fallback until the user restarts and confirms. NEXT: after user restarts and confirms monitor commands still work via the plugin path, remove .claude/skills/monitor/ and .claude/commands/monitor/ (monitor/scripts/ stays regardless — it&#x27;s the permanent per-project runtime location in both install modes, per commands/init.md&#x27;s ENGINE resolution).</p>
-    </details>
-  </article>
   </div>
   <nav class="pagenav" aria-label="Pagination">
-    <span class="pageinfo">Page 1 of 5 · 46 total</span>
+    <span class="pageinfo">Page 1 of 5 · 47 total</span>
     <a href="page-2.html">Next →</a>
   </nav>
 
-  <footer><span>Rendered from monitor/logs/operations.mtr · 46 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
+  <footer><span>Rendered from monitor/logs/operations.mtr · 47 entries.</span><span><a href="../index.html">← Dashboard</a> · <a href="#top">↑ Back to Top</a></span></footer>
 
 </div>
 </body>
